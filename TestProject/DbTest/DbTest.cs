@@ -8,6 +8,7 @@ using QuantumZhou.Infrastructure.Data.Database.SQLite;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using QuantumZhou.Infrastructure.Data.Database.SqlServer;
 using TestProject.DbCode;
 using TestProject.DbCode.Entity;
 using TestProject.DbCode.Tables;
@@ -21,7 +22,10 @@ namespace TestProject.DbTest
         public void Run()
         {
             //var executor = new MySqlExecutor("192.168.50.85", "test", "root", "`12qweasd");
-            var executor = new SQLiteExecutor("User.db");
+            //var executor = new SQLiteExecutor("User.db");
+            var executor =
+                new SqlServerExecutor(
+                    "Data Source=192.168.50.22;Database=TestDb;User ID=myuser;Password=qwe123!@;Connect Timeout=30");
 
             var dbEngine = new TestDbEngine(executor);
             DbContainer.Add(dbEngine);
@@ -58,7 +62,7 @@ namespace TestProject.DbTest
             dbEngine.Insert(newTenant, con);
 
             var allTenant = dbEngine.GetAllTenant(con).ToList();
-            Assert.AreEqual(tenantId, allTenant[0]);
+            Assert.AreEqual(tenantId, allTenant[0].Trim());
 
             var anotherTenant = "another";
             var input = new InputValues();
@@ -66,7 +70,7 @@ namespace TestProject.DbTest
             var whereParams = new WhereParams(TenantTable.Id, tenantId);
             dbEngine.Update(new SqlBuilderUpdateParam(TenantTable.TableName, input, whereParams), con);
             allTenant = dbEngine.GetAllTenant(con).ToList();
-            Assert.AreEqual(anotherTenant, allTenant[0]);
+            Assert.AreEqual(anotherTenant, allTenant[0].Trim());
 
             dbEngine.DeleteTenant(con, anotherTenant);
             allTenant = dbEngine.GetAllTenant(con).ToList();
