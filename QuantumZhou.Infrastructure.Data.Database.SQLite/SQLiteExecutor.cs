@@ -14,6 +14,52 @@ namespace QuantumZhou.Infrastructure.Data.Database.SQLite
     public class SQLiteExecutor : DbExecutor
     {
         public SQLiteExecutor(string directory, string dbFileName)
+            : base(BuildConnectionString(directory, dbFileName))
+        {
+        }
+
+        public SQLiteExecutor(string dbFileName)
+            : this(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), dbFileName)
+        {
+        }
+
+        protected override IDbConnection GetConnection(string connectionString)
+        {
+            var connection = new SQLiteConnection(connectionString);
+            return connection;
+        }
+
+        protected override DbCommand AppendParams(IDbCommand command, WhereParams whereParams)
+        {
+            if (command is not SQLiteCommand cmd)
+            {
+                throw new ArgumentOutOfRangeException(nameof(command));
+            }
+
+            foreach (var item in whereParams.Items)
+            {
+                cmd.Parameters.AddWithValue($"{SqlBuilder.ParamPrefix}{item.Name}", item.Value);
+            }
+
+            return cmd;
+        }
+
+        protected override bool ExistTable(IDbConnection con, TableDefine table)
+        {
+            var whereParams = new WhereParams("type", "table");
+            whereParams.Add("name", $"{table.Name.Trim()}");
+            var conditions = new WhereConditions(whereParams);
+
+            var count = -1;
+            Execute(con, reader =>
+            {
+                reader.Read();
+                count = reader.GetInt32(0);
+            }, SqlBuilder.Count("sqlite_master", conditions), whereParams);
+            return count > 0;
+        }
+
+        private static string BuildConnectionString(string directory, string dbFileName)
         {
             if (string.IsNullOrEmpty(directory))
             {
@@ -37,66 +83,7 @@ namespace QuantumZhou.Infrastructure.Data.Database.SQLite
                 ReadOnly = false
             };
 
-            var conString = connStrBuilder.ConnectionString;
-            using var connection = new SQLiteConnection(conString);
-            try
-            {
-                connection.Open();
-                ConnectionString = conString;
-            }
-            finally
-            {
-                connection.Close();
-            }
-        }
-
-        public SQLiteExecutor(string dbFileName)
-            : this(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), dbFileName)
-        {
-        }
-
-        public override IDbConnection GetConnection()
-        {
-            var connection = new SQLiteConnection(ConnectionString);
-            return connection;
-        }
-
-        protected override DbCommand AppendParams(IDbCommand command, WhereParams whereParams)
-        {
-            if (command is not SQLiteCommand cmd)
-            {
-                throw new ArgumentOutOfRangeException(nameof(command));
-            }
-
-            foreach (var item in whereParams.Items)
-            {
-                cmd.Parameters.AddWithValue($"{SqlBuilder.ParamPrefix}{item.Name}", item.Value);
-            }
-
-            return cmd;
-        }
-
-        protected override void CreateTable(IDbConnection con, TableDefine table)
-        {
-            if (!ExistTable(con, table.Name))
-            {
-                base.CreateTable(con, table);
-            }
-        }
-
-        private bool ExistTable(IDbConnection con, string tableName)
-        {
-            var whereParams = new WhereParams("type", "table");
-            whereParams.Add("name", $"{tableName.Trim()}");
-            var conditions = new WhereConditions(whereParams);
-
-            var count = -1;
-            Execute(con, reader =>
-            {
-                reader.Read();
-                count = reader.GetInt32(0);
-            }, SqlBuilder.Count("sqlite_master", conditions), whereParams);
-            return count > 0;
+            return connStrBuilder.ConnectionString;
         }
     }
 }

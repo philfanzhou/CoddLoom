@@ -10,31 +10,13 @@ namespace QuantumZhou.Infrastructure.Data.Database.SqlServer
     public class SqlServerExecutor : DbExecutor
     {
         public SqlServerExecutor(string connectionString)
+            : base(connectionString)
         {
-            using var connection = new SqlConnection(connectionString);
-            try
-            {
-                connection.Open();
-                ConnectionString = connectionString;
-            }
-            finally
-            {
-                connection.Close();
-            }
         }
 
-        protected override void CreateTable(IDbConnection con, TableDefine table)
+        protected override IDbConnection GetConnection(string connectionString)
         {
-            var count = Count(con, $"SELECT COUNT(*) FROM sysobjects WHERE name='{table.Name}' and xtype='U'");
-            if (count == 0)
-            {
-                base.CreateTable(con, table);
-            }
-        }
-
-        public override IDbConnection GetConnection()
-        {
-            var connection = new SqlConnection(ConnectionString);
+            var connection = new SqlConnection(connectionString);
             return connection;
         }
 
@@ -51,6 +33,12 @@ namespace QuantumZhou.Infrastructure.Data.Database.SqlServer
             }
 
             return cmd;
+        }
+
+        protected override bool ExistTable(IDbConnection con, TableDefine table)
+        {
+            var count = Count(con, $"SELECT COUNT(*) FROM sysobjects WHERE name='{table.Name}' and xtype='U'");
+            return count > 0;
         }
     }
 }

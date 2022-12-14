@@ -10,13 +10,44 @@ namespace QuantumZhou.Infrastructure.Data.Database
 {
     public abstract class DbExecutor
     {
-        public string ConnectionString { get; protected set; }
+        private readonly string _connectionString;
+
+        protected DbExecutor(string connectionString)
+        {
+            using var connection = GetConnection(connectionString);
+            try
+            {
+                connection.Open();
+                _connectionString = connectionString;
+            }
+            finally
+            {
+                connection.Close();
+            }
+        }
 
         public virtual SqlBuilder SqlBuilder { get; } = new();
 
-        public abstract IDbConnection GetConnection();
+        public IDbConnection GetConnection()
+        {
+            return GetConnection(_connectionString);
+        }
 
-        public virtual DbCommand BuildCommand(IDbConnection con, string sql,
+        protected abstract IDbConnection GetConnection(string connectionString);
+
+        protected abstract DbCommand AppendParams(IDbCommand command, WhereParams whereParams);
+
+        protected abstract bool ExistTable(IDbConnection con, TableDefine table);
+
+        internal void CreateTableIfNotExists(IDbConnection con, TableDefine table)
+        {
+            if (!ExistTable(con, table))
+            {
+                Execute(con, SqlBuilder.GetCreateTableSql(table));
+            }
+        }
+
+        private DbCommand BuildCommand(IDbConnection con, string sql,
             WhereParams whereParams = null)
         {
             var command = con.CreateCommand();
@@ -28,13 +59,6 @@ namespace QuantumZhou.Infrastructure.Data.Database
             }
 
             return AppendParams(command, whereParams);
-        }
-
-        protected abstract DbCommand AppendParams(IDbCommand command, WhereParams whereParams);
-
-        protected internal virtual void CreateTable(IDbConnection con, TableDefine table)
-        {
-            Execute(con, SqlBuilder.GetCreateTableSql(table));
         }
 
         #region Execute Sql

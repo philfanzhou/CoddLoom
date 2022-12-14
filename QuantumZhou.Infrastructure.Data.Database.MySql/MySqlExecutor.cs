@@ -1,6 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using QuantumZhou.Infrastructure.Data.Database.Params;
 using QuantumZhou.Infrastructure.Data.Database.Sql;
+using QuantumZhou.Infrastructure.Data.Database.Table;
 using System;
 using System.Data;
 using System.Data.Common;
@@ -10,17 +11,8 @@ namespace QuantumZhou.Infrastructure.Data.Database.MySql
     public class MySqlExecutor : DbExecutor
     {
         public MySqlExecutor(string connectionString)
+            : base(connectionString)
         {
-            using var connection = new MySqlConnection(connectionString);
-            try
-            {
-                connection.Open();
-                ConnectionString = connectionString;
-            }
-            finally
-            {
-                connection.Close();
-            }
         }
 
         public MySqlExecutor(string server, string database, string user, string password, uint port = 3306)
@@ -30,9 +22,9 @@ namespace QuantumZhou.Infrastructure.Data.Database.MySql
 
         public override SqlBuilder SqlBuilder { get; } = new MySqlBuilder();
 
-        public override IDbConnection GetConnection()
+        protected override IDbConnection GetConnection(string connectionString)
         {
-            var connection = new MySqlConnection(ConnectionString);
+            var connection = new MySqlConnection(connectionString);
             return connection;
         }
 
@@ -49,6 +41,12 @@ namespace QuantumZhou.Infrastructure.Data.Database.MySql
             }
 
             return cmd;
+        }
+
+        protected override bool ExistTable(IDbConnection con, TableDefine table)
+        {
+            // use create table sql to check exist, not here
+            return false;
         }
 
         private static string BuildConnectionString(string server, string database,

@@ -1,4 +1,5 @@
-﻿using QuantumZhou.Infrastructure.Data.Database.Output;
+﻿using QuantumZhou.Infrastructure.Data.Database.Cache;
+using QuantumZhou.Infrastructure.Data.Database.Output;
 using QuantumZhou.Infrastructure.Data.Database.Params;
 using QuantumZhou.Infrastructure.Data.Database.Sql;
 using QuantumZhou.Infrastructure.Data.Database.Table;
@@ -6,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using QuantumZhou.Infrastructure.Data.Database.Cache;
 
 namespace QuantumZhou.Infrastructure.Data.Database
 {
@@ -22,7 +22,7 @@ namespace QuantumZhou.Infrastructure.Data.Database
             {
                 foreach (var table in tableList)
                 {
-                    Executor.CreateTable(conn, table);
+                    Executor.CreateTableIfNotExists(conn, table);
                 }
             });
         }
