@@ -147,8 +147,8 @@ namespace QuantumZhou.Infrastructure.Data.Database
         {
             var sql = SqlBuilder.Select(builderParam);
             return con != null
-                ? Executor.Select(con, convertor, sql, builderParam.WhereParams)
-                : Execute(conn => Executor.Select(conn, convertor, sql, builderParam.WhereParams));
+                ? Executor.Select(con, sql, convertor, builderParam.WhereParams)
+                : Execute(conn => Executor.Select(conn, sql, convertor, builderParam.WhereParams));
         }
 
         public T First<T>(Func<IDataRecord, T> convertor, SqlBuilderSelectParam builderParam,
@@ -156,8 +156,8 @@ namespace QuantumZhou.Infrastructure.Data.Database
         {
             var sql = SqlBuilder.First(builderParam);
             return con != null 
-                ? Executor.First(con, convertor, sql, builderParam.WhereParams)
-                : Execute(conn => Executor.First(conn, convertor, sql, builderParam.WhereParams));
+                ? Executor.First(con, sql, convertor, builderParam.WhereParams)
+                : Execute(conn => Executor.First(conn, sql, convertor, builderParam.WhereParams));
         }
 
         public PageResult<T> PageSelect<T>(Func<IDataRecord, T> convertor,
@@ -174,7 +174,7 @@ namespace QuantumZhou.Infrastructure.Data.Database
             SqlBuilderSelectParam builderParam)
         {
             var sql = SqlBuilder.Take(pageParam.Offset, pageParam.PageCount, builderParam);
-            var items = Executor.Select(con, convertor, sql, builderParam.WhereParams).ToList();
+            var items = Executor.Select(con, sql, convertor, builderParam.WhereParams).ToList();
             if (items.Count < 1)
             {
                 return new PageResult<T>();

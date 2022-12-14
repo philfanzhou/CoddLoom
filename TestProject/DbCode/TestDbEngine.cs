@@ -28,9 +28,8 @@ namespace TestProject.DbCode
         public IEnumerable<string> GetAllTenant(IDbConnection conn)
         {
             var sql = SqlBuilder.Select(TenantTable.TableName);
-            var tenants = Executor.Select(conn, 
-                record => record[TenantTable.Id].ToString(),
-                sql);
+            var tenants = Executor.Select(conn,
+                sql, record => record[TenantTable.Id].ToString());
             return tenants.ToList();
         }
 

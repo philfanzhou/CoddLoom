@@ -88,7 +88,12 @@ namespace QuantumZhou.Infrastructure.Data.Database
             readerAction(reader);
         }
 
-        public void Insert(IDbConnection con, string sql)
+        #endregion
+
+        #region CRUD
+
+        public void Insert(IDbConnection con, 
+            string sql)
         {
             Execute(con, sql);
         }
@@ -107,20 +112,8 @@ namespace QuantumZhou.Infrastructure.Data.Database
             Execute(con, sql, whereParams);
         }
 
-        public int Count(IDbConnection con,
-            string sql, WhereParams whereParams = null)
-        {
-            var count = 0;
-            Execute(con, reader =>
-            {
-                reader.Read();
-                count = reader.GetInt32(0);
-            }, sql, whereParams);
-            return count;
-        }
-
-        public IEnumerable<T> Select<T>(IDbConnection con, Func<IDataRecord, T> convertor,
-            string sql, WhereParams whereParams = null)
+        public IEnumerable<T> Select<T>(IDbConnection con, 
+            string sql, Func<IDataRecord, T> convertor, WhereParams whereParams = null)
         {
             var result = new List<T>();
             Execute(con, reader =>
@@ -133,8 +126,8 @@ namespace QuantumZhou.Infrastructure.Data.Database
             return result;
         }
 
-        public T First<T>(IDbConnection con, Func<IDataRecord, T> convertor,
-            string sql, WhereParams whereParams = null)
+        public T First<T>(IDbConnection con,
+            string sql, Func<IDataRecord, T> convertor, WhereParams whereParams = null)
         {
             T result = default;
             Execute(con, reader =>
@@ -143,6 +136,18 @@ namespace QuantumZhou.Infrastructure.Data.Database
                 result = convertor(reader);
             }, sql, whereParams);
             return result;
+        }
+
+        public int Count(IDbConnection con,
+            string sql, WhereParams whereParams = null)
+        {
+            var count = 0;
+            Execute(con, reader =>
+            {
+                reader.Read();
+                count = reader.GetInt32(0);
+            }, sql, whereParams);
+            return count;
         }
 
         #endregion
