@@ -37,16 +37,8 @@ namespace QuantumZhou.Infrastructure.Data.Database
 
         protected abstract DbCommand AppendParams(IDbCommand command, WhereParams whereParams);
 
-        protected abstract bool ExistTable(IDbConnection con, TableDefine table);
-
-        internal void CreateTableIfNotExists(IDbConnection con, TableDefine table)
-        {
-            if (!ExistTable(con, table))
-            {
-                Execute(con, SqlBuilder.GetCreateTableSql(table));
-            }
-        }
-
+        protected internal abstract bool ExistTable(IDbConnection con, TableDefine table);
+        
         private DbCommand BuildCommand(IDbConnection con, string sql,
             WhereParams whereParams = null)
         {

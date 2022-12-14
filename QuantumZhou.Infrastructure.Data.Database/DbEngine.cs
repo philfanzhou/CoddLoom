@@ -20,9 +20,9 @@ namespace QuantumZhou.Infrastructure.Data.Database
             TableColumnsCache.Initialize(tableList);
             Execute(conn =>
             {
-                foreach (var table in tableList)
+                foreach (var table in tableList.Where(table => !Executor.ExistTable(conn, table)))
                 {
-                    Executor.CreateTableIfNotExists(conn, table);
+                    Executor.Execute(conn, SqlBuilder.GetCreateTableSql(table));
                 }
             });
         }
