@@ -12,9 +12,8 @@ namespace QuantumZhou.Infrastructure.Data.Database
     {
         private readonly string _connectionString;
 
-        protected DbExecutor(string connectionString)
+        protected DbExecutor(string connectionString, IDbConnection connection)
         {
-            using var connection = GetConnection(connectionString);
             try
             {
                 connection.Open();
@@ -33,11 +32,11 @@ namespace QuantumZhou.Infrastructure.Data.Database
             return GetConnection(_connectionString);
         }
 
+        protected internal abstract bool ExistTable(IDbConnection con, TableDefine table);
+
         protected abstract IDbConnection GetConnection(string connectionString);
 
         protected abstract DbCommand AppendParams(IDbCommand command, WhereParams whereParams);
-
-        protected internal abstract bool ExistTable(IDbConnection con, TableDefine table);
         
         private DbCommand BuildCommand(IDbConnection con, string sql,
             WhereParams whereParams = null)

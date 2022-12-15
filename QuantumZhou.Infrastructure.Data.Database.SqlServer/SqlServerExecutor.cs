@@ -10,7 +10,7 @@ namespace QuantumZhou.Infrastructure.Data.Database.SqlServer
     public class SqlServerExecutor : DbExecutor
     {
         public SqlServerExecutor(string connectionString)
-            : base(connectionString)
+            : base(connectionString, new SqlConnection(connectionString))
         {
         }
 

@@ -6,22 +6,26 @@ using System.Data;
 using System.Data.Common;
 using System.Data.SQLite;
 using System.IO;
-using System.Reflection;
 
 namespace QuantumZhou.Infrastructure.Data.Database.SQLite
 {
     // ReSharper disable once InconsistentNaming
     public class SQLiteExecutor : DbExecutor
     {
-        public SQLiteExecutor(string directory, string dbFileName)
-            : base(BuildConnectionString(directory, dbFileName))
+        public SQLiteExecutor(string connectionString)
+            : base(connectionString, new SQLiteConnection(connectionString))
         {
         }
 
-        public SQLiteExecutor(string dbFileName)
-            : this(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), dbFileName)
+        public SQLiteExecutor(string directory, string dbFileName)
+            : this(BuildConnectionString(directory, dbFileName))
         {
         }
+
+        //public SQLiteExecutor(string dbFileName)
+        //    : this(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), dbFileName)
+        //{
+        //}
 
         protected override IDbConnection GetConnection(string connectionString)
         {

@@ -11,7 +11,7 @@ namespace QuantumZhou.Infrastructure.Data.Database.MySql
     public class MySqlExecutor : DbExecutor
     {
         public MySqlExecutor(string connectionString)
-            : base(connectionString)
+            : base(connectionString, new MySqlConnection(connectionString))
         {
         }
 
