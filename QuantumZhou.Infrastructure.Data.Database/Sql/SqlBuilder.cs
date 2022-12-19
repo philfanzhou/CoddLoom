@@ -10,6 +10,8 @@ namespace QuantumZhou.Infrastructure.Data.Database.Sql
 {
     public class SqlBuilder
     {
+        protected const string KeyWordSelect = "SELECT";
+
         public string ParamPrefix { get; set; } = "@";
 
         public virtual string GetCreateTableSql(TableDefine table)
@@ -96,7 +98,7 @@ namespace QuantumZhou.Infrastructure.Data.Database.Sql
         {
             if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
 
-            var sql = $"SELECT * FROM {tableName}";
+            var sql = $"{KeyWordSelect} * FROM {tableName}";
             sql = AppendWhere(sql, where);
             return AppendOrderBy(sql, orderBy);
         }
@@ -249,7 +251,7 @@ namespace QuantumZhou.Infrastructure.Data.Database.Sql
             return First(builderParam.TableName, builderParam.WhereConditions, builderParam.OrderBy);
         }
 
-        public string First(string tableName,
+        public virtual string First(string tableName,
             WhereConditions where = null, OrderByCondition orderBy = null)
         {
             var selectSql = Select(tableName, where, orderBy);
@@ -261,7 +263,7 @@ namespace QuantumZhou.Infrastructure.Data.Database.Sql
             return Take(builderParam.TableName, offset, count, builderParam.WhereConditions, builderParam.OrderBy);
         }
 
-        public string Take(string tableName, int offset, int count,
+        public virtual string Take(string tableName, int offset, int count,
             WhereConditions where = null, OrderByCondition orderBy = null)
         {
             var selectSql = Select(tableName, where, orderBy);

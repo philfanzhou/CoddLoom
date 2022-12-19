@@ -1,4 +1,5 @@
 ﻿using QuantumZhou.Infrastructure.Data.Database.Params;
+using QuantumZhou.Infrastructure.Data.Database.Sql;
 using QuantumZhou.Infrastructure.Data.Database.Table;
 using System;
 using System.Data;
@@ -13,6 +14,8 @@ namespace QuantumZhou.Infrastructure.Data.Database.SqlServer
             : base(connectionString, new SqlConnection(connectionString))
         {
         }
+
+        public override SqlBuilder SqlBuilder { get; } = new SqlServerBuilder();
 
         protected override IDbConnection GetConnection(string connectionString)
         {

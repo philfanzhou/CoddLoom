@@ -24,10 +24,10 @@ namespace TestProject.DbTest
         public void Run()
         {
             //var executor = new MySqlExecutor("192.168.50.85", "test", "root", "`12qweasd");
-            var executor = new SQLiteExecutor(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "User.db");
-            //var executor =
-            //    new SqlServerExecutor(
-            //        "Data Source=192.168.50.22;Database=TestDb;User ID=myuser;Password=qwe123!@;Connect Timeout=30");
+            //var executor = new SQLiteExecutor(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "User.db");
+            var executor =
+                new SqlServerExecutor(
+                    "Data Source=192.168.50.22;Database=TestDb;User ID=myuser;Password=qwe123!@;Connect Timeout=30");
 
             var dbEngine = new TestDbEngine(executor);
             DbContainer.Add(dbEngine);
@@ -100,21 +100,23 @@ namespace TestProject.DbTest
         private static void TestOrderBy(TestDbEngine dbEngine, IDbConnection con)
         {
             var firstUser = dbEngine.First<User>(new SqlBuilderSelectParam<User>(), con);
-            Assert.IsTrue(firstUser.Id == "0");
+            Assert.IsTrue(firstUser.Id.Trim() == "0");
 
             firstUser = dbEngine.First<User>(new SqlBuilderSelectParam<User>(new OrderByCondition(UserTable.Id, true)), con);
-            Assert.IsTrue(firstUser.Id == "99");
+            Assert.IsTrue(firstUser.Id.Trim() == "99");
         }
 
         private static void PageSelectTest(TestDbEngine dbEngine, IDbConnection con)
         {
-            var firstPage = dbEngine.PageSelect<User>(new PageParam { PageCount = 10, PageIndex = 0 }, new SqlBuilderSelectParam<User>(), con);
+            var firstPage = dbEngine.PageSelect<User>(new PageParam { PageCount = 10, PageIndex = 0 }, 
+                new SqlBuilderSelectParam<User>(new OrderByCondition(UserTable.Id)), con);
             Assert.IsTrue(firstPage.Items.Count == 10);
-            Assert.IsTrue(firstPage.Items[0].Id == "0");
+            Assert.IsTrue(firstPage.Items[0].Id.Trim() == "0");
 
-            var secondPage = dbEngine.PageSelect<User>(new PageParam { PageCount = 10, PageIndex = 1 }, new SqlBuilderSelectParam<User>(), con);
+            var secondPage = dbEngine.PageSelect<User>(new PageParam { PageCount = 10, PageIndex = 1 }, 
+                new SqlBuilderSelectParam<User>(new OrderByCondition(UserTable.Id)), con);
             Assert.IsTrue(secondPage.Items.Count == 10);
-            Assert.IsTrue(secondPage.Items[0].Id == "10");
+            Assert.IsTrue(secondPage.Items[0].Id.Trim() == "10");
         }
 
         private static void DeleteTwoTables(List<PasswordUser> allPwdUser, TestDbEngine dbEngine, IDbConnection con,
@@ -122,7 +124,7 @@ namespace TestProject.DbTest
         {
             foreach (var user in allPwdUser)
             {
-                Assert.IsTrue(user.Id == user.Password);
+                Assert.IsTrue(user.Id == user.Password.Trim());
                 dbEngine.DeleteUser(user.UnionId);
             }
 
