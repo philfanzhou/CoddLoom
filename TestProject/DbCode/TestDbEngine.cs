@@ -27,7 +27,7 @@ namespace TestProject.DbCode
 
         public IEnumerable<string> GetAllTenant(IDbConnection conn)
         {
-            var sql = SqlBuilder.Select(TenantTable.TableName);
+            var sql = Executor.SqlBuilder.Select(TenantTable.TableName);
             var tenants = Executor.Select(conn,
                 sql, record => record[TenantTable.Id].ToString());
             return tenants.ToList();
@@ -41,17 +41,17 @@ namespace TestProject.DbCode
             }
 
             var whereParamItem = new WhereParamsItem(TenantTable.Id, tenant);
-            var sql = SqlBuilder.Delete(TenantTable.TableName, new WhereConditions(whereParamItem));
-            Executor.Delete(conn, sql, new WhereParams(whereParamItem));
+            var sql = Executor.SqlBuilder.Delete(TenantTable.TableName, new WhereConditions(whereParamItem));
+            Executor.Execute(conn, sql, new WhereParams(whereParamItem));
         }
 
         public void DeleteUser(string unionId)
         {
             var whereParams = new WhereParams(PasswordUserTable.UnionId, unionId);
-            Transaction(conn =>
+            Executor.Transaction(transaction =>
             {
-                Delete(new SqlBuilderDeleteParam(PasswordUserTable.TableName, whereParams), conn);
-                Delete(new SqlBuilderDeleteParam(UserTable.TableName, whereParams), conn);
+                Delete(new SqlBuilderDeleteParam(PasswordUserTable.TableName, whereParams), transaction);
+                Delete(new SqlBuilderDeleteParam(UserTable.TableName, whereParams), transaction);
             });
         }
 

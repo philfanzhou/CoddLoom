@@ -52,7 +52,94 @@ namespace QuantumZhou.Infrastructure.Data.Database
             return AppendParams(command, whereParams);
         }
 
+        #region Transaction
+
+        public void Transaction(Action<DbTransaction> action)
+        {
+            using var conn = GetConnection();
+            try
+            {
+                conn.Open();
+                using var tran = conn.BeginTransaction();
+                if (tran is DbTransaction dbTran)
+                {
+                    try
+                    {
+                        action(dbTran);
+                        tran.Commit();
+                    }
+                    catch
+                    {
+                        tran.Rollback();
+                        throw;
+                    }
+                }
+            }
+            finally
+            {
+                conn.Close();
+            }
+        }
+
+        #endregion
+
+        #region Execute
+
+        public void Execute(Action<IDbConnection> action, IDbConnection con = null)
+        {
+            if (con != null)
+            {
+                action(con);
+            }
+            else
+            {
+                using var newConnection = GetConnection();
+                try
+                {
+                    newConnection.Open();
+                    action(newConnection);
+                }
+                finally
+                {
+                    newConnection.Close();
+                }
+            }
+        }
+
+        public T Execute<T>(Func<IDbConnection, T> func, IDbConnection con = null)
+        {
+            if (con != null)
+            {
+                return func(con);
+            }
+            else
+            {
+                using var newConnection = GetConnection();
+                try
+                {
+                    newConnection.Open();
+                    return func(newConnection);
+                }
+                finally
+                {
+                    newConnection.Close();
+                }
+            }
+        }
+
+        #endregion
+
         #region Execute Sql
+
+        public void Execute(DbTransaction tran,
+            string sql, WhereParams whereParams = null)
+        {
+            if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
+
+            using var command = BuildCommand(tran.Connection, sql, whereParams);
+            command.Transaction = tran;
+            command.ExecuteNonQuery();
+        }
 
         public void Execute(IDbConnection con,
             string sql, WhereParams whereParams = null)
@@ -81,28 +168,8 @@ namespace QuantumZhou.Infrastructure.Data.Database
 
         #endregion
 
-        #region CRUD
-
-        public void Insert(IDbConnection con, 
-            string sql)
-        {
-            Execute(con, sql);
-        }
-
-        public void Delete(IDbConnection con,
-            string sql, WhereParams whereParams)
-        {
-            if (whereParams == null) throw new ArgumentNullException(nameof(whereParams));
-            Execute(con, sql, whereParams);
-        }
-
-        public void Update(IDbConnection con,
-            string sql, WhereParams whereParams)
-        {
-            if (whereParams == null) throw new ArgumentNullException(nameof(whereParams));
-            Execute(con, sql, whereParams);
-        }
-
+        #region Read operation
+        
         public IEnumerable<T> Select<T>(IDbConnection con, 
             string sql, Func<IDataRecord, T> convertor, WhereParams whereParams = null)
         {

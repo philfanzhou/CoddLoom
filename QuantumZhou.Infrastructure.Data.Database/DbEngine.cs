@@ -6,6 +6,7 @@ using QuantumZhou.Infrastructure.Data.Database.Table;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 
 namespace QuantumZhou.Infrastructure.Data.Database
@@ -18,162 +19,96 @@ namespace QuantumZhou.Infrastructure.Data.Database
 
             var tableList = tables.ToList();
             TableColumnsCache.Initialize(tableList);
-            Execute(conn =>
+            Executor.Execute(conn =>
             {
                 foreach (var table in tableList.Where(table => !Executor.ExistTable(conn, table)))
                 {
-                    Executor.Execute(conn, SqlBuilder.GetCreateTableSql(table));
+                    Executor.Execute(conn, Executor.SqlBuilder.GetCreateTableSql(table));
                 }
             });
         }
 
         public DbExecutor Executor { get; }
 
-        public SqlBuilder SqlBuilder => Executor.SqlBuilder;
-
-        #region Execute
-
-        public void Execute(Action<IDbConnection> action)
-        {
-            using var conn = Executor.GetConnection();
-            try
-            {
-                conn.Open();
-                action(conn);
-            }
-            finally
-            {
-                conn.Close();
-            }
-        }
-
-        public T Execute<T>(Func<IDbConnection, T> func)
-        {
-            using var conn = Executor.GetConnection();
-            try
-            {
-                conn.Open();
-                return func(conn);
-            }
-            finally
-            {
-                conn.Close();
-            }
-        }
-
-        #endregion
-
-        #region Transaction
-
-        public void Transaction(Action<IDbConnection> action)
-        {
-            using var conn = Executor.GetConnection();
-            try
-            {
-                conn.Open();
-                using var tran = conn.BeginTransaction();
-                try
-                {
-                    action(tran.Connection);
-                    tran.Commit();
-                }
-                catch
-                {
-                    tran.Rollback();
-                    throw;
-                }
-            }
-            finally
-            {
-                conn.Close();
-            }
-        }
-
-        #endregion
-
         public void Insert(SqlBuilderInsertParam builderParam,
             IDbConnection con = null)
         {
-            var sql = SqlBuilder.Insert(builderParam);
-            if (con != null)
-            {
-                Executor.Insert(con, sql);
-            }
-            else
-            {
-                Execute(conn => Executor.Insert(conn, sql));
-            }
+            var sql = Executor.SqlBuilder.Insert(builderParam);
+            Executor.Execute(p => Executor.Execute(p, sql), con);
+        }
+
+        public void Insert(SqlBuilderInsertParam builderParam, DbTransaction tran)
+        {
+            var sql = Executor.SqlBuilder.Insert(builderParam);
+            Executor.Execute(tran, sql);
         }
 
         public void Delete(SqlBuilderDeleteParam builderParam,
             IDbConnection con = null)
         {
-            var sql = SqlBuilder.Delete(builderParam);
-            if (con != null)
-            {
-                Executor.Delete(con, sql, builderParam.WhereParams);
-            }
-            else
-            {
-                Execute(conn => Executor.Delete(conn, sql, builderParam.WhereParams));
-            }
+            if (builderParam.WhereParams == null) throw new ArgumentNullException(nameof(builderParam.WhereParams));
+            var sql = Executor.SqlBuilder.Delete(builderParam);
+            Executor.Execute(p => Executor.Execute(p, sql, builderParam.WhereParams), con);
+        }
+
+        public void Delete(SqlBuilderDeleteParam builderParam, DbTransaction tran)
+        {
+            if (builderParam.WhereParams == null) throw new ArgumentNullException(nameof(builderParam.WhereParams));
+            var sql = Executor.SqlBuilder.Delete(builderParam);
+            Executor.Execute(tran, sql, builderParam.WhereParams);
         }
 
         public void Update(SqlBuilderUpdateParam builderParam,
             IDbConnection con = null)
         {
-            var sql = SqlBuilder.Update(builderParam);
-            if (con != null)
-            {
-                Executor.Update(con, sql, builderParam.WhereParams);
-            }
-            else
-            {
-                Execute(conn => Executor.Update(conn, sql, builderParam.WhereParams));
-            }
+            if (builderParam.WhereParams == null) throw new ArgumentNullException(nameof(builderParam.WhereParams));
+            var sql = Executor.SqlBuilder.Update(builderParam);
+            Executor.Execute(p => Executor.Execute(p, sql, builderParam.WhereParams), con);
+        }
+
+        public void Update(SqlBuilderUpdateParam builderParam, DbTransaction tran)
+        {
+            if (builderParam.WhereParams == null) throw new ArgumentNullException(nameof(builderParam.WhereParams));
+            var sql = Executor.SqlBuilder.Update(builderParam);
+            Executor.Execute(tran, sql, builderParam.WhereParams);
         }
 
         public int Count(SqlBuilderCountParam builderParam,
             IDbConnection con = null)
         {
-            var sql = SqlBuilder.Count(builderParam);
-            return con != null
-                ? Executor.Count(con, sql, builderParam.WhereParams)
-                : Execute(conn => Executor.Count(conn, sql, builderParam.WhereParams));
+            var sql = Executor.SqlBuilder.Count(builderParam);
+            return Executor.Execute(p => Executor.Count(p, sql, builderParam.WhereParams), con);
         }
 
         public IEnumerable<T> Select<T>(Func<IDataRecord, T> convertor, SqlBuilderSelectParam builderParam,
             IDbConnection con = null)
         {
-            var sql = SqlBuilder.Select(builderParam);
-            return con != null
-                ? Executor.Select(con, sql, convertor, builderParam.WhereParams)
-                : Execute(conn => Executor.Select(conn, sql, convertor, builderParam.WhereParams));
+            var sql = Executor.SqlBuilder.Select(builderParam);
+            return Executor.Execute(p => Executor.Select(p, sql, convertor, builderParam.WhereParams), con);
         }
 
         public T First<T>(Func<IDataRecord, T> convertor, SqlBuilderSelectParam builderParam,
             IDbConnection con = null)
         {
-            var sql = SqlBuilder.First(builderParam);
-            return con != null 
-                ? Executor.First(con, sql, convertor, builderParam.WhereParams)
-                : Execute(conn => Executor.First(conn, sql, convertor, builderParam.WhereParams));
+            var sql = Executor.SqlBuilder.First(builderParam);
+            return Executor.Execute(p => Executor.First(p, sql, convertor, builderParam.WhereParams), con);
         }
 
         public PageResult<T> PageSelect<T>(Func<IDataRecord, T> convertor,
             PageParam pageParam, SqlBuilderSelectParam builderParam,
             IDbConnection con = null)
         {
-            return con != null
-                ? GetPageResult(con, convertor, pageParam, builderParam)
-                : Execute(conn => GetPageResult(conn, convertor, pageParam, builderParam));
+
+            return Executor.Execute(p => GetPageResult(p, convertor, pageParam, builderParam), con);
         }
+
+        #region Private method
 
         private PageResult<T> GetPageResult<T>(IDbConnection con, 
             Func<IDataRecord, T> convertor, PageParam pageParam, 
             SqlBuilderSelectParam builderParam)
         {
-            var sql = SqlBuilder.Take(pageParam.Offset, pageParam.PageCount, builderParam);
+            var sql = Executor.SqlBuilder.Take(pageParam.Offset, pageParam.PageCount, builderParam);
             var items = Executor.Select(con, sql, convertor, builderParam.WhereParams).ToList();
             if (items.Count < 1)
             {
@@ -189,5 +124,7 @@ namespace QuantumZhou.Infrastructure.Data.Database
 
             return new PageResult<T>(items, pageParam.PageIndex, totalPages, totalCount);
         }
+
+        #endregion
     }
 }
