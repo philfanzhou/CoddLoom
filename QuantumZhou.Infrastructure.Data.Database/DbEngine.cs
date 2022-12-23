@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace QuantumZhou.Infrastructure.Data.Database
 {
-    public partial class DbEngine
+    public class DbEngine
     {
         public DbEngine(DbExecutor executor, IEnumerable<TableDefine> tables)
         {
