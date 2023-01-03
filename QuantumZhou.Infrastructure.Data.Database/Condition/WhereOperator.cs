@@ -7,6 +7,7 @@
         GreaterThan,
         GreaterEqual,
         LessThan,
-        LessEqual
+        LessEqual,
+        Like
     }
 }

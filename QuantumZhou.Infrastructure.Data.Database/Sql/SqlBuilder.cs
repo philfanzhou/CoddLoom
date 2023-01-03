@@ -192,6 +192,9 @@ namespace QuantumZhou.Infrastructure.Data.Database.Sql
                         case WhereOperator.LessEqual:
                             sqlBuilder.Append(" <= ");
                             break;
+                        case WhereOperator.Like:
+                            sqlBuilder.Append(" LIKE ");
+                            break;
                     }
                     sqlBuilder.Append($"{ParamPrefix}{item.ParamName}");
                 }
