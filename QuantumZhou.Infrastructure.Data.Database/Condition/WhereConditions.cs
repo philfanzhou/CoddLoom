@@ -6,11 +6,7 @@ namespace QuantumZhou.Infrastructure.Data.Database.Condition
     public class WhereConditions
     {
         private readonly List<WhereConditionsItem> _items = new();
-
-        public WhereConditions()
-        {
-        }
-
+        
         public WhereConditions(WhereParamsItem whereParamsItem,
             WhereOperator whereOperator = WhereOperator.Equal,
             WhereConnecter connecter = WhereConnecter.And)
