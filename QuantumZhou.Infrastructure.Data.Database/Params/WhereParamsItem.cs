@@ -10,13 +10,13 @@
         }
 
         public WhereParamsItem(string name, string value)
-            : this (name, value, name)
+            : this(name, value, name)
         {
         }
 
         public string Name { get; }
 
-        public string Value { get; }
+        public string Value { get; set; }
 
         public string Column { get; }
     }
