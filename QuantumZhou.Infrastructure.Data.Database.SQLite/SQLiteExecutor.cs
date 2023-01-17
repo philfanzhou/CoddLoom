@@ -13,7 +13,7 @@ namespace QuantumZhou.Infrastructure.Data.Database.SQLite
     public class SQLiteExecutor : DbExecutor
     {
         public SQLiteExecutor(string connectionString)
-            : base(connectionString, new SQLiteConnection(connectionString))
+            : base(connectionString, BuildConnection(connectionString))
         {
         }
 
@@ -21,11 +21,6 @@ namespace QuantumZhou.Infrastructure.Data.Database.SQLite
             : this(BuildConnectionString(directory, dbFileName))
         {
         }
-
-        //public SQLiteExecutor(string dbFileName)
-        //    : this(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), dbFileName)
-        //{
-        //}
 
         protected override IDbConnection GetConnection(string connectionString)
         {
@@ -65,9 +60,34 @@ namespace QuantumZhou.Infrastructure.Data.Database.SQLite
 
         private static string BuildConnectionString(string directory, string dbFileName)
         {
+            CreateFilePath(directory, dbFileName);
+            var filePath = Path.Combine(directory, dbFileName);
+            var connStrBuilder = new SQLiteConnectionStringBuilder
+            {
+                DataSource = filePath,
+                ReadOnly = false
+            };
+            return connStrBuilder.ConnectionString;
+        }
+
+        private static SQLiteConnection BuildConnection(string connectionString)
+        {
+            var builder = new SQLiteConnectionStringBuilder(connectionString);
+            var dir = Path.GetDirectoryName(builder.DataSource);
+            var file = Path.GetFileName(builder.DataSource);
+            CreateFilePath(dir, file);
+            return new SQLiteConnection(builder.ConnectionString);
+        }
+
+        private static void CreateFilePath(string directory, string dbFileName)
+        {
             if (string.IsNullOrEmpty(directory))
             {
                 throw new ArgumentNullException(nameof(directory));
+            }
+            if (string.IsNullOrEmpty(dbFileName))
+            {
+                throw new ArgumentNullException(nameof(dbFileName));
             }
 
             if (!Directory.Exists(directory))
@@ -75,19 +95,11 @@ namespace QuantumZhou.Infrastructure.Data.Database.SQLite
                 Directory.CreateDirectory(directory);
             }
 
-            var filePath = Path.Combine(directory, dbFileName);
-            if (!File.Exists(filePath))
+            var fullPath = Path.Combine(directory, dbFileName);
+            if (!File.Exists(fullPath))
             {
-                SQLiteConnection.CreateFile(filePath);
+                SQLiteConnection.CreateFile(fullPath);
             }
-
-            var connStrBuilder = new SQLiteConnectionStringBuilder
-            {
-                DataSource = filePath,
-                ReadOnly = false
-            };
-
-            return connStrBuilder.ConnectionString;
         }
     }
 }
