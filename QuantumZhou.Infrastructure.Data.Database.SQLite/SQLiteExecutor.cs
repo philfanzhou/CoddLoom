@@ -39,7 +39,7 @@ namespace QuantumZhou.Infrastructure.Data.Database.SQLite
         protected override bool ExistTable(IDbConnection con, TableDefine table)
         {
             var whereParams = new WhereParams("type", "table");
-            whereParams.Add("name", $"{table.Name.Trim()}");
+            whereParams.Add("name", table.Name.Trim());
             var conditions = new WhereConditions(whereParams);
 
             var count = -1;
