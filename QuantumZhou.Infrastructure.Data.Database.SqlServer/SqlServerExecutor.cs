@@ -15,10 +15,9 @@ namespace QuantumZhou.Infrastructure.Data.Database.SqlServer
 
         public override SqlBuilder SqlBuilder { get; } = new SqlServerBuilder();
 
-        protected override IDbConnection GetConnection(string connectionString)
+        public override IDbConnection GetConnection()
         {
-            var connection = new SqlConnection(connectionString);
-            return connection;
+            return new SqlConnection(ConnectionString);
         }
 
         protected override void AppendParams(IDbCommand command, string paramName, string value)

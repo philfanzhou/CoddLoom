@@ -21,10 +21,9 @@ namespace QuantumZhou.Infrastructure.Data.Database.SQLite
         {
         }
 
-        protected override IDbConnection GetConnection(string connectionString)
+        public override IDbConnection GetConnection()
         {
-            var connection = new SQLiteConnection(connectionString);
-            return connection;
+            return new SQLiteConnection(ConnectionString);
         }
 
         protected override void AppendParams(IDbCommand command, string paramName, string value)

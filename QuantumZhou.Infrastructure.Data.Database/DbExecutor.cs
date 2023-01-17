@@ -10,14 +10,12 @@ namespace QuantumZhou.Infrastructure.Data.Database
 {
     public abstract class DbExecutor
     {
-        private readonly string _connectionString;
-
         protected DbExecutor(string connectionString, IDbConnection connection)
         {
             try
             {
                 connection.Open();
-                _connectionString = connectionString;
+                ConnectionString = connectionString;
             }
             finally
             {
@@ -25,16 +23,13 @@ namespace QuantumZhou.Infrastructure.Data.Database
             }
         }
 
+        public string ConnectionString { get; }
+
         public virtual SqlBuilder SqlBuilder { get; } = new();
 
-        public IDbConnection GetConnection()
-        {
-            return GetConnection(_connectionString);
-        }
+        public abstract IDbConnection GetConnection();
 
         protected internal abstract bool ExistTable(IDbConnection con, TableDefine table);
-
-        protected abstract IDbConnection GetConnection(string connectionString);
 
         protected abstract void AppendParams(IDbCommand command, string paramName, string value);
         

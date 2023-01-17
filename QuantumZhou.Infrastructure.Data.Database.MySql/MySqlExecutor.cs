@@ -20,10 +20,9 @@ namespace QuantumZhou.Infrastructure.Data.Database.MySql
 
         public override SqlBuilder SqlBuilder { get; } = new MySqlBuilder();
 
-        protected override IDbConnection GetConnection(string connectionString)
+        public override IDbConnection GetConnection()
         {
-            var connection = new MySqlConnection(connectionString);
-            return connection;
+            return new MySqlConnection(ConnectionString);
         }
 
         protected override void AppendParams(IDbCommand command, string paramName, string value)
