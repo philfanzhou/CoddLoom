@@ -3,7 +3,6 @@ using QuantumZhou.Infrastructure.Data.Database.Params;
 using QuantumZhou.Infrastructure.Data.Database.Table;
 using System;
 using System.Data;
-using System.Data.Common;
 using System.Data.SQLite;
 using System.IO;
 
@@ -28,19 +27,14 @@ namespace QuantumZhou.Infrastructure.Data.Database.SQLite
             return connection;
         }
 
-        protected override DbCommand AppendParams(IDbCommand command, WhereParams whereParams)
+        protected override void AppendParams(IDbCommand command, string paramName, string value)
         {
             if (command is not SQLiteCommand cmd)
             {
                 throw new ArgumentOutOfRangeException(nameof(command));
             }
 
-            foreach (var item in whereParams.Items)
-            {
-                cmd.Parameters.AddWithValue($"{SqlBuilder.ParamPrefix}{item.Name}", item.Value);
-            }
-
-            return cmd;
+            cmd.Parameters.AddWithValue(paramName, value);
         }
 
         protected override bool ExistTable(IDbConnection con, TableDefine table)

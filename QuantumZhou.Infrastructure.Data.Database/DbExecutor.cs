@@ -36,7 +36,7 @@ namespace QuantumZhou.Infrastructure.Data.Database
 
         protected abstract IDbConnection GetConnection(string connectionString);
 
-        protected abstract DbCommand AppendParams(IDbCommand command, WhereParams whereParams);
+        protected abstract void AppendParams(IDbCommand command, string paramName, string value);
         
         private DbCommand BuildCommand(IDbConnection con, string sql,
             WhereParams whereParams = null)
@@ -44,12 +44,15 @@ namespace QuantumZhou.Infrastructure.Data.Database
             var command = con.CreateCommand();
             command.CommandText = sql;
 
-            if (whereParams == null)
+            if (whereParams != null)
             {
-                return command as DbCommand;
+                foreach (var item in whereParams.Items)
+                {
+                    AppendParams(command, $"{SqlBuilder.ParamPrefix}{item.Name}", item.Value);
+                }
             }
 
-            return AppendParams(command, whereParams);
+            return command as DbCommand;
         }
 
         #region Transaction
