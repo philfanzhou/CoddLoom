@@ -1,5 +1,5 @@
-﻿using QuantumZhou.Infrastructure.Data.Database.Condition;
-using QuantumZhou.Infrastructure.Data.Database.Params;
+﻿using QuantumZhou.Infrastructure.Data.Database.Params;
+using QuantumZhou.Infrastructure.Data.Database.Sql;
 using QuantumZhou.Infrastructure.Data.Database.Table;
 using System;
 using System.Data;
@@ -39,15 +39,10 @@ namespace QuantumZhou.Infrastructure.Data.Database.SQLite
         protected override bool ExistTable(IDbConnection con, TableDefine table)
         {
             var whereParams = new WhereParams("type", "table");
-            whereParams.Add("name", table.Name.Trim());
-            var conditions = new WhereConditions(whereParams);
+            whereParams.Add("name", table.Name);
 
-            var count = -1;
-            Execute(con, reader =>
-            {
-                reader.Read();
-                count = reader.GetInt32(0);
-            }, SqlBuilder.Count("sqlite_master", conditions), whereParams);
+            var builderParam = new SqlBuilderCountParam("sqlite_master", whereParams);
+            var count = Count(con, SqlBuilder.Count(builderParam), whereParams);
             return count > 0;
         }
 

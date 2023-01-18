@@ -1,4 +1,5 @@
-﻿using QuantumZhou.Infrastructure.Data.Database.Sql;
+﻿using QuantumZhou.Infrastructure.Data.Database.Params;
+using QuantumZhou.Infrastructure.Data.Database.Sql;
 using QuantumZhou.Infrastructure.Data.Database.Table;
 using System;
 using System.Data;
@@ -32,7 +33,11 @@ namespace QuantumZhou.Infrastructure.Data.Database.SqlServer
 
         protected override bool ExistTable(IDbConnection con, TableDefine table)
         {
-            var count = Count(con, $"SELECT COUNT(*) FROM sysobjects WHERE name='{table.Name}' and xtype='U'");
+            var whereParams = new WhereParams("xtype", "U");
+            whereParams.Add("name", table.Name);
+
+            var builderParam = new SqlBuilderCountParam("sysobjects", whereParams);
+            var count = Count(con, SqlBuilder.Count(builderParam), whereParams);
             return count > 0;
         }
     }
