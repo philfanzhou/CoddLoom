@@ -1,8 +1,8 @@
-﻿using QuantumZhou.Infrastructure.Data.Database;
-using QuantumZhou.Infrastructure.Data.Database.Condition;
-using QuantumZhou.Infrastructure.Data.Database.Params;
-using QuantumZhou.Infrastructure.Data.Database.Sql;
-using QuantumZhou.Infrastructure.Data.Database.Table;
+﻿using Qz.Infra.Database;
+using Qz.Infra.Database.Condition;
+using Qz.Infra.Database.Params;
+using Qz.Infra.Database.Sql;
+using Qz.Infra.Database.Table;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;

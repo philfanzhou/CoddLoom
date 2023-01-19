@@ -3,15 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33122.133
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantumZhou.Infrastructure.Data.Database", "QuantumZhou.Infrastructure.Data.Database\QuantumZhou.Infrastructure.Data.Database.csproj", "{B16BDA0E-DF00-4ED5-B438-6B472DBCEF71}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qz.Infra.Database", "Qz.Infra.Database\Qz.Infra.Database.csproj", "{B16BDA0E-DF00-4ED5-B438-6B472DBCEF71}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantumZhou.Infrastructure.Data.Database.SQLite", "QuantumZhou.Infrastructure.Data.Database.SQLite\QuantumZhou.Infrastructure.Data.Database.SQLite.csproj", "{AD39AB2E-D7F2-420A-9ED1-D7F1D4DA5DBC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qz.Infra.Database.SQLite", "Qz.Infra.Database.SQLite\Qz.Infra.Database.SQLite.csproj", "{AD39AB2E-D7F2-420A-9ED1-D7F1D4DA5DBC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestProject", "TestProject\TestProject.csproj", "{5B36F041-7060-4CFF-A10B-F95581D35622}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantumZhou.Infrastructure.Data.Database.MySql", "QuantumZhou.Infrastructure.Data.Database.MySql\QuantumZhou.Infrastructure.Data.Database.MySql.csproj", "{7AABDC07-8060-46F1-9E82-C5542BACEA20}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qz.Infra.Database.MySql", "Qz.Infra.Database.MySql\Qz.Infra.Database.MySql.csproj", "{7AABDC07-8060-46F1-9E82-C5542BACEA20}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantumZhou.Infrastructure.Data.Database.SqlServer", "QuantumZhou.Infrastructure.Data.Database.SqlServer\QuantumZhou.Infrastructure.Data.Database.SqlServer.csproj", "{53977139-2262-4AA8-B4A2-1450468FD1BC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qz.Infra.Database.SqlServer", "Qz.Infra.Database.SqlServer\Qz.Infra.Database.SqlServer.csproj", "{53977139-2262-4AA8-B4A2-1450468FD1BC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

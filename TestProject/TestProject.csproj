@@ -14,10 +14,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\QuantumZhou.Infrastructure.Data.Database.MySql\QuantumZhou.Infrastructure.Data.Database.MySql.csproj" />
-    <ProjectReference Include="..\QuantumZhou.Infrastructure.Data.Database.SQLite\QuantumZhou.Infrastructure.Data.Database.SQLite.csproj" />
-    <ProjectReference Include="..\QuantumZhou.Infrastructure.Data.Database.SqlServer\QuantumZhou.Infrastructure.Data.Database.SqlServer.csproj" />
-    <ProjectReference Include="..\QuantumZhou.Infrastructure.Data.Database\QuantumZhou.Infrastructure.Data.Database.csproj" />
+    <ProjectReference Include="..\Qz.Infra.Database.MySql\Qz.Infra.Database.MySql.csproj" />
+    <ProjectReference Include="..\Qz.Infra.Database.SQLite\Qz.Infra.Database.SQLite.csproj" />
+    <ProjectReference Include="..\Qz.Infra.Database.SqlServer\Qz.Infra.Database.SqlServer.csproj" />
+    <ProjectReference Include="..\Qz.Infra.Database\Qz.Infra.Database.csproj" />
   </ItemGroup>
 
 </Project>

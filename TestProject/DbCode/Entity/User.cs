@@ -1,4 +1,4 @@
-﻿using QuantumZhou.Infrastructure.Data.Database.Entity;
+﻿using Qz.Infra.Database.Entity;
 using TestProject.DbCode.Tables;
 
 namespace TestProject.DbCode.Entity

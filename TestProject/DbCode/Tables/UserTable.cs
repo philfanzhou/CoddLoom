@@ -1,5 +1,5 @@
 ﻿using System.Data;
-using QuantumZhou.Infrastructure.Data.Database.Table;
+using Qz.Infra.Database.Table;
 
 namespace TestProject.DbCode.Tables
 {
