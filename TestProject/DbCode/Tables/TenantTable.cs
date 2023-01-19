@@ -1,5 +1,5 @@
-﻿using System.Data;
-using Qz.Infra.Database.Table;
+﻿using Qz.Infra.Database.Table;
+using System.Data;
 
 namespace TestProject.DbCode.Tables
 {

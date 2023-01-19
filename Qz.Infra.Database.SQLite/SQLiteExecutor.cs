@@ -1,5 +1,4 @@
-﻿using Qz.Infra.Database;
-using Qz.Infra.Database.Params;
+﻿using Qz.Infra.Database.Params;
 using Qz.Infra.Database.Sql;
 using Qz.Infra.Database.Table;
 using System;

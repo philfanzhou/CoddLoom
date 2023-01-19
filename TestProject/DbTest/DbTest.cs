@@ -4,16 +4,13 @@ using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Input;
 using Qz.Infra.Database.Params;
 using Qz.Infra.Database.Sql;
-using Qz.Infra.Database.SQLite;
+using Qz.Infra.Database.SqlServer;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using Qz.Infra.Database.SqlServer;
 using TestProject.DbCode;
 using TestProject.DbCode.Entity;
 using TestProject.DbCode.Tables;
-using System.IO;
-using System.Reflection;
 
 namespace TestProject.DbTest
 {
