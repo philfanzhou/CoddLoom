@@ -1,5 +1,4 @@
 ﻿using Qz.Infra.Database.Cache;
-using Qz.Infra.Database.Output;
 using Qz.Infra.Database.Params;
 using Qz.Infra.Database.Sql;
 using Qz.Infra.Database.Table;
@@ -80,7 +79,7 @@ namespace Qz.Infra.Database
             return Executor.Execute(p => Executor.Count(p, sql, builderParam.WhereParams), con);
         }
 
-        public IEnumerable<T> Select<T>(Func<IDataRecord, T> convertor, SqlBuilderSelectParam builderParam,
+        public List<T> Select<T>(Func<IDataRecord, T> convertor, SqlBuilderSelectParam builderParam,
             IDbConnection con = null)
         {
             var sql = Executor.SqlBuilder.Select(builderParam);
@@ -94,35 +93,52 @@ namespace Qz.Infra.Database
             return Executor.Execute(p => Executor.First(p, sql, convertor, builderParam.WhereParams), con);
         }
 
-        public PageResult<T> PageSelect<T>(Func<IDataRecord, T> convertor,
-            PageParam pageParam, SqlBuilderSelectParam builderParam,
+        public List<T> PageSelect<T>(Func<IDataRecord, T> convertor,
+            PageParam pageParam, SqlBuilderSelectParam builderParam, out int totalPages, out int totalCount,
             IDbConnection con = null)
         {
-
-            return Executor.Execute(p => GetPageResult(p, convertor, pageParam, builderParam), con);
+            if (con != null)
+            {
+                return GetPageResult(con, convertor, pageParam, builderParam, out totalPages, out totalCount);
+            }
+            else
+            {
+                using var newConnection = Executor.GetConnection();
+                try
+                {
+                    newConnection.Open();
+                    return GetPageResult(newConnection, convertor, pageParam, builderParam, out totalPages,
+                        out totalCount);
+                }
+                finally
+                {
+                    newConnection.Close();
+                }
+            }
         }
 
         #region Private method
 
-        private PageResult<T> GetPageResult<T>(IDbConnection con, 
-            Func<IDataRecord, T> convertor, PageParam pageParam, 
-            SqlBuilderSelectParam builderParam)
+        private List<T> GetPageResult<T>(IDbConnection con,
+            Func<IDataRecord, T> convertor, PageParam pageParam,
+            SqlBuilderSelectParam builderParam, out int totalPages, out int totalCount)
         {
+            totalCount = 0;
+            totalPages = 0;
+
             var sql = Executor.SqlBuilder.Take(pageParam.Offset, pageParam.PageCount, builderParam);
             var items = Executor.Select(con, sql, convertor, builderParam.WhereParams).ToList();
-            if (items.Count < 1)
+            if (items.Count > 1)
             {
-                return new PageResult<T>();
+                totalCount = Count(builderParam, con);
+                totalPages = totalCount / pageParam.PageCount;
+                if (Math.Abs(totalCount % pageParam.PageCount) > 0)
+                {
+                    totalPages++;
+                }
             }
 
-            var totalCount = Count(builderParam, con);
-            var totalPages = totalCount / pageParam.PageCount;
-            if (Math.Abs(totalCount % pageParam.PageCount) > 0)
-            {
-                totalPages++;
-            }
-
-            return new PageResult<T>(items, pageParam.PageIndex, totalPages, totalCount);
+            return items;
         }
 
         #endregion

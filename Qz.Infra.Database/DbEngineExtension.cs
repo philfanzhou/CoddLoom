@@ -1,6 +1,5 @@
 ﻿using Qz.Infra.Database.Cache;
 using Qz.Infra.Database.Convert;
-using Qz.Infra.Database.Output;
 using Qz.Infra.Database.Params;
 using Qz.Infra.Database.Sql;
 using System;
@@ -36,14 +35,14 @@ namespace Qz.Infra.Database
             return self.Count(builderParam, con) > 0;
         }
 
-        public static IEnumerable<T> Select<T>(this DbEngine self,
+        public static List<T> Select<T>(this DbEngine self,
             SqlBuilderSelectParam builderParam, IDbConnection con = null)
             where T : new()
         {
             return self.Select(DbConverter.ToEntity<T>, builderParam, con);
         }
 
-        public static IEnumerable<T> Select<T>(this DbEngine self,
+        public static List<T> Select<T>(this DbEngine self,
             IDbConnection con = null)
             where T : new()
         {
@@ -52,7 +51,7 @@ namespace Qz.Infra.Database
             return self.Select<T>(builderParam, con);
         }
 
-        public static IEnumerable<T> Select<T>(this DbEngine self,
+        public static List<T> Select<T>(this DbEngine self,
             string keyValue, IDbConnection con = null)
             where T : new()
         {
@@ -68,11 +67,13 @@ namespace Qz.Infra.Database
             return self.First(DbConverter.ToEntity<T>, builderParam, con);
         }
 
-        public static PageResult<T> PageSelect<T>(this DbEngine self,
-            PageParam pageParam, SqlBuilderSelectParam builderParam, IDbConnection con = null)
+        public static List<T> PageSelect<T>(this DbEngine self,
+            PageParam pageParam, SqlBuilderSelectParam builderParam, out int totalPages, out int totalCount,
+            IDbConnection con = null)
             where T : new()
         {
-            return self.PageSelect(DbConverter.ToEntity<T>, pageParam, builderParam, con);
+            return self.PageSelect(DbConverter.ToEntity<T>, pageParam, builderParam, out totalPages, out totalCount,
+                con);
         }
 
         private static WhereParams GetKeyWhereParam<T>(string keyValue)

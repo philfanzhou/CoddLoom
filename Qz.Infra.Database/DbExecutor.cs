@@ -32,7 +32,7 @@ namespace Qz.Infra.Database
         protected internal abstract bool ExistTable(IDbConnection con, TableDefine table);
 
         protected abstract void AppendParams(IDbCommand command, string paramName, string value);
-        
+
         private DbCommand BuildCommand(IDbConnection con, string sql,
             WhereParams whereParams = null)
         {
@@ -167,8 +167,8 @@ namespace Qz.Infra.Database
         #endregion
 
         #region Read operation
-        
-        public IEnumerable<T> Select<T>(IDbConnection con, 
+
+        public List<T> Select<T>(IDbConnection con,
             string sql, Func<IDataRecord, T> convertor, WhereParams whereParams = null)
         {
             var result = new List<T>();
