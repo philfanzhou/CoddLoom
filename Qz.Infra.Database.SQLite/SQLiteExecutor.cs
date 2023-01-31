@@ -26,14 +26,14 @@ namespace Qz.Infra.Database.SQLite
             return new SQLiteConnection(ConnectionString);
         }
 
-        protected override void AppendParams(IDbCommand command, string paramName, string value)
+        protected override Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command)
         {
             if (command is not SQLiteCommand cmd)
             {
                 throw new ArgumentOutOfRangeException(nameof(command));
             }
 
-            cmd.Parameters.AddWithValue(paramName, value);
+            return cmd.Parameters.AddWithValue;
         }
 
         protected override SqlBuilderCountParam GetExistTableParam(TableDefine table)

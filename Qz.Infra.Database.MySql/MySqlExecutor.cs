@@ -25,18 +25,19 @@ namespace Qz.Infra.Database.MySql
             return new MySqlConnection(ConnectionString);
         }
 
-        protected override void AppendParams(IDbCommand command, string paramName, string value)
+        protected override Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command)
         {
             if (command is not MySqlCommand cmd)
             {
                 throw new ArgumentOutOfRangeException(nameof(command));
             }
 
-            cmd.Parameters.AddWithValue(paramName, value);
+            return cmd.Parameters.AddWithValue;
         }
 
         protected override SqlBuilderCountParam GetExistTableParam(TableDefine table)
         {
+            // use create table sql to check exist, not here
             return null;
         }
 

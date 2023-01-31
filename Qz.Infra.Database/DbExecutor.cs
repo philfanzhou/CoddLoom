@@ -43,9 +43,9 @@ namespace Qz.Infra.Database
 
         protected abstract SqlBuilderCountParam GetExistTableParam(TableDefine table);
 
-        protected abstract void AppendParams(IDbCommand command, string paramName, string value);
+        protected abstract Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command);
 
-        private DbCommand BuildCommand(IDbConnection con, string sql,
+        private IDbCommand BuildCommand(IDbConnection con, string sql,
             WhereParams whereParams = null)
         {
             var command = con.CreateCommand();
@@ -53,13 +53,14 @@ namespace Qz.Infra.Database
 
             if (whereParams != null)
             {
+                var func = GetAddParameterFunc(command);
                 foreach (var item in whereParams.Items)
                 {
-                    AppendParams(command, $"{SqlBuilder.ParamPrefix}{item.Name}", item.Value);
+                    func($"{SqlBuilder.ParamPrefix}{item.Name}", item.Value);
                 }
             }
 
-            return command as DbCommand;
+            return command;
         }
 
         #region Transaction
@@ -170,7 +171,7 @@ namespace Qz.Infra.Database
             }
 
             using var reader = command.ExecuteReader();
-            if (!reader.HasRows)
+            if (reader is not DbDataReader { HasRows: true })
             {
                 return;
             }
