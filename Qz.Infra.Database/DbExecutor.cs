@@ -29,7 +29,19 @@ namespace Qz.Infra.Database
 
         public abstract IDbConnection GetConnection();
 
-        protected internal abstract bool ExistTable(IDbConnection con, TableDefine table);
+        internal bool ExistTable(IDbConnection con, TableDefine table)
+        {
+            var builderParam = GetExistTableParam(table);
+            if (builderParam == null)
+            {
+                return false;
+            }
+
+            var count = Count(con, SqlBuilder.Count(builderParam), null, builderParam.WhereParams);
+            return count > 0;
+        }
+
+        protected abstract SqlBuilderCountParam GetExistTableParam(TableDefine table);
 
         protected abstract void AppendParams(IDbCommand command, string paramName, string value);
 

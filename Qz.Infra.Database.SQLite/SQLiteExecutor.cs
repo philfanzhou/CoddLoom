@@ -36,14 +36,11 @@ namespace Qz.Infra.Database.SQLite
             cmd.Parameters.AddWithValue(paramName, value);
         }
 
-        protected override bool ExistTable(IDbConnection con, TableDefine table)
+        protected override SqlBuilderCountParam GetExistTableParam(TableDefine table)
         {
             var whereParams = new WhereParams("type", "table");
             whereParams.Add("name", table.Name);
-
-            var builderParam = new SqlBuilderCountParam("sqlite_master", whereParams);
-            var count = Count(con, SqlBuilder.Count(builderParam), null, whereParams);
-            return count > 0;
+            return new SqlBuilderCountParam("sqlite_master", whereParams);
         }
 
         private static string BuildConnectionString(string directory, string dbFileName)

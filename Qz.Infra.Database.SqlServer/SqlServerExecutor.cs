@@ -31,14 +31,11 @@ namespace Qz.Infra.Database.SqlServer
             cmd.Parameters.AddWithValue(paramName, value);
         }
 
-        protected override bool ExistTable(IDbConnection con, TableDefine table)
+        protected override SqlBuilderCountParam GetExistTableParam(TableDefine table)
         {
             var whereParams = new WhereParams("xtype", "U");
             whereParams.Add("name", table.Name);
-
-            var builderParam = new SqlBuilderCountParam("sysobjects", whereParams);
-            var count = Count(con, SqlBuilder.Count(builderParam), null, whereParams);
-            return count > 0;
+            return new SqlBuilderCountParam("sysobjects", whereParams);
         }
     }
 }

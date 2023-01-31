@@ -35,10 +35,9 @@ namespace Qz.Infra.Database.MySql
             cmd.Parameters.AddWithValue(paramName, value);
         }
 
-        protected override bool ExistTable(IDbConnection con, TableDefine table)
+        protected override SqlBuilderCountParam GetExistTableParam(TableDefine table)
         {
-            // use create table sql to check exist, not here
-            return false;
+            return null;
         }
 
         private static string BuildConnectionString(string server, string database,
