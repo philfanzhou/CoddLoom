@@ -129,6 +129,15 @@ namespace Qz.Infra.Database
 
         #region Execute Sql
 
+        public void Execute(IDbConnection con,
+            string sql, WhereParams whereParams = null)
+        {
+            if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
+
+            using var command = BuildCommand(con, sql, whereParams);
+            command.ExecuteNonQuery();
+        }
+
         public void Execute(DbTransaction tran,
             string sql, WhereParams whereParams = null)
         {
@@ -139,15 +148,6 @@ namespace Qz.Infra.Database
             command.ExecuteNonQuery();
         }
 
-        public void Execute(IDbConnection con,
-            string sql, WhereParams whereParams = null)
-        {
-            if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
-
-            using var command = BuildCommand(con, sql, whereParams);
-            command.ExecuteNonQuery();
-        }
-
         public void Execute(IDbConnection con, Action<IDataReader> readerAction,
             string sql, WhereParams whereParams = null)
         {
@@ -155,6 +155,23 @@ namespace Qz.Infra.Database
             if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
 
             using var command = BuildCommand(con, sql, whereParams);
+            using var reader = command.ExecuteReader();
+            if (!reader.HasRows)
+            {
+                return;
+            }
+
+            readerAction(reader);
+        }
+
+        public void Execute(DbTransaction tran, Action<IDataReader> readerAction,
+            string sql, WhereParams whereParams = null)
+        {
+            if (readerAction == null) throw new ArgumentNullException(nameof(readerAction));
+            if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
+
+            using var command = BuildCommand(tran.Connection, sql, whereParams);
+            command.Transaction = tran;
             using var reader = command.ExecuteReader();
             if (!reader.HasRows)
             {
@@ -199,6 +216,18 @@ namespace Qz.Infra.Database
         {
             var count = 0;
             Execute(con, reader =>
+            {
+                reader.Read();
+                count = reader.GetInt32(0);
+            }, sql, whereParams);
+            return count;
+        }
+
+        public int Count(DbTransaction tran,
+            string sql, WhereParams whereParams = null)
+        {
+            var count = 0;
+            Execute(tran, reader =>
             {
                 reader.Read();
                 count = reader.GetInt32(0);

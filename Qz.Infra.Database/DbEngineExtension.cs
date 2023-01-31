@@ -5,6 +5,7 @@ using Qz.Infra.Database.Sql;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 
 namespace Qz.Infra.Database
 {
@@ -33,6 +34,12 @@ namespace Qz.Infra.Database
             SqlBuilderCountParam builderParam, IDbConnection con = null)
         {
             return self.Count(builderParam, con) > 0;
+        }
+
+        public static bool Exist(this DbEngine self, DbTransaction tran,
+            SqlBuilderCountParam builderParam)
+        {
+            return self.Count(builderParam, tran) > 0;
         }
 
         public static List<T> Select<T>(this DbEngine self,

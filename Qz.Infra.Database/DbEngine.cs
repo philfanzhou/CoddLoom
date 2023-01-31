@@ -79,6 +79,12 @@ namespace Qz.Infra.Database
             return Executor.Execute(p => Executor.Count(p, sql, builderParam.WhereParams), con);
         }
 
+        public int Count(SqlBuilderCountParam builderParam, DbTransaction tran)
+        {
+            var sql = Executor.SqlBuilder.Count(builderParam);
+            return Executor.Count(tran, sql, builderParam.WhereParams);
+        }
+
         public List<T> Select<T>(Func<IDataRecord, T> convertor, SqlBuilderSelectParam builderParam,
             IDbConnection con = null)
         {
