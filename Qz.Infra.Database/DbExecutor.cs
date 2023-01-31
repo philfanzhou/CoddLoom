@@ -72,18 +72,15 @@ namespace Qz.Infra.Database
             {
                 conn.Open();
                 using var tran = conn.BeginTransaction();
-                if (tran is DbTransaction dbTran)
+                try
                 {
-                    try
-                    {
-                        action(dbTran);
-                        tran.Commit();
-                    }
-                    catch
-                    {
-                        tran.Rollback();
-                        throw;
-                    }
+                    action(tran);
+                    tran.Commit();
+                }
+                catch
+                {
+                    tran.Rollback();
+                    throw;
                 }
             }
             finally
@@ -150,9 +147,9 @@ namespace Qz.Infra.Database
             if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
 
             using var command = BuildCommand(con, sql, whereParams);
-            if (tran is DbTransaction dbTran)
+            if (tran != null)
             {
-                command.Transaction = dbTran;
+                command.Transaction = tran;
             }
 
             command.ExecuteNonQuery();
@@ -165,9 +162,9 @@ namespace Qz.Infra.Database
             if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
 
             using var command = BuildCommand(con, sql, whereParams);
-            if (tran is DbTransaction dbTran)
+            if (tran != null)
             {
-                command.Transaction = dbTran;
+                command.Transaction = tran;
             }
 
             using var reader = command.ExecuteReader();
