@@ -5,45 +5,43 @@ using Qz.Infra.Database.Sql;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 
 namespace Qz.Infra.Database
 {
     public static class DbEngineExtension
     {
-        public static void Insert<T>(this DbEngine self,
-            T entity, IDbConnection con = null)
+        public static void Insert<T>(this DbEngine self, T entity, 
+            IDbConnection con = null)
         {
             self.Insert(DbConverter.ToInsert(entity), con);
         }
 
-        public static void Delete<T>(this DbEngine self,
-            string keyValue, IDbConnection con = null)
+        public static void Delete<T>(this DbEngine self, string keyValue, 
+            IDbConnection con = null)
         {
             var whereParams = GetKeyWhereParam<T>(keyValue);
             self.Delete(new SqlBuilderDeleteParam<T>(whereParams), con);
         }
 
-        public static void Update<T>(this DbEngine self,
-            T entity, IDbConnection con = null)
+        public static void Update<T>(this DbEngine self, T entity, 
+            IDbConnection con = null)
         {
             self.Update(DbConverter.ToUpdate(entity), con);
         }
 
-        public static bool Exist(this DbEngine self,
-            SqlBuilderCountParam builderParam, IDbConnection con = null)
+        public static bool Exist(this DbEngine self, SqlBuilderCountParam builderParam, 
+            IDbConnection con = null)
         {
             return self.Count(builderParam, con) > 0;
         }
 
-        public static bool Exist(this DbEngine self, DbTransaction tran,
-            SqlBuilderCountParam builderParam)
+        public static bool Exist(this DbEngine self, SqlBuilderCountParam builderParam, IDbTransaction tran)
         {
             return self.Count(builderParam, tran) > 0;
         }
 
-        public static List<T> Select<T>(this DbEngine self,
-            SqlBuilderSelectParam builderParam, IDbConnection con = null)
+        public static List<T> Select<T>(this DbEngine self, SqlBuilderSelectParam builderParam, 
+            IDbConnection con = null)
             where T : new()
         {
             return self.Select(DbConverter.ToEntity<T>, builderParam, con);
@@ -58,8 +56,8 @@ namespace Qz.Infra.Database
             return self.Select<T>(builderParam, con);
         }
 
-        public static List<T> Select<T>(this DbEngine self,
-            string keyValue, IDbConnection con = null)
+        public static List<T> Select<T>(this DbEngine self, string keyValue, 
+            IDbConnection con = null)
             where T : new()
         {
             var whereParams = GetKeyWhereParam<T>(keyValue);
@@ -67,8 +65,8 @@ namespace Qz.Infra.Database
             return self.Select<T>(builderParam, con);
         }
 
-        public static T First<T>(this DbEngine self,
-            SqlBuilderSelectParam builderParam, IDbConnection con = null)
+        public static T First<T>(this DbEngine self, SqlBuilderSelectParam builderParam, 
+            IDbConnection con = null)
             where T : new()
         {
             return self.First(DbConverter.ToEntity<T>, builderParam, con);

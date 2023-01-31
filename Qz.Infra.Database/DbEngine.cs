@@ -5,7 +5,6 @@ using Qz.Infra.Database.Table;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 
 namespace Qz.Infra.Database
@@ -36,10 +35,10 @@ namespace Qz.Infra.Database
             Executor.Execute(p => Executor.Execute(p, sql), con);
         }
 
-        public void Insert(SqlBuilderInsertParam builderParam, DbTransaction tran)
+        public void Insert(SqlBuilderInsertParam builderParam, IDbTransaction tran)
         {
             var sql = Executor.SqlBuilder.Insert(builderParam);
-            Executor.Execute(tran, sql);
+            Executor.Execute(tran.Connection, sql, tran);
         }
 
         public void Delete(SqlBuilderDeleteParam builderParam,
@@ -47,14 +46,14 @@ namespace Qz.Infra.Database
         {
             if (builderParam.WhereParams == null) throw new ArgumentNullException(nameof(builderParam.WhereParams));
             var sql = Executor.SqlBuilder.Delete(builderParam);
-            Executor.Execute(p => Executor.Execute(p, sql, builderParam.WhereParams), con);
+            Executor.Execute(p => Executor.Execute(p, sql, null, builderParam.WhereParams), con);
         }
 
-        public void Delete(SqlBuilderDeleteParam builderParam, DbTransaction tran)
+        public void Delete(SqlBuilderDeleteParam builderParam, IDbTransaction tran)
         {
             if (builderParam.WhereParams == null) throw new ArgumentNullException(nameof(builderParam.WhereParams));
             var sql = Executor.SqlBuilder.Delete(builderParam);
-            Executor.Execute(tran, sql, builderParam.WhereParams);
+            Executor.Execute(tran.Connection, sql, tran, builderParam.WhereParams);
         }
 
         public void Update(SqlBuilderUpdateParam builderParam,
@@ -62,41 +61,41 @@ namespace Qz.Infra.Database
         {
             if (builderParam.WhereParams == null) throw new ArgumentNullException(nameof(builderParam.WhereParams));
             var sql = Executor.SqlBuilder.Update(builderParam);
-            Executor.Execute(p => Executor.Execute(p, sql, builderParam.WhereParams), con);
+            Executor.Execute(p => Executor.Execute(p, sql, null, builderParam.WhereParams), con);
         }
 
-        public void Update(SqlBuilderUpdateParam builderParam, DbTransaction tran)
+        public void Update(SqlBuilderUpdateParam builderParam, IDbTransaction tran)
         {
             if (builderParam.WhereParams == null) throw new ArgumentNullException(nameof(builderParam.WhereParams));
             var sql = Executor.SqlBuilder.Update(builderParam);
-            Executor.Execute(tran, sql, builderParam.WhereParams);
+            Executor.Execute(tran.Connection, sql, tran, builderParam.WhereParams);
         }
 
         public int Count(SqlBuilderCountParam builderParam,
             IDbConnection con = null)
         {
             var sql = Executor.SqlBuilder.Count(builderParam);
-            return Executor.Execute(p => Executor.Count(p, sql, builderParam.WhereParams), con);
+            return Executor.Execute(p => Executor.Count(p, sql, null, builderParam.WhereParams), con);
         }
 
-        public int Count(SqlBuilderCountParam builderParam, DbTransaction tran)
+        public int Count(SqlBuilderCountParam builderParam, IDbTransaction tran)
         {
             var sql = Executor.SqlBuilder.Count(builderParam);
-            return Executor.Count(tran, sql, builderParam.WhereParams);
+            return Executor.Count(tran.Connection, sql, tran, builderParam.WhereParams);
         }
 
         public List<T> Select<T>(Func<IDataRecord, T> convertor, SqlBuilderSelectParam builderParam,
             IDbConnection con = null)
         {
             var sql = Executor.SqlBuilder.Select(builderParam);
-            return Executor.Execute(p => Executor.Select(p, sql, convertor, builderParam.WhereParams), con);
+            return Executor.Execute(p => Executor.Select(p, sql, convertor, null, builderParam.WhereParams), con);
         }
 
         public T First<T>(Func<IDataRecord, T> convertor, SqlBuilderSelectParam builderParam,
             IDbConnection con = null)
         {
             var sql = Executor.SqlBuilder.First(builderParam);
-            return Executor.Execute(p => Executor.First(p, sql, convertor, builderParam.WhereParams), con);
+            return Executor.Execute(p => Executor.First(p, sql, convertor, null,builderParam.WhereParams), con);
         }
 
         public List<T> PageSelect<T>(Func<IDataRecord, T> convertor,
@@ -133,7 +132,7 @@ namespace Qz.Infra.Database
             totalPages = 0;
 
             var sql = Executor.SqlBuilder.Take(pageParam.Offset, pageParam.PageCount, builderParam);
-            var items = Executor.Select(con, sql, convertor, builderParam.WhereParams).ToList();
+            var items = Executor.Select(con, sql, convertor, null, builderParam.WhereParams).ToList();
             if (items.Count > 1)
             {
                 totalCount = Count(builderParam, con);

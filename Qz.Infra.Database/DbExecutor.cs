@@ -52,7 +52,7 @@ namespace Qz.Infra.Database
 
         #region Transaction
 
-        public void Transaction(Action<DbTransaction> action)
+        public void Transaction(Action<IDbTransaction> action)
         {
             using var conn = GetConnection();
             try
@@ -83,7 +83,8 @@ namespace Qz.Infra.Database
 
         #region Execute
 
-        public void Execute(Action<IDbConnection> action, IDbConnection con = null)
+        public void Execute(Action<IDbConnection> action, 
+            IDbConnection con = null)
         {
             if (con != null)
             {
@@ -104,7 +105,8 @@ namespace Qz.Infra.Database
             }
         }
 
-        public T Execute<T>(Func<IDbConnection, T> func, IDbConnection con = null)
+        public T Execute<T>(Func<IDbConnection, T> func, 
+            IDbConnection con = null)
         {
             if (con != null)
             {
@@ -129,55 +131,37 @@ namespace Qz.Infra.Database
 
         #region Execute Sql
 
-        public void Execute(IDbConnection con,
-            string sql, WhereParams whereParams = null)
+        public void Execute(IDbConnection con, string sql,
+            IDbTransaction tran = null, WhereParams whereParams = null)
         {
             if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
 
             using var command = BuildCommand(con, sql, whereParams);
+            if (tran is DbTransaction dbTran)
+            {
+                command.Transaction = dbTran;
+            }
+
             command.ExecuteNonQuery();
         }
 
-        public void Execute(DbTransaction tran,
-            string sql, WhereParams whereParams = null)
-        {
-            if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
-
-            using var command = BuildCommand(tran.Connection, sql, whereParams);
-            command.Transaction = tran;
-            command.ExecuteNonQuery();
-        }
-
-        public void Execute(IDbConnection con, Action<IDataReader> readerAction,
-            string sql, WhereParams whereParams = null)
+        public void Execute(IDbConnection con, Action<IDataReader> readerAction, string sql,
+            IDbTransaction tran = null, WhereParams whereParams = null)
         {
             if (readerAction == null) throw new ArgumentNullException(nameof(readerAction));
             if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
 
             using var command = BuildCommand(con, sql, whereParams);
+            if (tran is DbTransaction dbTran)
+            {
+                command.Transaction = dbTran;
+            }
+
             using var reader = command.ExecuteReader();
             if (!reader.HasRows)
             {
                 return;
             }
-
-            readerAction(reader);
-        }
-
-        public void Execute(DbTransaction tran, Action<IDataReader> readerAction,
-            string sql, WhereParams whereParams = null)
-        {
-            if (readerAction == null) throw new ArgumentNullException(nameof(readerAction));
-            if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
-
-            using var command = BuildCommand(tran.Connection, sql, whereParams);
-            command.Transaction = tran;
-            using var reader = command.ExecuteReader();
-            if (!reader.HasRows)
-            {
-                return;
-            }
-
             readerAction(reader);
         }
 
@@ -185,8 +169,8 @@ namespace Qz.Infra.Database
 
         #region Read operation
 
-        public List<T> Select<T>(IDbConnection con,
-            string sql, Func<IDataRecord, T> convertor, WhereParams whereParams = null)
+        public List<T> Select<T>(IDbConnection con, string sql, Func<IDataRecord, T> convertor,
+            IDbTransaction tran = null, WhereParams whereParams = null)
         {
             var result = new List<T>();
             Execute(con, reader =>
@@ -195,43 +179,31 @@ namespace Qz.Infra.Database
                 {
                     result.Add(convertor(reader));
                 }
-            }, sql, whereParams);
+            }, sql, tran, whereParams);
             return result;
         }
 
-        public T First<T>(IDbConnection con,
-            string sql, Func<IDataRecord, T> convertor, WhereParams whereParams = null)
+        public T First<T>(IDbConnection con, string sql, Func<IDataRecord, T> convertor, 
+            IDbTransaction tran = null, WhereParams whereParams = null)
         {
             T result = default;
             Execute(con, reader =>
             {
                 reader.Read();
                 result = convertor(reader);
-            }, sql, whereParams);
+            }, sql, tran, whereParams);
             return result;
         }
 
-        public int Count(IDbConnection con,
-            string sql, WhereParams whereParams = null)
+        public int Count(IDbConnection con, string sql,
+            IDbTransaction tran = null, WhereParams whereParams = null)
         {
             var count = 0;
             Execute(con, reader =>
             {
                 reader.Read();
                 count = reader.GetInt32(0);
-            }, sql, whereParams);
-            return count;
-        }
-
-        public int Count(DbTransaction tran,
-            string sql, WhereParams whereParams = null)
-        {
-            var count = 0;
-            Execute(tran, reader =>
-            {
-                reader.Read();
-                count = reader.GetInt32(0);
-            }, sql, whereParams);
+            }, sql, tran, whereParams);
             return count;
         }
 

@@ -42,7 +42,7 @@ namespace Qz.Infra.Database.SQLite
             whereParams.Add("name", table.Name);
 
             var builderParam = new SqlBuilderCountParam("sqlite_master", whereParams);
-            var count = Count(con, SqlBuilder.Count(builderParam), whereParams);
+            var count = Count(con, SqlBuilder.Count(builderParam), null, whereParams);
             return count > 0;
         }
 
