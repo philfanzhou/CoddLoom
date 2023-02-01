@@ -23,7 +23,7 @@ namespace Qz.Infra.Database.SqlServer
         {
             if (orderBy == null)
             {
-                throw new ArgumentNullException(nameof(orderBy));
+                throw new ArgumentNullException(nameof(orderBy), "SqlServer can not use 'OFFSET' keyword without order by condition");
             }
             return base.Take(tableName, offset, count, where, orderBy);
         }

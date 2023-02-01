@@ -17,11 +17,11 @@ namespace Qz.Infra.Database
 
             var tableList = tables.ToList();
             TableColumnsCache.Initialize(tableList);
-            Executor.Execute(conn =>
+            Executor.Execute(con =>
             {
-                foreach (var table in tableList.Where(table => !Executor.ExistTable(conn, table)))
+                foreach (var table in tableList.Where(table => !Executor.ExistTable(table, con)))
                 {
-                    Executor.Execute(Executor.SqlBuilder.GetCreateTableSql(table), conn);
+                    Executor.Execute(Executor.SqlBuilder.GetCreateTableSql(table), null, null, con);
                 }
             });
         }

@@ -14,6 +14,7 @@ namespace Qz.Infra.Database
         {
             try
             {
+                // because of connection instance not include db password, so need provide connection string.
                 connection.Open();
                 ConnectionString = connectionString;
             }
@@ -29,7 +30,7 @@ namespace Qz.Infra.Database
 
         public abstract IDbConnection GetConnection();
 
-        internal bool ExistTable(IDbConnection con, TableDefine table)
+        internal bool ExistTable(TableDefine table, IDbConnection con)
         {
             var builderParam = GetExistTableParam(table);
             if (builderParam == null)
@@ -61,6 +62,51 @@ namespace Qz.Infra.Database
             }
 
             return command;
+        }
+
+        private void Execute(IDbConnection con, string sql,
+            WhereParams whereParams = null, Action<IDataReader> readerAction = null, IDbTransaction tran = null)
+        {
+            if (con == null) throw new ArgumentNullException(nameof(con));
+            if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
+
+            var doOpenCon = con.State != ConnectionState.Open;
+            try
+            {
+                if (doOpenCon)
+                {
+                    con.Open();
+                }
+
+                using var command = BuildCommand(con, sql, whereParams);
+
+                if (tran != null)
+                {
+                    command.Transaction = tran;
+                }
+
+                if (readerAction == null)
+                {
+                    command.ExecuteNonQuery();
+                }
+                else
+                {
+                    using var reader = command.ExecuteReader();
+                    if (reader is not DbDataReader { HasRows: true })
+                    {
+                        return;
+                    }
+
+                    readerAction(reader);
+                }
+            }
+            finally
+            {
+                if (doOpenCon)
+                {
+                    con.Close();
+                }
+            }
         }
 
         #region Execute
@@ -121,31 +167,23 @@ namespace Qz.Infra.Database
             WhereParams whereParams = null, Action<IDataReader> readerAction = null,
             IDbConnection con = null, IDbTransaction tran = null)
         {
-            if (tran == null)
-            {
-                if (con != null)
-                {
-                    Execute(con, sql, whereParams, readerAction);
-                }
-                else
-                {
-                    using var newConnection = GetConnection();
-                    try
-                    {
-                        newConnection.Open();
-                        Execute(newConnection, sql, whereParams, readerAction);
-                    }
-                    finally
-                    {
-                        newConnection.Close();
-                    }
-                }
-            }
-            else
+            if (tran != null)
             {
                 Execute(tran.Connection, sql, whereParams, readerAction, tran);
             }
+            else if (con != null)
+            {
+                Execute(con, sql, whereParams, readerAction);
+            }
+            else
+            {
+                Execute(p => { Execute(p, sql, whereParams, readerAction); });
+            }
         }
+
+        #endregion
+
+        #region Execute with reader
 
         public List<T> Select<T>(string sql, Func<IDataRecord, T> convertor,
             WhereParams whereParams = null, IDbConnection con = null, IDbTransaction tran = null)
@@ -192,48 +230,5 @@ namespace Qz.Infra.Database
         }
 
         #endregion
-
-        #region Execute Sql
-
-        public void Execute(string sql, IDbConnection con,
-            WhereParams whereParams = null, Action<IDataReader> readerAction = null)
-        {
-            Execute(con, sql, whereParams, readerAction);
-        }
-
-        public void Execute(string sql, IDbTransaction tran,
-            WhereParams whereParams = null, Action<IDataReader> readerAction = null)
-        {
-            Execute(tran.Connection, sql, whereParams, readerAction, tran);
-        }
-
-        #endregion
-
-        private void Execute(IDbConnection con, string sql,
-            WhereParams whereParams = null, Action<IDataReader> readerAction = null, IDbTransaction tran = null)
-        {
-            if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
-
-            using var command = BuildCommand(con, sql, whereParams);
-            if (tran != null)
-            {
-                command.Transaction = tran;
-            }
-
-            if (readerAction == null)
-            {
-                command.ExecuteNonQuery();
-            }
-            else
-            {
-                using var reader = command.ExecuteReader();
-                if (reader is not DbDataReader { HasRows: true })
-                {
-                    return;
-                }
-
-                readerAction(reader);
-            }
-        }
     }
 }
