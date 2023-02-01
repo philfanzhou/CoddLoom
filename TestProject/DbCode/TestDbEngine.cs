@@ -28,8 +28,8 @@ namespace TestProject.DbCode
         public IEnumerable<string> GetAllTenant(IDbConnection conn)
         {
             var sql = Executor.SqlBuilder.Select(TenantTable.TableName);
-            var tenants = Executor.Select(conn,
-                sql, record => record[TenantTable.Id].ToString());
+            var tenants = Executor.Select(
+                sql, record => record[TenantTable.Id].ToString(), null, conn);
             return tenants.ToList();
         }
 
@@ -42,16 +42,16 @@ namespace TestProject.DbCode
 
             var whereParamItem = new WhereParamsItem(TenantTable.Id, tenant);
             var sql = Executor.SqlBuilder.Delete(TenantTable.TableName, new WhereConditions(whereParamItem));
-            Executor.Execute(conn, sql, null, new WhereParams(whereParamItem));
+            Executor.Execute(sql, new WhereParams(whereParamItem), null, conn);
         }
 
         public void DeleteUser(string unionId)
         {
             var whereParams = new WhereParams(PasswordUserTable.UnionId, unionId);
-            Executor.Transaction(transaction =>
+            Executor.Transaction(tran =>
             {
-                Delete(new SqlBuilderDeleteParam(PasswordUserTable.TableName, whereParams), transaction);
-                Delete(new SqlBuilderDeleteParam(UserTable.TableName, whereParams), transaction);
+                Delete(new SqlBuilderDeleteParam(PasswordUserTable.TableName, whereParams), null, tran);
+                Delete(new SqlBuilderDeleteParam(UserTable.TableName, whereParams), null, tran);
             });
         }
 

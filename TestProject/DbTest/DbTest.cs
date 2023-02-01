@@ -7,10 +7,7 @@ using Qz.Infra.Database.Sql;
 using Qz.Infra.Database.SqlServer;
 using System.Collections.Generic;
 using System.Data;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using Qz.Infra.Database.SQLite;
 using TestProject.DbCode;
 using TestProject.DbCode.Entity;
 using TestProject.DbCode.Tables;
@@ -24,10 +21,10 @@ namespace TestProject.DbTest
         public void Run()
         {
             //var executor = new MySqlExecutor("192.168.50.85", "test", "root", "`12qweasd");
-            var executor = new SQLiteExecutor(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "User.db");
-            //var executor =
-            //    new SqlServerExecutor(
-            //        "Data Source=192.168.50.22;Database=TestDb;User ID=myuser;Password=qwe123!@;Connect Timeout=30");
+            //var executor = new SQLiteExecutor(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "User.db");
+            var executor =
+                new SqlServerExecutor(
+                    "Data Source=192.168.50.22;Database=TestDb;User ID=myuser;Password=qwe123!@;Connect Timeout=30");
 
             var dbEngine = new TestDbEngine(executor);
             DbContainer.Add(dbEngine);

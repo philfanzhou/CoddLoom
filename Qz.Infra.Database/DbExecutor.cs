@@ -37,7 +37,7 @@ namespace Qz.Infra.Database
                 return false;
             }
 
-            var count = Count(con, SqlBuilder.Count(builderParam), null, builderParam.WhereParams);
+            var count = Count(SqlBuilder.Count(builderParam), builderParam.WhereParams, con);
             return count > 0;
         }
 
@@ -63,7 +63,7 @@ namespace Qz.Infra.Database
             return command;
         }
 
-        #region Transaction
+        #region Execute
 
         public void Transaction(Action<IDbTransaction> action)
         {
@@ -89,134 +89,151 @@ namespace Qz.Infra.Database
             }
         }
 
-        #endregion
-
-        #region Execute
-
-        public void Execute(Action<IDbConnection> action, 
-            IDbConnection con = null)
+        public void Execute(Action<IDbConnection> action)
         {
-            if (con != null)
+            using var con = GetConnection();
+            try
             {
+                con.Open();
                 action(con);
             }
-            else
+            finally
             {
-                using var newConnection = GetConnection();
-                try
-                {
-                    newConnection.Open();
-                    action(newConnection);
-                }
-                finally
-                {
-                    newConnection.Close();
-                }
+                con.Close();
             }
         }
 
-        public T Execute<T>(Func<IDbConnection, T> func, 
-            IDbConnection con = null)
+        public T Execute<T>(Func<IDbConnection, T> func)
         {
-            if (con != null)
+            using var con = GetConnection();
+            try
             {
+                con.Open();
                 return func(con);
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        public void Execute(string sql,
+            WhereParams whereParams = null, Action<IDataReader> readerAction = null,
+            IDbConnection con = null, IDbTransaction tran = null)
+        {
+            if (tran == null)
+            {
+                if (con != null)
+                {
+                    Execute(con, sql, whereParams, readerAction);
+                }
+                else
+                {
+                    using var newConnection = GetConnection();
+                    try
+                    {
+                        newConnection.Open();
+                        Execute(newConnection, sql, whereParams, readerAction);
+                    }
+                    finally
+                    {
+                        newConnection.Close();
+                    }
+                }
             }
             else
             {
-                using var newConnection = GetConnection();
-                try
-                {
-                    newConnection.Open();
-                    return func(newConnection);
-                }
-                finally
-                {
-                    newConnection.Close();
-                }
+                Execute(tran.Connection, sql, whereParams, readerAction, tran);
             }
+        }
+
+        public List<T> Select<T>(string sql, Func<IDataRecord, T> convertor,
+            WhereParams whereParams = null, IDbConnection con = null, IDbTransaction tran = null)
+        {
+            var result = new List<T>();
+
+            Execute(sql, whereParams, reader =>
+            {
+                while (reader.Read())
+                {
+                    result.Add(convertor(reader));
+                }
+            }, con, tran);
+
+            return result;
+        }
+
+        public T First<T>(string sql, Func<IDataRecord, T> convertor,
+            WhereParams whereParams = null, IDbConnection con = null, IDbTransaction tran = null)
+        {
+            T result = default;
+
+            Execute(sql, whereParams, reader =>
+            {
+                reader.Read();
+                result = convertor(reader);
+            }, con, tran);
+
+            return result;
+        }
+
+        public int Count(string sql,
+            WhereParams whereParams = null, IDbConnection con = null, IDbTransaction tran = null)
+        {
+            var count = 0;
+
+            Execute(sql, whereParams, reader =>
+            {
+                reader.Read();
+                count = reader.GetInt32(0);
+            }, con, tran);
+
+            return count;
         }
 
         #endregion
 
         #region Execute Sql
 
-        public void Execute(IDbConnection con, string sql,
-            IDbTransaction tran = null, WhereParams whereParams = null)
+        public void Execute(string sql, IDbConnection con,
+            WhereParams whereParams = null, Action<IDataReader> readerAction = null)
         {
-            if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
-
-            using var command = BuildCommand(con, sql, whereParams);
-            if (tran != null)
-            {
-                command.Transaction = tran;
-            }
-
-            command.ExecuteNonQuery();
+            Execute(con, sql, whereParams, readerAction);
         }
 
-        public void Execute(IDbConnection con, Action<IDataReader> readerAction, string sql,
-            IDbTransaction tran = null, WhereParams whereParams = null)
+        public void Execute(string sql, IDbTransaction tran,
+            WhereParams whereParams = null, Action<IDataReader> readerAction = null)
         {
-            if (readerAction == null) throw new ArgumentNullException(nameof(readerAction));
-            if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
-
-            using var command = BuildCommand(con, sql, whereParams);
-            if (tran != null)
-            {
-                command.Transaction = tran;
-            }
-
-            using var reader = command.ExecuteReader();
-            if (reader is not DbDataReader { HasRows: true })
-            {
-                return;
-            }
-            readerAction(reader);
+            Execute(tran.Connection, sql, whereParams, readerAction, tran);
         }
 
         #endregion
 
-        #region Read operation
-
-        public List<T> Select<T>(IDbConnection con, string sql, Func<IDataRecord, T> convertor,
-            IDbTransaction tran = null, WhereParams whereParams = null)
+        private void Execute(IDbConnection con, string sql,
+            WhereParams whereParams = null, Action<IDataReader> readerAction = null, IDbTransaction tran = null)
         {
-            var result = new List<T>();
-            Execute(con, reader =>
+            if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
+
+            using var command = BuildCommand(con, sql, whereParams);
+            if (tran != null)
             {
-                while (reader.Read())
+                command.Transaction = tran;
+            }
+
+            if (readerAction == null)
+            {
+                command.ExecuteNonQuery();
+            }
+            else
+            {
+                using var reader = command.ExecuteReader();
+                if (reader is not DbDataReader { HasRows: true })
                 {
-                    result.Add(convertor(reader));
+                    return;
                 }
-            }, sql, tran, whereParams);
-            return result;
-        }
 
-        public T First<T>(IDbConnection con, string sql, Func<IDataRecord, T> convertor, 
-            IDbTransaction tran = null, WhereParams whereParams = null)
-        {
-            T result = default;
-            Execute(con, reader =>
-            {
-                reader.Read();
-                result = convertor(reader);
-            }, sql, tran, whereParams);
-            return result;
+                readerAction(reader);
+            }
         }
-
-        public int Count(IDbConnection con, string sql,
-            IDbTransaction tran = null, WhereParams whereParams = null)
-        {
-            var count = 0;
-            Execute(con, reader =>
-            {
-                reader.Read();
-                count = reader.GetInt32(0);
-            }, sql, tran, whereParams);
-            return count;
-        }
-
-        #endregion
     }
 }
