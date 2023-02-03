@@ -1,18 +1,18 @@
 ﻿using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Convert;
 using Qz.Infra.Database.Input;
 using Qz.Infra.Database.Table;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Text;
 
 namespace Qz.Infra.Database.Sql
 {
-    public class SqlBuilder
+    public partial class SqlBuilder
     {
         protected const string KeyWordSelect = "SELECT";
 
-        public string ParamPrefix { get; set; } = "@";
+        protected internal string ParamPrefix { get; set; } = "@";
 
         public virtual string GetCreateTableSql(TableDefine table)
         {
@@ -40,7 +40,7 @@ namespace Qz.Infra.Database.Sql
                     valueBuilder.Append(",");
                 }
 
-                valueBuilder.Append(DbTypeConverter.ToValueSql(item.Value, item.Type));
+                valueBuilder.Append(ToValueSql(item.Value, item.Type));
             }
 
             return $"INSERT INTO {tableName} ({columnBuilder}) VALUES({valueBuilder})";
@@ -70,7 +70,7 @@ namespace Qz.Infra.Database.Sql
                 }
 
                 valueBuilder.Append($"{item.Column} = ");
-                valueBuilder.Append(DbTypeConverter.ToValueSql(item.Value, item.Type));
+                valueBuilder.Append(ToValueSql(item.Value, item.Type));
             }
 
             var sql = $"UPDATE {tableName} SET {valueBuilder}";
@@ -112,7 +112,7 @@ namespace Qz.Infra.Database.Sql
 
             if (primaryKey != null)
             {
-                columnBuilder.Append(TableSqlBuilder.GetPrimaryKeySql(primaryKey));
+                columnBuilder.Append(GetPrimaryKeySql(primaryKey));
             }
 
             foreach (var column in columns)
@@ -122,10 +122,27 @@ namespace Qz.Infra.Database.Sql
                     columnBuilder.Append(",");
                 }
 
-                columnBuilder.Append(TableSqlBuilder.GetColumnSql(column));
+                columnBuilder.Append(GetColumnSql(column));
             }
 
             return columnBuilder.ToString();
+        }
+
+        protected virtual string GetPrimaryKeySql(DbPrimaryKeyAttribute primaryKey)
+        {
+            return $"{primaryKey.Name} {ToColumnSql(primaryKey)} PRIMARY KEY NOT NULL";
+        }
+
+        protected virtual string GetColumnSql(DbColumnAttribute column)
+        {
+            if (column.AllowEmpty)
+            {
+                return $"{column.Name} {ToColumnSql(column)}";
+            }
+            else
+            {
+                return $"{column.Name} {ToColumnSql(column)} NOT NULL";
+            }
         }
 
         protected internal virtual string GetJoinTable(JoinConditions joinCondition)
@@ -220,57 +237,31 @@ namespace Qz.Infra.Database.Sql
             return $"{sql} LIMIT {offset},{count}";
         }
 
-        #endregion
-
-        #region Extension
-
-        public string Insert(SqlBuilderInsertParam builderParam)
+        protected virtual string ToValueSql(string value, DbType dbType)
         {
-            return Insert(builderParam.TableName, builderParam.Values);
+            switch (dbType)
+            {
+                case DbType.String:
+                    return $"'{value}'";
+                case DbType.Int32:
+                case DbType.Int16:
+                case DbType.Decimal:
+                    return $"{value}";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(dbType), dbType, null);
+            }
         }
 
-        public string Delete(SqlBuilderDeleteParam builderParam)
+        protected virtual string ToColumnSql(DbColumnBaseAttribute column)
         {
-            return Delete(builderParam.TableName, builderParam.WhereConditions);
-        }
-
-        public string Update(SqlBuilderUpdateParam builderParam)
-        {
-            return Update(builderParam.TableName, builderParam.Values, builderParam.WhereConditions);
-        }
-
-        public string Count(SqlBuilderCountParam builderParam)
-        {
-            return Count(builderParam.TableName, builderParam.WhereConditions);
-        }
-
-        public string Select(SqlBuilderSelectParam builderParam)
-        {
-            return Select(builderParam.TableName, builderParam.WhereConditions, builderParam.OrderBy);
-        }
-
-        public string First(SqlBuilderSelectParam builderParam)
-        {
-            return First(builderParam.TableName, builderParam.WhereConditions, builderParam.OrderBy);
-        }
-
-        public virtual string First(string tableName,
-            WhereConditions where = null, OrderByCondition orderBy = null)
-        {
-            var selectSql = Select(tableName, where, orderBy);
-            return AppendLimit(selectSql, 1);
-        }
-
-        public string Take(int offset, int count, SqlBuilderSelectParam builderParam)
-        {
-            return Take(builderParam.TableName, offset, count, builderParam.WhereConditions, builderParam.OrderBy);
-        }
-
-        public virtual string Take(string tableName, int offset, int count,
-            WhereConditions where = null, OrderByCondition orderBy = null)
-        {
-            var selectSql = Select(tableName, where, orderBy);
-            return AppendLimit(selectSql, count, offset);
+            return column.Type switch
+            {
+                DbType.String => column.Length > 50 ? $"VARCHAR({column.Length})" : $"CHAR({column.Length})",
+                DbType.Int32 => "INTEGER",
+                DbType.Int16 => "SMALLINT",
+                DbType.Decimal => "DECIMAL(18,2)",
+                _ => throw new NotSupportedException($"{column.Type} not support.")
+            };
         }
 
         #endregion

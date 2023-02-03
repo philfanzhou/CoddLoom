@@ -79,7 +79,7 @@ namespace Qz.Infra.Database
             totalCount = 0;
             totalPages = 0;
 
-            var sql = Executor.SqlBuilder.Take(pageParam.Offset, pageParam.PageCount, builderParam);
+            var sql = Executor.SqlBuilder.Take(builderParam, pageParam.Offset, pageParam.PageCount);
             var items = Executor.Select(sql, convertor, builderParam.WhereParams, con, tran).ToList();
             
             if (items.Count <= 1)
