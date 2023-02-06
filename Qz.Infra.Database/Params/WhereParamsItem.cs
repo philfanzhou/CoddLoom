@@ -14,6 +14,11 @@
         {
         }
 
+        public WhereParamsItem(string name, bool value)
+            : this(name, value ? "1" : "0", name)
+        {
+        }
+
         public string Name { get; }
 
         public string Value { get; set; }

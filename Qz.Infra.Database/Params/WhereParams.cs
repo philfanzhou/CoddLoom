@@ -6,6 +6,14 @@ namespace Qz.Infra.Database.Params
     {
         private readonly List<WhereParamsItem> _items = new();
 
+        public WhereParams(IEnumerable<WhereParamsItem> items)
+        {
+            foreach (var item in items)
+            {
+                Add(item);
+            }
+        }
+
         public WhereParams(WhereParamsItem item)
         {
             Add(item);
