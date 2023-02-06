@@ -33,7 +33,7 @@ namespace Qz.Infra.Database.Sql
                     valueBuilder.Append(",");
                 }
 
-                valueBuilder.Append(ToValueSql(item.Value, item.Type));
+                valueBuilder.Append(ToValueSql(item));
             }
 
             return $"INSERT INTO {tableName} ({columnBuilder}) VALUES({valueBuilder})";
@@ -63,7 +63,7 @@ namespace Qz.Infra.Database.Sql
                 }
 
                 valueBuilder.Append($"{item.Column} = ");
-                valueBuilder.Append(ToValueSql(item.Value, item.Type));
+                valueBuilder.Append(ToValueSql(item));
             }
 
             var sql = $"UPDATE {tableName} SET {valueBuilder}";
@@ -170,18 +170,20 @@ namespace Qz.Infra.Database.Sql
             return $"{sql} LIMIT {offset},{count}";
         }
 
-        protected virtual string ToValueSql(string value, DbType dbType)
+        protected virtual string ToValueSql(InputValuesItem item)
         {
-            switch (dbType)
+            switch (item.Type)
             {
                 case DbType.String:
-                    return $"'{value}'";
+                case DbType.DateTime:
+                    return $"'{item.StringValue}'";
                 case DbType.Int32:
                 case DbType.Int16:
                 case DbType.Decimal:
-                    return $"{value}";
+                case DbType.Boolean:
+                    return $"{item.StringValue}";
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(dbType), dbType, null);
+                    throw new ArgumentOutOfRangeException(nameof(item.Type), item.Type, null);
             }
         }
 

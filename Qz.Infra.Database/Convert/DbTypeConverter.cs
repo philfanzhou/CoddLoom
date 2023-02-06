@@ -14,6 +14,8 @@ namespace Qz.Infra.Database.Convert
                 "System.Int32" => DbType.Int32,
                 "System.Int16" => DbType.Int16,
                 "System.Decimal" => DbType.Decimal,
+                "System.DateTime" => DbType.DateTime,
+                "System.Boolean" => DbType.Boolean,
                 _ => throw new NotSupportedException($"{typeName} not support.")
             };
         }
@@ -28,6 +30,8 @@ namespace Qz.Infra.Database.Convert
                 "System.Int32" => (int.TryParse(strValue, out var num32) ? num32 : null),
                 "System.Int16" => (short.TryParse(strValue, out var num16) ? num16 : null),
                 "System.Decimal" => (decimal.TryParse(strValue, out var dec) ? dec : null),
+                "System.DateTime" => (DateTime.TryParse(strValue, out var datetime) ? datetime : null),
+                "System.Boolean" => (bool.TryParse(strValue, out var bl) ? bl : null),
                 _ => throw new NotSupportedException($"{typeName} not support.")
             };
         }

@@ -38,22 +38,22 @@ namespace Qz.Infra.Database.Sql
 
         protected virtual string GetPrimaryKeySql(DbPrimaryKeyAttribute primaryKey)
         {
-            return $"{primaryKey.Name} {ToColumnSql(primaryKey)} PRIMARY KEY NOT NULL";
+            return $"{primaryKey.Name} {GetColumnTypeSql(primaryKey)} PRIMARY KEY NOT NULL";
         }
 
         protected virtual string GetColumnSql(DbColumnAttribute column)
         {
             if (column.AllowEmpty)
             {
-                return $"{column.Name} {ToColumnSql(column)}";
+                return $"{column.Name} {GetColumnTypeSql(column)}";
             }
             else
             {
-                return $"{column.Name} {ToColumnSql(column)} NOT NULL";
+                return $"{column.Name} {GetColumnTypeSql(column)} NOT NULL";
             }
         }
 
-        protected virtual string ToColumnSql(DbColumnBaseAttribute column)
+        protected virtual string GetColumnTypeSql(DbColumnBaseAttribute column)
         {
             return column.Type switch
             {
@@ -61,6 +61,8 @@ namespace Qz.Infra.Database.Sql
                 DbType.Int32 => "INTEGER",
                 DbType.Int16 => "SMALLINT",
                 DbType.Decimal => "DECIMAL(18,2)",
+                DbType.Boolean => "BIT",
+                DbType.DateTime => "DATETIME",
                 _ => throw new NotSupportedException($"{column.Type} not support.")
             };
         }

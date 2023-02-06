@@ -6,7 +6,7 @@ namespace Qz.Infra.Database.Input
     {
         public string Column{ get; set; }
 
-        public string Value{ get; set; }
+        public string StringValue{ get; set; }
 
         public DbType Type { get; set; }
     }

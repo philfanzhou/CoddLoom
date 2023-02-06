@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
@@ -15,8 +16,28 @@ namespace Qz.Infra.Database.Input
             _items.Add(column, new InputValuesItem
             {
                 Column = column,
-                Value = value,
+                StringValue = value,
                 Type = type
+            });
+        }
+
+        public void Add(string column, DateTime value)
+        {
+            _items.Add(column, new InputValuesItem
+            {
+                Column = column,
+                StringValue = value.ToString("yyyy-MM-dd HH:mm:ss"),
+                Type = DbType.DateTime
+            });
+        }
+
+        public void Add(string column, bool value)
+        {
+            _items.Add(column, new InputValuesItem
+            {
+                Column = column,
+                StringValue = $"{(value ? 1 : 0)}",
+                Type = DbType.Boolean
             });
         }
     }
