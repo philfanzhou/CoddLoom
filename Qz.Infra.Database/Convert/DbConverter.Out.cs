@@ -6,8 +6,31 @@ using System.Reflection;
 
 namespace Qz.Infra.Database.Convert
 {
-    internal static partial class DbConverter
+    partial class DbConverter
     {
+        public static bool ToBoolean(IDataRecord record, string key)
+        {
+            if (record?[key] == null)
+            {
+                return false;
+            }
+
+            var strValue = record[key].ToString();
+            if (string.IsNullOrEmpty(strValue))
+            {
+                return false;
+            }
+
+            if (int.TryParse(strValue, out var intValue))
+            {
+                return intValue != 0;
+            }
+            else
+            {
+                return bool.Parse(strValue);
+            }
+        }
+
         internal static T ToEntity<T>(IDataRecord record)
             where T : new()
         {

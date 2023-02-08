@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace Qz.Infra.Database.Convert
 {
-    internal static partial class DbConverter
+    public static partial class DbConverter
     {
         internal static SqlBuilderInsertParam ToInsert<T>(T entity)
         {
