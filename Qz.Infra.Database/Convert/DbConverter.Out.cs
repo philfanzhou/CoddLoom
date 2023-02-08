@@ -31,6 +31,17 @@ namespace Qz.Infra.Database.Convert
             }
         }
 
+        public static DateTime ToDateTime(IDataRecord record, string key)
+        {
+            if (record?[key] == null)
+            {
+                return DateTime.MinValue;
+            }
+
+            var strValue = record[key].ToString();
+            return DateTime.TryParse(strValue, out var result) ? result : DateTime.MinValue;
+        }
+
         internal static T ToEntity<T>(IDataRecord record)
             where T : new()
         {
