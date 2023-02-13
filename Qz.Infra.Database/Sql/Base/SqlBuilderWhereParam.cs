@@ -14,11 +14,10 @@ namespace Qz.Infra.Database.Sql.Base
             : base(tableName)
         {
             WhereConditions = where;
-            WhereParams = where.WhereParams;
         }
 
         public WhereConditions WhereConditions { get; }
 
-        public WhereParams WhereParams { get; }
+        public WhereParams WhereParams => WhereConditions?.WhereParams;
     }
 }
