@@ -21,24 +21,19 @@ namespace Qz.Infra.Database.Input
             });
         }
 
+        public void Add(string column, int value)
+        {
+            Add(column, value.ToString(), DbType.Int32);
+        }
+
         public void Add(string column, DateTime value)
         {
-            _items.Add(column, new InputValuesItem
-            {
-                Column = column,
-                StringValue = value.ToString("yyyy-MM-dd HH:mm:ss"),
-                Type = DbType.DateTime
-            });
+            Add(column, value.ToString("yyyy-MM-dd HH:mm:ss"), DbType.DateTime);
         }
 
         public void Add(string column, bool value)
         {
-            _items.Add(column, new InputValuesItem
-            {
-                Column = column,
-                StringValue = $"{(value ? 1 : 0)}",
-                Type = DbType.Boolean
-            });
+            Add(column, $"{(value ? 1 : 0)}", DbType.Boolean);
         }
     }
 }
