@@ -2,35 +2,34 @@
 using Qz.Infra.Database.Params;
 using Qz.Infra.Database.Sql.Base;
 
-namespace Qz.Infra.Database.Sql
-{
-    public class SqlBuilderDeleteParam : SqlBuilderWhereParam
-    {
-        public SqlBuilderDeleteParam(string tableName, WhereConditions where)
-            : base(tableName, where)
-        {
-            if (where == null || where.Items.Count < 1)
-            {
-                throw new System.ArgumentNullException(nameof(where));
-            }
-        }
+namespace Qz.Infra.Database.Sql;
 
-        public SqlBuilderDeleteParam(string tableName, WhereParams whereParams)
-            : this(tableName, new WhereConditions(whereParams))
+public class SqlBuilderDeleteParam : SqlBuilderWhereParam
+{
+    public SqlBuilderDeleteParam(string tableName, WhereConditions where)
+        : base(tableName, where)
+    {
+        if (where == null || where.Items.Count < 1)
         {
+            throw new System.ArgumentNullException(nameof(where));
         }
     }
 
-    public class SqlBuilderDeleteParam<T> : SqlBuilderDeleteParam
+    public SqlBuilderDeleteParam(string tableName, WhereParams whereParams)
+        : this(tableName, new WhereConditions(whereParams))
     {
-        public SqlBuilderDeleteParam(WhereConditions where)
-            : base(GetTableName<T>(), where)
-        {
-        }
+    }
+}
 
-        public SqlBuilderDeleteParam(WhereParams whereParams)
-            : this(new WhereConditions(whereParams))
-        {
-        }
+public class SqlBuilderDeleteParam<T> : SqlBuilderDeleteParam
+{
+    public SqlBuilderDeleteParam(WhereConditions where)
+        : base(GetTableName<T>(), where)
+    {
+    }
+
+    public SqlBuilderDeleteParam(WhereParams whereParams)
+        : this(new WhereConditions(whereParams))
+    {
     }
 }

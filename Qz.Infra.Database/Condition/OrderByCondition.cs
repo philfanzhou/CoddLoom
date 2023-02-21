@@ -1,15 +1,14 @@
-﻿namespace Qz.Infra.Database.Condition
+﻿namespace Qz.Infra.Database.Condition;
+
+public class OrderByCondition
 {
-    public class OrderByCondition
+    public OrderByCondition(string column, bool descending = false)
     {
-        public OrderByCondition(string column, bool descending = false)
-        {
-            Column = column;
-            Descending = descending;
-        }
-
-        public string Column { get; }
-
-        public bool Descending { get; }
+        Column = column;
+        Descending = descending;
     }
+
+    public string Column { get; }
+
+    public bool Descending { get; }
 }

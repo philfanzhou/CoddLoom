@@ -1,25 +1,24 @@
 ﻿using Qz.Infra.Database.Cache;
 
-namespace Qz.Infra.Database.Sql.Base
+namespace Qz.Infra.Database.Sql.Base;
+
+public abstract class SqlBuilderParam
 {
-    public abstract class SqlBuilderParam
+    protected SqlBuilderParam(string tableName)
     {
-        protected SqlBuilderParam(string tableName)
+        if (string.IsNullOrEmpty(tableName))
         {
-            if (string.IsNullOrEmpty(tableName))
-            {
-                throw new System.ArgumentNullException(nameof(tableName));
-            }
-
-            TableName = tableName;
+            throw new System.ArgumentNullException(nameof(tableName));
         }
 
-        public string TableName { get; }
+        TableName = tableName;
+    }
 
-        protected static string GetTableName<T>()
-        {
-            var entityMap = EntityMapCache.Get<T>();
-            return entityMap.Table.Name;
-        }
+    public string TableName { get; }
+
+    protected static string GetTableName<T>()
+    {
+        var entityMap = EntityMapCache.Get<T>();
+        return entityMap.Table.Name;
     }
 }

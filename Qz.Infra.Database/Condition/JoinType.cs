@@ -1,9 +1,8 @@
-﻿namespace Qz.Infra.Database.Condition
+﻿namespace Qz.Infra.Database.Condition;
+
+public enum JoinType
 {
-    public enum JoinType
-    {
-        Inner,
-        Left,
-        Right
-    }
+    Inner,
+    Left,
+    Right
 }

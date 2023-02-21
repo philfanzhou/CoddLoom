@@ -1,26 +1,25 @@
 ﻿using Qz.Infra.Database.Entity;
 using System.Collections.Generic;
 
-namespace Qz.Infra.Database.Cache
+namespace Qz.Infra.Database.Cache;
+
+internal static class EntityMapCache
 {
-    internal static class EntityMapCache
+    #region Internal cache
+
+    private static readonly Dictionary<string, EntityMap> MapCache = new();
+
+    internal static EntityMap Get<T>()
     {
-        #region Internal cache
-
-        private static readonly Dictionary<string, EntityMap> MapCache = new();
-
-        internal static EntityMap Get<T>()
+        var type = typeof(T);
+        var name = type.Name;
+        if (!MapCache.ContainsKey(name))
         {
-            var type = typeof(T);
-            var name = type.Name;
-            if (!MapCache.ContainsKey(name))
-            {
-                MapCache[name] = new EntityMap(name, type);
-            }
-
-            return MapCache[name];
+            MapCache[name] = new EntityMap(name, type);
         }
 
-        #endregion
+        return MapCache[name];
     }
+
+    #endregion
 }

@@ -2,29 +2,28 @@
 using Qz.Infra.Database.Sql.Base;
 using System;
 
-namespace Qz.Infra.Database.Sql
-{
-    public class SqlBuilderInsertParam : SqlBuilderParam
-    {
-        public SqlBuilderInsertParam(string tableName, InputValues inputValues)
-            : base(tableName)
-        {
-            if (inputValues == null || inputValues.Items.Count < 1)
-            {
-                throw new ArgumentNullException(nameof(inputValues));
-            }
+namespace Qz.Infra.Database.Sql;
 
-            Values = inputValues;
+public class SqlBuilderInsertParam : SqlBuilderParam
+{
+    public SqlBuilderInsertParam(string tableName, InputValues inputValues)
+        : base(tableName)
+    {
+        if (inputValues == null || inputValues.Items.Count < 1)
+        {
+            throw new ArgumentNullException(nameof(inputValues));
         }
 
-        public InputValues Values { get; }
+        Values = inputValues;
     }
 
-    public class SqlBuilderInsertParam<T> : SqlBuilderInsertParam
+    public InputValues Values { get; }
+}
+
+public class SqlBuilderInsertParam<T> : SqlBuilderInsertParam
+{
+    public SqlBuilderInsertParam(InputValues inputValues)
+        : base(GetTableName<T>(), inputValues)
     {
-        public SqlBuilderInsertParam(InputValues inputValues)
-            : base(GetTableName<T>(), inputValues)
-        {
-        }
     }
 }

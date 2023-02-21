@@ -1,13 +1,12 @@
-﻿namespace Qz.Infra.Database.Condition
+﻿namespace Qz.Infra.Database.Condition;
+
+public enum WhereOperator
 {
-    public enum WhereOperator
-    {
-        Equal,
-        NotEqual,
-        GreaterThan,
-        GreaterEqual,
-        LessThan,
-        LessEqual,
-        Like
-    }
+    Equal,
+    NotEqual,
+    GreaterThan,
+    GreaterEqual,
+    LessThan,
+    LessEqual,
+    Like
 }

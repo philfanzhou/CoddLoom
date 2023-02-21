@@ -1,9 +1,8 @@
 ﻿using System;
 
-namespace Qz.Infra.Database.Table
+namespace Qz.Infra.Database.Table;
+
+[AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
+public class DbPrimaryKeyAttribute : DbColumnBaseAttribute
 {
-    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
-    public class DbPrimaryKeyAttribute : DbColumnBaseAttribute
-    {
-    }
 }

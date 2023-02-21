@@ -4,67 +4,66 @@ using System.Collections.Generic;
 using System.Data;
 using System.Text;
 
-namespace Qz.Infra.Database.Sql
+namespace Qz.Infra.Database.Sql;
+
+partial class SqlBuilder
 {
-    partial class SqlBuilder
+    protected internal virtual string GetCreateTableSql(TableDefine table)
     {
-        protected internal virtual string GetCreateTableSql(TableDefine table)
+        return $"CREATE TABLE {table.Name}({GetCreateColumnsSql(table.Columns, table.PrimaryKey)})";
+    }
+
+    protected virtual string GetCreateColumnsSql(IEnumerable<DbColumnAttribute> columns,
+        DbPrimaryKeyAttribute primaryKey = null)
+    {
+        var columnBuilder = new StringBuilder();
+
+        if (primaryKey != null)
         {
-            return $"CREATE TABLE {table.Name}({GetCreateColumnsSql(table.Columns, table.PrimaryKey)})";
+            columnBuilder.Append(GetPrimaryKeySql(primaryKey));
         }
 
-        protected virtual string GetCreateColumnsSql(IEnumerable<DbColumnAttribute> columns,
-            DbPrimaryKeyAttribute primaryKey = null)
+        foreach (var column in columns)
         {
-            var columnBuilder = new StringBuilder();
-
-            if (primaryKey != null)
+            if (columnBuilder.Length > 0)
             {
-                columnBuilder.Append(GetPrimaryKeySql(primaryKey));
+                columnBuilder.Append(",");
             }
 
-            foreach (var column in columns)
-            {
-                if (columnBuilder.Length > 0)
-                {
-                    columnBuilder.Append(",");
-                }
-
-                columnBuilder.Append(GetColumnSql(column));
-            }
-
-            return columnBuilder.ToString();
+            columnBuilder.Append(GetColumnSql(column));
         }
 
-        protected virtual string GetPrimaryKeySql(DbPrimaryKeyAttribute primaryKey)
+        return columnBuilder.ToString();
+    }
+
+    protected virtual string GetPrimaryKeySql(DbPrimaryKeyAttribute primaryKey)
+    {
+        return $"{primaryKey.Name} {GetColumnTypeSql(primaryKey)} PRIMARY KEY NOT NULL";
+    }
+
+    protected virtual string GetColumnSql(DbColumnAttribute column)
+    {
+        if (column.AllowEmpty)
         {
-            return $"{primaryKey.Name} {GetColumnTypeSql(primaryKey)} PRIMARY KEY NOT NULL";
+            return $"{column.Name} {GetColumnTypeSql(column)}";
         }
-
-        protected virtual string GetColumnSql(DbColumnAttribute column)
+        else
         {
-            if (column.AllowEmpty)
-            {
-                return $"{column.Name} {GetColumnTypeSql(column)}";
-            }
-            else
-            {
-                return $"{column.Name} {GetColumnTypeSql(column)} NOT NULL";
-            }
+            return $"{column.Name} {GetColumnTypeSql(column)} NOT NULL";
         }
+    }
 
-        protected virtual string GetColumnTypeSql(DbColumnBaseAttribute column)
+    protected virtual string GetColumnTypeSql(DbColumnBaseAttribute column)
+    {
+        return column.Type switch
         {
-            return column.Type switch
-            {
-                DbType.String => column.Length > 50 ? $"VARCHAR({column.Length})" : $"CHAR({column.Length})",
-                DbType.Int32 => "INTEGER",
-                DbType.Int16 => "SMALLINT",
-                DbType.Decimal => "DECIMAL(18,2)",
-                DbType.Boolean => "BIT",
-                DbType.DateTime => "DATETIME",
-                _ => throw new NotSupportedException($"{column.Type} not support.")
-            };
-        }
+            DbType.String => column.Length > 50 ? $"VARCHAR({column.Length})" : $"CHAR({column.Length})",
+            DbType.Int32 => "INTEGER",
+            DbType.Int16 => "SMALLINT",
+            DbType.Decimal => "DECIMAL(18,2)",
+            DbType.Boolean => "BIT",
+            DbType.DateTime => "DATETIME",
+            _ => throw new NotSupportedException($"{column.Type} not support.")
+        };
     }
 }
