@@ -79,7 +79,7 @@ public class DbEngine
         totalCount = 0;
         totalPages = 0;
 
-        var sql = Executor.SqlBuilder.Take(builderParam, pageParam.Offset, pageParam.PageCount);
+        var sql = Executor.SqlBuilder.Take(builderParam, pageParam.Offset, pageParam.PageSize);
         var items = Executor.Select(sql, convertor, builderParam.WhereParams, con, tran).ToList();
             
         if (items.Count <= 1)
@@ -88,8 +88,8 @@ public class DbEngine
         }
 
         totalCount = Count(builderParam, con, tran);
-        totalPages = totalCount / pageParam.PageCount;
-        if (Math.Abs(totalCount % pageParam.PageCount) > 0)
+        totalPages = totalCount / pageParam.PageSize;
+        if (Math.Abs(totalCount % pageParam.PageSize) > 0)
         {
             totalPages++;
         }

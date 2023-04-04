@@ -2,9 +2,9 @@
 
 public class PageParam
 {
-    public int PageCount { get; set; }
+    public int PageSize { get; set; }
 
-    public int PageIndex { get; set; }
+    public int PageNumber { get; set; }
 
-    internal int Offset => PageCount * PageIndex;
+    internal int Offset => PageSize * (PageNumber - 1);
 }
