@@ -82,7 +82,7 @@ public class DbEngine
         var sql = Executor.SqlBuilder.Take(builderParam, pageParam.Offset, pageParam.PageSize);
         var items = Executor.Select(sql, convertor, builderParam.WhereParams, con, tran).ToList();
             
-        if (items.Count <= 1)
+        if (items.Count < 1)
         {
             return items;
         }
