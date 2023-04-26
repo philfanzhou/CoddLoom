@@ -21,18 +21,21 @@ public partial class SqlBuilder
         var valueBuilder = new StringBuilder();
         foreach (var item in input.Items)
         {
+            if (string.IsNullOrEmpty(item.StringValue))
+            {
+                continue;
+            }
+
             if (columnBuilder.Length > 0)
             {
                 columnBuilder.Append(",");
             }
-
             columnBuilder.Append(item.Column);
 
             if (valueBuilder.Length > 0)
             {
                 valueBuilder.Append(",");
             }
-
             valueBuilder.Append(ToValueSql(item));
         }
 
@@ -57,6 +60,11 @@ public partial class SqlBuilder
         var valueBuilder = new StringBuilder();
         foreach (var item in input.Items)
         {
+            if (string.IsNullOrEmpty(item.StringValue))
+            {
+                continue;
+            }
+
             if (valueBuilder.Length > 0)
             {
                 valueBuilder.Append(", ");

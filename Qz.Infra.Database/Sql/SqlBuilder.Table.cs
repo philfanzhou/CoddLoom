@@ -38,26 +38,30 @@ partial class SqlBuilder
 
     protected virtual string GetPrimaryKeySql(DbPrimaryKeyAttribute primaryKey)
     {
-        return $"{primaryKey.Name} {GetColumnTypeSql(primaryKey)} PRIMARY KEY NOT NULL";
+        var keySql = primaryKey.IsIdentity ? GetIdentityColumnSql(primaryKey) : GetColumnTypeSql(primaryKey);
+        return $"{primaryKey.Name} {keySql} PRIMARY KEY NOT NULL";
+    }
+
+    protected virtual string GetIdentityColumnSql(DbPrimaryKeyAttribute primaryKey)
+    {
+        return "BIGINT IDENTITY(1,1)";
     }
 
     protected virtual string GetColumnSql(DbColumnAttribute column)
     {
-        if (column.AllowEmpty)
+        var sql = $"{column.Name} {GetColumnTypeSql(column)}";
+        if (column.AllowEmpty == false)
         {
-            return $"{column.Name} {GetColumnTypeSql(column)}";
+            sql += " NOT NULL";
         }
-        else
-        {
-            return $"{column.Name} {GetColumnTypeSql(column)} NOT NULL";
-        }
+        return sql;
     }
 
     protected virtual string GetColumnTypeSql(DbColumnBaseAttribute column)
     {
         return column.Type switch
         {
-            DbType.String => column.Length > 50 ? $"VARCHAR({column.Length})" : $"CHAR({column.Length})",
+            DbType.String => GetColumnCharType(column),
             DbType.Int32 => "INTEGER",
             DbType.Int16 => "SMALLINT",
             DbType.Decimal => "DECIMAL(18,2)",
@@ -65,5 +69,22 @@ partial class SqlBuilder
             DbType.DateTime => "DATETIME",
             _ => throw new NotSupportedException($"{column.Type} not support.")
         };
+    }
+
+    protected virtual string GetColumnCharType(DbColumnBaseAttribute column)
+    {
+        var sql = "CHAR";
+        if (column.FixedLength == false)
+        {
+            sql = "VAR" + sql;
+        }
+        sql += $"({column.Length})";
+
+        if (column.AllowUnicode)
+        {
+            sql = "N" + sql;
+        }
+
+        return sql;
     }
 }

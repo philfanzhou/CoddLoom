@@ -10,5 +10,9 @@ public abstract class DbColumnBaseAttribute : Attribute
 
     public int Length { get; set; } = 50;
 
+    public bool FixedLength { get; set; }
+
+    public bool AllowUnicode { get; set; }
+
     internal string Name { get; set; }
 }
