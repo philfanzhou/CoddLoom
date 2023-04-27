@@ -76,6 +76,33 @@ public static class DbEngineExtension
             con, tran);
     }
 
+    public static string GenerateTimeStampId(this DbEngine self, 
+        string tableName, string columnName,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        var getNewId = new Func<string>(() => DateTime.UtcNow.ToString("yyMMddHHmmss") + new Random().Next(100, 999));
+
+        var newId = getNewId();
+        var whereParamItem = new WhereParamsItem(columnName, newId);
+        var whereParam = new WhereParams(whereParamItem);
+        var sqlBuilderParam = new SqlBuilderCountParam(tableName, whereParam);
+
+        var tryCount = 0;
+        while (self.Exist(sqlBuilderParam, con, tran))
+        {
+            if (tryCount > 10)
+            {
+                throw new Exception($"Generate new {tableName}.{columnName} ID failed.");
+            }
+
+            newId = getNewId();
+            whereParamItem.Value = newId;
+            tryCount++;
+        }
+
+        return newId;
+    }
+
     private static WhereParams GetKeyWhereParam<T>(string keyValue)
     {
         if (string.IsNullOrEmpty(keyValue))
