@@ -15,7 +15,8 @@ internal static class TableColumnsCache
             InsertColumnCache.Add(table.Name, new List<string>());
             UpdateColumnCache.Add(table.Name, new List<string>());
 
-            if (table.PrimaryKey != null)
+            if (table.PrimaryKey != null 
+                && table.PrimaryKey.IsIdentity == false)
             {
                 InsertColumnCache[table.Name].Add(table.PrimaryKey.Name);
             }
@@ -28,7 +29,7 @@ internal static class TableColumnsCache
         }
     }
 
-    internal static List<string> GetTableInsertColumns(string tableName)
+    internal static List<string> GetInsertColumns(string tableName)
     {
         if (InsertColumnCache.ContainsKey(tableName))
         {
@@ -38,7 +39,7 @@ internal static class TableColumnsCache
         return null;
     }
 
-    internal static List<string> GetTableUpdateColumns(string tableName)
+    internal static List<string> GetUpdateColumns(string tableName)
     {
         if (UpdateColumnCache.ContainsKey(tableName))
         {

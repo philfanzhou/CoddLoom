@@ -18,7 +18,7 @@ public static partial class DbConverter
         }
 
         var entityMap = EntityMapCache.Get<T>();
-        var columns = TableColumnsCache.GetTableInsertColumns(entityMap.Table.Name);
+        var columns = TableColumnsCache.GetInsertColumns(entityMap.Table.Name);
         if (columns == null)
         {
             return null;
@@ -45,7 +45,7 @@ public static partial class DbConverter
         }
 
         var entityMap = EntityMapCache.Get<T>();
-        var columns = TableColumnsCache.GetTableUpdateColumns(entityMap.Table.Name);
+        var columns = TableColumnsCache.GetUpdateColumns(entityMap.Table.Name);
         if (columns == null)
         {
             return null;
