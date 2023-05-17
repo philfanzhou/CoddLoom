@@ -1,9 +1,9 @@
 ﻿using Qz.Infra.Database.Cache;
-using Qz.Infra.Database.Entity;
 using Qz.Infra.Database.Input;
 using Qz.Infra.Database.Params;
 using Qz.Infra.Database.Sql;
 using System;
+using System.Data;
 using System.Reflection;
 
 namespace Qz.Infra.Database.Convert;
@@ -29,7 +29,12 @@ public static partial class DbConverter
         {
             if (columns.Contains(attribute.Name))
             {
-                AddToInput(input, memberInfo, attribute, entity);
+                var value = memberInfo.GetEntityValue(entity);
+                // do not add empty value while insert.
+                if (!string.IsNullOrEmpty(value))
+                {
+                    input.Add(attribute.Name, value, memberInfo.GetDbType());
+                }
             }
         }
 
@@ -57,11 +62,12 @@ public static partial class DbConverter
         {
             if (columns.Contains(attribute.Name))
             {
-                AddToInput(input, memberInfo, attribute, entity);
+                var value = memberInfo.GetEntityValue(entity);
+                input.Add(attribute.Name, value, memberInfo.GetDbType());
             }
             else if (attribute.PrimaryKey)
             {
-                var keyValue = GetMemberValue(memberInfo, entity);
+                var keyValue = memberInfo.GetEntityValue(entity);
                 if (string.IsNullOrEmpty(keyValue) == false)
                 {
                     whereParams = new WhereParams(attribute.Name, keyValue);
@@ -72,30 +78,33 @@ public static partial class DbConverter
         return whereParams == null ? null : new SqlBuilderUpdateParam<T>(input, whereParams);
     }
 
-    private static void AddToInput<T>(InputValues input, MemberInfo member, MapColumnAttribute attribute, T entity)
+    private static string GetEntityValue<T>(this MemberInfo member, T entity)
     {
+        object obj = null;
         if (member is FieldInfo field)
         {
-            input.Add(attribute.Name, field.GetValue(entity).ToString(), DbTypeConverter.ToDbType(field.FieldType));
+            obj = field.GetValue(entity);
         }
         else if (member is PropertyInfo property)
         {
-            input.Add(attribute.Name, property.GetValue(entity).ToString(), DbTypeConverter.ToDbType(property.PropertyType));
+            obj = property.GetValue(entity);
         }
+
+        return obj != null ? obj.ToString() : string.Empty;
     }
 
-    private static string GetMemberValue<T>(MemberInfo member, T entity)
+    private static DbType GetDbType(this MemberInfo member)
     {
         if (member is FieldInfo field)
         {
-            return field.GetValue(entity).ToString();
+            return DbTypeConverter.ToDbType(field.FieldType);
         }
 
         if (member is PropertyInfo property)
         {
-            return property.GetValue(entity).ToString();
+            return DbTypeConverter.ToDbType(property.PropertyType);
         }
 
-        return string.Empty;
+        throw new NotSupportedException($"Member type {member.GetType()} not supported.");
     }
 }

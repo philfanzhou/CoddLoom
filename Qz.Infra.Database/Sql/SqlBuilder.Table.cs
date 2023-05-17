@@ -38,13 +38,9 @@ partial class SqlBuilder
 
     protected virtual string GetPrimaryKeySql(DbPrimaryKeyAttribute primaryKey)
     {
-        var keySql = primaryKey.IsIdentity ? GetIdentityColumnSql(primaryKey) : GetColumnTypeSql(primaryKey);
-        return $"{primaryKey.Name} {keySql} PRIMARY KEY NOT NULL";
-    }
-
-    protected virtual string GetIdentityColumnSql(DbPrimaryKeyAttribute primaryKey)
-    {
-        return "BIGINT IDENTITY(1,1)";
+        var typeSql = primaryKey.IsIdentity ? "INTEGER" : GetColumnTypeSql(primaryKey);
+        var endSql = primaryKey.IsIdentity ? "AUTOINCREMENT" : "NOT NULL";
+        return $"{primaryKey.Name} {typeSql} PRIMARY KEY {endSql}";
     }
 
     protected virtual string GetColumnSql(DbColumnAttribute column)

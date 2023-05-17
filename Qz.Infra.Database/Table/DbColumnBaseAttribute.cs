@@ -14,5 +14,5 @@ public abstract class DbColumnBaseAttribute : Attribute
 
     public bool AllowUnicode { get; set; }
 
-    internal string Name { get; set; }
+    public string Name { get; internal set; }
 }

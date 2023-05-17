@@ -1,11 +1,18 @@
 ﻿using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Sql;
+using Qz.Infra.Database.Table;
 using System;
 
 namespace Qz.Infra.Database.SqlServer
 {
     public class SqlServerBuilder : SqlBuilder
     {
+        protected override string GetPrimaryKeySql(DbPrimaryKeyAttribute primaryKey)
+        {
+            var keySql = primaryKey.IsIdentity ? "BIGINT IDENTITY(1,1)" : GetColumnTypeSql(primaryKey);
+            return $"{primaryKey.Name} {keySql} PRIMARY KEY NOT NULL";
+        }
+
         protected override string AppendLimit(string sql, int count, int offset = 0)
         {
             if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
