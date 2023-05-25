@@ -76,24 +76,19 @@ public class DbEngine
         PageParam pageParam, SqlBuilderSelectParam builderParam, out int totalPages, out int totalCount,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        totalCount = 0;
+        totalCount = Count(builderParam, con, tran);
         totalPages = 0;
+        if (totalCount > 0)
+        {
+            totalPages = totalCount / pageParam.PageSize;
+            if (Math.Abs(totalCount % pageParam.PageSize) > 0)
+            {
+                totalPages++;
+            }
+        }
 
         var sql = Executor.SqlBuilder.Take(builderParam, pageParam.Offset, pageParam.PageSize);
         var items = Executor.Select(sql, convertor, builderParam.WhereParams, con, tran).ToList();
-            
-        if (items.Count < 1)
-        {
-            return items;
-        }
-
-        totalCount = Count(builderParam, con, tran);
-        totalPages = totalCount / pageParam.PageSize;
-        if (Math.Abs(totalCount % pageParam.PageSize) > 0)
-        {
-            totalPages++;
-        }
-
         return items;
     }
 }

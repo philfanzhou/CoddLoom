@@ -2,9 +2,34 @@
 
 public class PageParam
 {
-    public int PageSize { get; set; }
+    private int _pageSize;
+    private int _pageNumber;
 
-    public int PageNumber { get; set; }
+    public int PageSize
+    {
+        get => _pageSize;
+        set
+        {
+            if (value <= 0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(value));
+            }
+            _pageSize = value;
+        }
+    }
+
+    public int PageNumber
+    {
+        get => _pageNumber;
+        set
+        {
+            if (value <= 0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(value));
+            }
+            _pageNumber = value;
+        }
+    }
 
     internal int Offset => PageSize * (PageNumber - 1);
 }
