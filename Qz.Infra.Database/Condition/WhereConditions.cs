@@ -6,7 +6,12 @@ namespace Qz.Infra.Database.Condition;
 public class WhereConditions
 {
     private readonly List<WhereConditionsItem> _items = new();
-        
+
+    public WhereConditions(WhereConditionsIsItem item)
+    {
+        Add(item);
+    }
+
     public WhereConditions(WhereParamsItem whereParamsItem,
         WhereOperator whereOperator = WhereOperator.Equal,
         WhereConnecter connecter = WhereConnecter.And)
