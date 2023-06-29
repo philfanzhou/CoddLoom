@@ -1,4 +1,5 @@
 ﻿using Qz.Infra.Database.Condition;
+using Qz.Infra.Database.Input;
 using Qz.Infra.Database.Sql;
 using Qz.Infra.Database.Table;
 using System;
@@ -33,6 +34,15 @@ namespace Qz.Infra.Database.SqlServer
                 throw new ArgumentNullException(nameof(orderBy), "SqlServer can not use 'OFFSET' keyword without order by condition");
             }
             return base.Take(tableName, offset, count, where, orderBy);
+        }
+
+        protected override string GetStringInputValue(InputValuesItem item)
+        {
+            if (item.StringValue.Contains("'"))
+            {
+                item.StringValue = item.StringValue.Replace("'", "''");
+            }
+            return base.GetStringInputValue(item);
         }
     }
 }

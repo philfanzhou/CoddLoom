@@ -183,6 +183,7 @@ public partial class SqlBuilder
         switch (item.Type)
         {
             case DbType.String:
+                return GetStringInputValue(item);
             case DbType.DateTime:
                 return $"'{item.StringValue}'";
             case DbType.Int32:
@@ -193,6 +194,11 @@ public partial class SqlBuilder
             default:
                 throw new ArgumentOutOfRangeException(nameof(item.Type), item.Type, null);
         }
+    }
+
+    protected virtual string GetStringInputValue(InputValuesItem item)
+    {
+        return $"'{item.StringValue}'";
     }
 
     #endregion
