@@ -5,9 +5,10 @@ namespace Qz.Infra.Database.Condition;
 
 public class WhereConditions
 {
-    private readonly List<WhereConditionsItem> _items = new();
+    private readonly List<WhereConditionsItemBase> _items = new();
+    private readonly Dictionary<string, int> _paramNameIndex = new();
 
-    public WhereConditions(WhereConditionsIsItem item)
+    public WhereConditions(WhereConditionsNullItem item)
     {
         Add(item);
     }
@@ -16,22 +17,22 @@ public class WhereConditions
         WhereOperator whereOperator = WhereOperator.Equal,
         WhereConnecter connecter = WhereConnecter.And)
     {
-        _items.Add(new WhereConditionsItem(whereParamsItem, whereOperator, connecter));
         WhereParams = new WhereParams(whereParamsItem);
+        _items.Add(new WhereConditionsItem(whereParamsItem, whereOperator, connecter));
     }
 
     public WhereConditions(WhereParams whereParams,
         WhereOperator whereOperator = WhereOperator.Equal,
         WhereConnecter connecter = WhereConnecter.And)
     {
+        WhereParams = whereParams;
         foreach (var item in whereParams.Items)
         {
-            _items.Add(new WhereConditionsItem(item, whereOperator, connecter));
+            Add(new WhereConditionsItem(item, whereOperator, connecter));
         }
-        WhereParams = whereParams;
     }
 
-    public IReadOnlyList<WhereConditionsItem> Items => _items.AsReadOnly();
+    public IReadOnlyList<WhereConditionsItemBase> Items => _items.AsReadOnly();
 
     internal WhereParams WhereParams { get; }
 
@@ -39,13 +40,34 @@ public class WhereConditions
         WhereOperator whereOperator = WhereOperator.Equal,
         WhereConnecter connecter = WhereConnecter.And)
     {
-        _items.Add(new WhereConditionsItem(whereParamsItem, whereOperator, connecter));
         WhereParams.Add(whereParamsItem);
+        Add(new WhereConditionsItem(whereParamsItem, whereOperator, connecter));
     }
 
-    public void Add(WhereConditionsIsItem item)
+    public void Add(WhereConditionsNullItem nullItem)
     {
-        _items.Add(item);
+        _items.Add(nullItem);
         // no need add to WhereParams because it's special condition
+    }
+
+    private void Add(WhereConditionsItem item)
+    {
+        if (!_paramNameIndex.ContainsKey(item.Param.Name))
+        {
+            _paramNameIndex.Add(item.Param.Name, 0);
+        }
+        else
+        {
+            _paramNameIndex[item.Param.Name] += 1;
+        }
+
+        var index = _paramNameIndex[item.Param.Name];
+        if (index > 0)
+        {
+
+            item.Param.Name = $"{item.Param.Name}{index}";
+        }
+
+        _items.Add(item);
     }
 }

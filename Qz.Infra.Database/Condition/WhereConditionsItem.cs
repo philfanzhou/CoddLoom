@@ -1,28 +1,22 @@
 ﻿using Qz.Infra.Database.Params;
 
-namespace Qz.Infra.Database.Condition;
-
-public class WhereConditionsItem
+namespace Qz.Infra.Database.Condition
 {
-    protected WhereConditionsItem()
+    public class WhereConditionsItem : WhereConditionsItemBase
     {
+        public WhereConditionsItem(WhereParamsItem paramsItem,
+            WhereOperator whereOperator = WhereOperator.Equal,
+            WhereConnecter connecter = WhereConnecter.And)
+        {
+            Param = paramsItem;
+            WhereOperator = whereOperator;
+            WhereConnecter = connecter;
+        }
+
+        public WhereParamsItem Param { get; }
+
+        public WhereOperator WhereOperator { get; protected set; }
+
+        public override string Column => Param?.Column;
     }
-
-    public WhereConditionsItem(WhereParamsItem paramsItem, 
-        WhereOperator whereOperator = WhereOperator.Equal,
-        WhereConnecter connecter = WhereConnecter.And)
-    {
-        Column = paramsItem.Column;
-        WhereOperator = whereOperator;
-        ParamName = paramsItem.Name;
-        WhereConnecter = connecter;
-    }
-
-    public string Column { get; protected set; }
-
-    public WhereOperator WhereOperator { get; protected set; }
-
-    public string ParamName { get; protected set; }
-
-    public WhereConnecter WhereConnecter { get; protected set; }
 }

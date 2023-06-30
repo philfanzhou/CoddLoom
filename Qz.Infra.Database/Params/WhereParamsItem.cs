@@ -19,7 +19,7 @@ public class WhereParamsItem
     {
     }
 
-    public string Name { get; }
+    public string Name { get; set; }
 
     public string Value { get; set; }
 

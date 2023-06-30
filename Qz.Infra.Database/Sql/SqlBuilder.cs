@@ -124,13 +124,13 @@ public partial class SqlBuilder
 
             whereBuilder.Append($"{item.Column}");
 
-            if (item is WhereConditionsIsItem isItem)
+            if (item is WhereConditionsNullItem nullCondition)
             {
-                whereBuilder.Append($" IS {(isItem.IsNull ? "NULL" : "NOT NULL")}");
+                whereBuilder.Append($" IS {(nullCondition.IsNull ? "NULL" : "NOT NULL")}");
             }
-            else
+            else if (item is WhereConditionsItem condition)
             {
-                switch (item.WhereOperator)
+                switch (condition.WhereOperator)
                 {
                     case WhereOperator.Equal:
                         whereBuilder.Append(" = ");
@@ -154,7 +154,7 @@ public partial class SqlBuilder
                         whereBuilder.Append(" LIKE ");
                         break;
                 }
-                whereBuilder.Append($"{ParamPrefix}{item.ParamName}");
+                whereBuilder.Append($"{ParamPrefix}{condition.Param.Name}");
             }
         }
 
