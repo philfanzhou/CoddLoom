@@ -21,7 +21,7 @@ public partial class SqlBuilder
         var valueBuilder = new StringBuilder();
         foreach (var item in input.Items)
         {
-            if (item.Type != DbType.String && string.IsNullOrEmpty(item.StringValue))
+            if (/*item.Type != DbType.String && */string.IsNullOrEmpty(item.StringValue))
             {
                 continue;
             }
@@ -60,7 +60,7 @@ public partial class SqlBuilder
         var valueBuilder = new StringBuilder();
         foreach (var item in input.Items)
         {
-            if (item.Type != DbType.String && string.IsNullOrEmpty(item.StringValue))
+            if (/*item.Type != DbType.String && */string.IsNullOrEmpty(item.StringValue))
             {
                 continue;
             }
