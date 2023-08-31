@@ -8,39 +8,48 @@ public class WhereConditions
     private readonly List<WhereConditionsItemBase> _items = new();
     private readonly Dictionary<string, int> _paramNameIndex = new();
 
+    #region Constructor
+    public WhereConditions() { }
+
     public WhereConditions(WhereConditionsNullItem item)
     {
         Add(item);
-    }
-
-    public WhereConditions(WhereParamsItem whereParamsItem,
-        WhereOperator whereOperator = WhereOperator.Equal,
-        WhereConnecter connecter = WhereConnecter.And)
-    {
-        WhereParams = new WhereParams(whereParamsItem);
-        _items.Add(new WhereConditionsItem(whereParamsItem, whereOperator, connecter));
     }
 
     public WhereConditions(WhereParams whereParams,
         WhereOperator whereOperator = WhereOperator.Equal,
         WhereConnecter connecter = WhereConnecter.And)
     {
-        WhereParams = whereParams;
         foreach (var item in whereParams.Items)
         {
-            Add(new WhereConditionsItem(item, whereOperator, connecter));
+            Add(item, whereOperator, connecter);
         }
     }
 
+    public WhereConditions(WhereParamsItem whereParamsItem,
+        WhereOperator whereOperator = WhereOperator.Equal,
+        WhereConnecter connecter = WhereConnecter.And)
+        : this(new WhereParams(whereParamsItem), whereOperator, connecter)
+    {
+    }
+    #endregion
+
     public IReadOnlyList<WhereConditionsItemBase> Items => _items.AsReadOnly();
 
-    internal WhereParams WhereParams { get; }
+    internal WhereParams WhereParams { get; private set; }
 
     public void Add(WhereParamsItem whereParamsItem,
         WhereOperator whereOperator = WhereOperator.Equal,
         WhereConnecter connecter = WhereConnecter.And)
     {
-        WhereParams.Add(whereParamsItem);
+        if (WhereParams == null)
+        {
+            WhereParams = new WhereParams(whereParamsItem);
+        }
+        else
+        {
+            WhereParams.Add(whereParamsItem);
+        }
         Add(new WhereConditionsItem(whereParamsItem, whereOperator, connecter));
     }
 
@@ -64,7 +73,6 @@ public class WhereConditions
         var index = _paramNameIndex[item.Param.Name];
         if (index > 0)
         {
-
             item.Param.Name = $"{item.Param.Name}{index}";
         }
 

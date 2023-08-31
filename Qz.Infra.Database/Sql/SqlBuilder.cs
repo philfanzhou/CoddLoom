@@ -109,7 +109,7 @@ public partial class SqlBuilder
     protected virtual string AppendWhere(string sql,
         WhereConditions where = null)
     {
-        if (where == null)
+        if (where == null || where.Items.Count < 1)
         {
             return sql;
         }
