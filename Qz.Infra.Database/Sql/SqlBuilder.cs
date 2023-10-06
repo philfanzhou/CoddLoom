@@ -185,11 +185,11 @@ public partial class SqlBuilder
             case DbType.String:
                 return GetStringInputValue(item);
             case DbType.DateTime:
+            case DbType.Boolean:
                 return $"'{item.StringValue}'";
             case DbType.Int32:
             case DbType.Int16:
             case DbType.Decimal:
-            case DbType.Boolean:
                 return $"{item.StringValue}";
             default:
                 throw new ArgumentOutOfRangeException(nameof(item.Type), item.Type, null);
