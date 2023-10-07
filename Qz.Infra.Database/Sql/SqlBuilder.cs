@@ -1,7 +1,6 @@
 ﻿using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Input;
 using System;
-using System.Data;
 using System.Text;
 
 namespace Qz.Infra.Database.Sql;
@@ -21,11 +20,6 @@ public partial class SqlBuilder
         var valueBuilder = new StringBuilder();
         foreach (var item in input.Items)
         {
-            if (/*item.Type != DbType.String && */string.IsNullOrEmpty(item.StringValue))
-            {
-                continue;
-            }
-
             if (columnBuilder.Length > 0)
             {
                 columnBuilder.Append(",");
@@ -60,11 +54,6 @@ public partial class SqlBuilder
         var valueBuilder = new StringBuilder();
         foreach (var item in input.Items)
         {
-            if (/*item.Type != DbType.String && */string.IsNullOrEmpty(item.StringValue))
-            {
-                continue;
-            }
-
             if (valueBuilder.Length > 0)
             {
                 valueBuilder.Append(", ");
@@ -176,30 +165,6 @@ public partial class SqlBuilder
         if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
 
         return $"{sql} LIMIT {offset},{count}";
-    }
-
-    protected virtual string ToValueSql(InputValuesItem item)
-    {
-        switch (item.Type)
-        {
-            case DbType.String:
-                return GetStringInputValue(item);
-            case DbType.DateTime:
-            case DbType.Boolean:
-                return $"'{item.StringValue}'";
-            case DbType.Int32:
-            case DbType.Int16:
-            case DbType.Decimal:
-                return $"{item.StringValue}";
-            default:
-                throw new ArgumentOutOfRangeException(nameof(item.Type), item.Type, null);
-        }
-    }
-
-    protected virtual string GetStringInputValue(InputValuesItem item)
-    {
-        var value = string.IsNullOrEmpty(item.StringValue) ? "" : item.StringValue;
-        return $"'{value}'";
     }
 
     #endregion

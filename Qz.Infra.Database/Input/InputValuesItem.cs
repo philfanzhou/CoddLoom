@@ -2,11 +2,18 @@
 
 namespace Qz.Infra.Database.Input;
 
-public class InputValuesItem
+public class InputValuesItem<T> : IInputValuesItem
 {
-    public string Column{ get; set; }
-
-    public string StringValue{ get; set; }
+    public string Column { get; set; }
 
     public DbType Type { get; set; }
+
+    public T Value { get; set; }
+}
+
+public interface IInputValuesItem
+{
+    string Column { get; set; }
+
+    DbType Type { get; set; }
 }

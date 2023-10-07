@@ -7,32 +7,97 @@ namespace Qz.Infra.Database.Input;
 
 public class InputValues
 {
-    private readonly Dictionary<string, InputValuesItem> _items = new();
+    /// <summary>
+    /// use dictionary to make sure will not add same column one time.
+    /// </summary>
+    private readonly Dictionary<string, IInputValuesItem> _items = new();
 
-    public IReadOnlyList<InputValuesItem> Items => _items.Values.ToList().AsReadOnly();
+    public IReadOnlyList<IInputValuesItem> Items => _items.Values.ToList().AsReadOnly();
 
-    public void Add(string column, string value, DbType type = DbType.String)
+    public void Add(string column, object value, DbType dbType)
     {
-        _items.Add(column, new InputValuesItem
+        switch (dbType)
+        {
+            case DbType.String:
+                Add(column, value as string);
+                break;
+            case DbType.DateTime:
+                Add(column, (DateTime)value);
+                break;
+            case DbType.Boolean:
+                Add(column, (bool)value);
+                break;
+            case DbType.Int32:
+                Add(column, (int)value);
+                break;
+            case DbType.Int16:
+                Add(column, (short)value);
+                break;
+            case DbType.Decimal:
+                Add(column, (decimal)value);
+                break;
+            default:
+                throw new NotSupportedException($"{dbType} not supported.");
+        }
+    }
+
+    public void Add(string column, string value)
+    {
+        _items.Add(column, new InputValuesItem<string>
         {
             Column = column,
-            StringValue = value,
-            Type = type
+            Value = value,
+            Type = DbType.String
+        });
+    }
+
+    public void Add(string column, DateTime value)
+    {
+        _items.Add(column, new InputValuesItem<DateTime>
+        {
+            Column = column,
+            Value = value,
+            Type = DbType.DateTime
+        });
+    }
+
+    public void Add(string column, bool value)
+    {
+        _items.Add(column, new InputValuesItem<bool>
+        {
+            Column = column,
+            Value = value,
+            Type = DbType.Boolean
         });
     }
 
     public void Add(string column, int value)
     {
-        Add(column, value.ToString(), DbType.Int32);
+        _items.Add(column, new InputValuesItem<int>
+        {
+            Column = column,
+            Value = value,
+            Type = DbType.Int32
+        });
     }
 
-    public void Add(string column, DateTime value)
+    public void Add(string column, short value)
     {
-        Add(column, value.ToString("yyyy-MM-dd HH:mm:ss"), DbType.DateTime);
+        _items.Add(column, new InputValuesItem<short>
+        {
+            Column = column,
+            Value = value,
+            Type = DbType.Int16
+        });
     }
 
-    public void Add(string column, bool value)
+    public void Add(string column, decimal value)
     {
-        Add(column, $"{(value ? 1 : 0)}", DbType.Boolean);
+        _items.Add(column, new InputValuesItem<decimal>
+        {
+            Column = column,
+            Value = value,
+            Type = DbType.Decimal
+        });
     }
 }

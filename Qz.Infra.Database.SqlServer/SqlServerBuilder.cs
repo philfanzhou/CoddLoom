@@ -36,11 +36,11 @@ namespace Qz.Infra.Database.SqlServer
             return base.Take(tableName, offset, count, where, orderBy);
         }
 
-        protected override string GetStringInputValue(InputValuesItem item)
+        protected override string GetStringInputValue(InputValuesItem<string> item)
         {
-            if (item.StringValue.Contains("'"))
+            if (item.Value.Contains("'"))
             {
-                item.StringValue = item.StringValue.Replace("'", "''");
+                item.Value = item.Value.Replace("'", "''");
             }
             return base.GetStringInputValue(item);
         }

@@ -27,14 +27,25 @@ public static partial class DbConverter
         var input = new InputValues();
         foreach (var (memberInfo, attribute) in entityMap.Members)
         {
-            if (columns.Contains(attribute.Name))
+            if (!columns.Contains(attribute.Name))
             {
-                var value = memberInfo.GetEntityValue(entity);
-                // do not add empty value while insert.
-                if (!string.IsNullOrEmpty(value))
+                continue;
+            }
+
+            var value = memberInfo.GetEntityValue(entity);
+            var dbType = memberInfo.GetDbType();
+            
+            if (dbType == DbType.String)
+            {
+                // do not add empty string value while insert.
+                if (value != null && !string.IsNullOrEmpty(value.ToString()))
                 {
-                    input.Add(attribute.Name, value, memberInfo.GetDbType());
+                    input.Add(attribute.Name, value.ToString());
                 }
+            }
+            else
+            {
+                input.Add(attribute.Name, value, dbType);
             }
         }
 
@@ -68,9 +79,9 @@ public static partial class DbConverter
             else if (attribute.PrimaryKey)
             {
                 var keyValue = memberInfo.GetEntityValue(entity);
-                if (string.IsNullOrEmpty(keyValue) == false)
+                if (keyValue != null && !string.IsNullOrEmpty(keyValue.ToString()))
                 {
-                    whereParams = new WhereParams(attribute.Name, keyValue);
+                    whereParams = new WhereParams(attribute.Name, keyValue.ToString());
                 }
             }
         }
@@ -78,7 +89,7 @@ public static partial class DbConverter
         return whereParams == null ? null : new SqlBuilderUpdateParam<T>(input, whereParams);
     }
 
-    private static string GetEntityValue<T>(this MemberInfo member, T entity)
+    private static object GetEntityValue<T>(this MemberInfo member, T entity)
     {
         object obj = null;
         if (member is FieldInfo field)
@@ -90,7 +101,7 @@ public static partial class DbConverter
             obj = property.GetValue(entity);
         }
 
-        return obj != null ? obj.ToString() : string.Empty;
+        return obj;
     }
 
     private static DbType GetDbType(this MemberInfo member)
