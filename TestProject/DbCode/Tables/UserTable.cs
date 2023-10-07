@@ -13,5 +13,8 @@ namespace TestProject.DbCode.Tables
 
         [DbColumn(Type = DbType.String, AllowEmpty = false)]
         internal const string UnionId = "unionId";
+
+        [DbColumn(Type = DbType.DateTime, AllowEmpty = true)]
+        public const string RegistrationDate = "registrationDate";
     }
 }

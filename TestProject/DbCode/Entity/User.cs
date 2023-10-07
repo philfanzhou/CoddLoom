@@ -1,4 +1,5 @@
 ﻿using Qz.Infra.Database.Entity;
+using System;
 using TestProject.DbCode.Tables;
 
 namespace TestProject.DbCode.Entity
@@ -11,5 +12,8 @@ namespace TestProject.DbCode.Entity
 
         [MapColumn(Name = UserTable.UnionId)]
         public string UnionId { get; set; }
+
+        [MapColumn(Name = UserTable.RegistrationDate)]
+        public DateTime RegistrationDate { get; set; }
     }
 }

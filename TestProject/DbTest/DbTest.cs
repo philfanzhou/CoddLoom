@@ -14,6 +14,7 @@ using Qz.Infra.Database.SQLite;
 using TestProject.DbCode;
 using TestProject.DbCode.Entity;
 using TestProject.DbCode.Tables;
+using System;
 
 namespace TestProject.DbTest
 {
@@ -87,7 +88,8 @@ namespace TestProject.DbTest
                 {
                     Id = i.ToString(),
                     UnionId = (i * 5).ToString(),
-                    Password = i.ToString()
+                    Password = i.ToString(),
+                    RegistrationDate = DateTime.Now
                 };
                 dbEngine.Insert(pwdUser, con);
                 dbEngine.Insert<User>(pwdUser, con);
