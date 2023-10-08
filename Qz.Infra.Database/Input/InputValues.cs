@@ -36,6 +36,9 @@ public class InputValues
             case DbType.Decimal:
                 Add(column, (decimal)value);
                 break;
+            case DbType.Double: 
+                Add(column, (double)value);
+                break;
             default:
                 throw new NotSupportedException($"{dbType} not supported.");
         }
@@ -98,6 +101,16 @@ public class InputValues
             Column = column,
             Value = value,
             Type = DbType.Decimal
+        });
+    }
+
+    public void Add(string column, double value)
+    {
+        _items.Add(column, new InputValuesItem<double>
+        {
+            Column = column,
+            Value = value,
+            Type = DbType.Double
         });
     }
 }
