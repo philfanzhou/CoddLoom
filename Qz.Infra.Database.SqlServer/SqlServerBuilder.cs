@@ -38,7 +38,7 @@ namespace Qz.Infra.Database.SqlServer
 
         protected override string GetStringInputValue(InputValuesItem<string> item)
         {
-            if (item.Value.Contains("'"))
+            if (!string.IsNullOrEmpty(item.Value) && item.Value.Contains("'"))
             {
                 item.Value = item.Value.Replace("'", "''");
             }
