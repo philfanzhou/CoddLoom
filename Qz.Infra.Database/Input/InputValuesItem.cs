@@ -10,10 +10,3 @@ public class InputValuesItem<T> : IInputValuesItem
 
     public T Value { get; set; }
 }
-
-public interface IInputValuesItem
-{
-    string Column { get; set; }
-
-    DbType Type { get; set; }
-}

@@ -61,19 +61,19 @@ public class WhereConditions
 
     private void Add(WhereConditionsItem item)
     {
-        if (!_paramNameIndex.ContainsKey(item.Param.Name))
+        if (!_paramNameIndex.ContainsKey(item.Param.ParamName))
         {
-            _paramNameIndex.Add(item.Param.Name, 0);
+            _paramNameIndex.Add(item.Param.ParamName, 0);
         }
         else
         {
-            _paramNameIndex[item.Param.Name] += 1;
+            _paramNameIndex[item.Param.ParamName] += 1;
         }
 
-        var index = _paramNameIndex[item.Param.Name];
+        var index = _paramNameIndex[item.Param.ParamName];
         if (index > 0)
         {
-            item.Param.Name = $"{item.Param.Name}{index}";
+            item.Param.ParamName = $"{item.Param.ParamName}{index}";
         }
 
         _items.Add(item);

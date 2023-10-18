@@ -6,6 +6,8 @@ public class WhereParams
 {
     private readonly List<WhereParamsItem> _items = new();
 
+    #region Constructor
+
     public WhereParams(IEnumerable<WhereParamsItem> items)
     {
         foreach (var item in items)
@@ -27,8 +29,9 @@ public class WhereParams
     public WhereParams(string name, string value, string column)
         : this(new WhereParamsItem(name, value, column))
     {
-
     }
+
+    #endregion
 
     public IReadOnlyCollection<WhereParamsItem> Items => _items.AsReadOnly();
 

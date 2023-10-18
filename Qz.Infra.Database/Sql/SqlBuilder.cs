@@ -143,7 +143,7 @@ public partial class SqlBuilder
                         whereBuilder.Append(" LIKE ");
                         break;
                 }
-                whereBuilder.Append($"{ParamPrefix}{condition.Param.Name}");
+                whereBuilder.Append($"{ParamPrefix}{condition.Param.ParamName}");
             }
         }
 

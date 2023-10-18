@@ -57,7 +57,7 @@ public abstract class DbExecutor
             var func = GetAddParameterFunc(command);
             foreach (var item in whereParams.Items)
             {
-                func($"{SqlBuilder.ParamPrefix}{item.Name}", item.Value);
+                func($"{SqlBuilder.ParamPrefix}{item.ParamName}", item.Value);
             }
         }
 

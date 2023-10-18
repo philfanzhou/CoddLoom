@@ -2,26 +2,21 @@
 
 public class WhereParamsItem
 {
-    public WhereParamsItem(string name, string value, string column)
+    public WhereParamsItem(string paramName, object value, string column)
     {
-        Name = name;
+        ParamName = paramName;
         Value = value;
         Column = column;
     }
 
-    public WhereParamsItem(string name, string value)
-        : this(name, value, name)
+    public WhereParamsItem(string paramName, object value)
+        : this(paramName, value, paramName) // use param name as column
     {
     }
 
-    public WhereParamsItem(string name, bool value)
-        : this(name, value ? "1" : "0", name)
-    {
-    }
+    public string ParamName { get; set; }
 
-    public string Name { get; set; }
+    public object Value { get; set; }
 
-    public string Value { get; set; }
-
-    public string Column { get; }
+    public string Column { get; set; }
 }
