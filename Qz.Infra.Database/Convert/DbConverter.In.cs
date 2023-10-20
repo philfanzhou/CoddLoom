@@ -7,7 +7,6 @@ using System.Data;
 using System.Reflection;
 
 namespace Qz.Infra.Database.Convert;
-
 public static partial class DbConverter
 {
     internal static SqlBuilderInsertParam ToInsert<T>(T entity)
@@ -34,13 +33,13 @@ public static partial class DbConverter
 
             var value = memberInfo.GetEntityValue(entity);
             var dbType = memberInfo.GetDbType();
-            
+
             if (dbType == DbType.String)
             {
                 // do not add empty string value while insert.
                 if (value != null && !string.IsNullOrEmpty(value.ToString()))
                 {
-                    input.Add(attribute.Name, value.ToString());
+                    input.Add(attribute.Name, value.ToString(), attribute.IsUnicode);
                 }
             }
             else
@@ -71,17 +70,25 @@ public static partial class DbConverter
         WhereParams whereParams = null;
         foreach (var (memberInfo, attribute) in entityMap.Members)
         {
+            var value = memberInfo.GetEntityValue(entity);
+            var dbType = memberInfo.GetDbType();
+
             if (columns.Contains(attribute.Name))
             {
-                var value = memberInfo.GetEntityValue(entity);
-                input.Add(attribute.Name, value, memberInfo.GetDbType());
+                if (dbType == DbType.String)
+                {
+                    input.Add(attribute.Name, value.ToString(), attribute.IsUnicode);
+                }
+                else
+                {
+                    input.Add(attribute.Name, value, dbType);
+                }
             }
             else if (attribute.PrimaryKey)
             {
-                var keyValue = memberInfo.GetEntityValue(entity);
-                if (keyValue != null && !string.IsNullOrEmpty(keyValue.ToString()))
+                if (value != null && !string.IsNullOrEmpty(value.ToString()))
                 {
-                    whereParams = new WhereParams(attribute.Name, keyValue.ToString());
+                    whereParams = new WhereParams(attribute.Name, value.ToString());
                 }
             }
         }

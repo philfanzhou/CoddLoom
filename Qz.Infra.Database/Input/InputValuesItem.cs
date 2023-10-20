@@ -9,4 +9,6 @@ public class InputValuesItem<T> : IInputValuesItem
     public DbType Type { get; set; }
 
     public T Value { get; set; }
+
+    public bool IsUnicode { get; set; }
 }

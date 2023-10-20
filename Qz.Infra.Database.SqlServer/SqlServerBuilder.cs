@@ -38,11 +38,24 @@ namespace Qz.Infra.Database.SqlServer
 
         protected override string GetStringInputValue(InputValuesItem<string> item)
         {
-            if (!string.IsNullOrEmpty(item.Value) && item.Value.Contains("'"))
+            if (item.Value == null)
+            {
+                item.Value = string.Empty;
+            }
+
+            if (item.Value.Contains("'"))
             {
                 item.Value = item.Value.Replace("'", "''");
             }
-            return base.GetStringInputValue(item);
+
+            if (item.IsUnicode)
+            {
+                return $"N'{item.Value}'";
+            }
+            else
+            {
+                return $"'{item.Value}'";
+            }
         }
     }
 }

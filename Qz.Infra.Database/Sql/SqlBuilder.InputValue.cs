@@ -29,7 +29,7 @@ partial class SqlBuilder
 
     protected virtual string GetStringInputValue(InputValuesItem<string> item)
     {
-        var value = string.IsNullOrEmpty(item.Value) ? "" : item.Value;
+        var value = string.IsNullOrEmpty(item.Value) ? string.Empty : item.Value;
         return $"'{value}'";
     }
 

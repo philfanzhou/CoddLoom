@@ -44,13 +44,14 @@ public class InputValues
         }
     }
 
-    public void Add(string column, string value)
+    public void Add(string column, string value, bool isUnicode = false)
     {
         _items.Add(column, new InputValuesItem<string>
         {
             Column = column,
             Value = value,
-            Type = DbType.String
+            Type = DbType.String,
+            IsUnicode = isUnicode
         });
     }
 
