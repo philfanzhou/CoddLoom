@@ -10,6 +10,8 @@ public abstract class DbColumnBaseAttribute : Attribute
 
     public int Length { get; set; } = 50;
 
+    public int PointLength { get; set; }
+
     public bool FixedLength { get; set; }
 
     public bool AllowUnicode { get; set; }

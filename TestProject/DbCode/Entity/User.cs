@@ -15,5 +15,23 @@ namespace TestProject.DbCode.Entity
 
         [MapColumn(Name = UserTable.RegistrationDate)]
         public DateTime RegistrationDate { get; set; }
+
+        [MapColumn(Name = UserTable.Data)]
+        public byte[] Data { get; set; }
+
+        [MapColumn(Name = UserTable.DoubleData)]
+        public double DoubleData { get; set; }
+
+        [MapColumn(Name = UserTable.DecimalData)]
+        public decimal DecimalData { get; set; }
+
+        [MapColumn(Name = UserTable.ShortData)]
+        public short ShortData { get; set; }
+
+        [MapColumn(Name = UserTable.IntData)]
+        public int IntData { get; set; }
+
+        [MapColumn(Name = UserTable.BoolData)]
+        public bool BoolData { get; set; }
     }
 }

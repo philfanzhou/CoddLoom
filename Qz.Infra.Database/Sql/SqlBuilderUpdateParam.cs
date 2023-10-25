@@ -11,7 +11,8 @@ public class SqlBuilderUpdateParam : SqlBuilderWhereParam
     public SqlBuilderUpdateParam(string tableName, InputValues inputValues, WhereConditions where)
         : base(tableName, where)
     {
-        if (inputValues == null || inputValues.Items.Count < 1)
+        if (inputValues == null 
+            || (inputValues.SqlItems.Count < 1 && inputValues.ParamItems.Count < 1))
         {
             throw new ArgumentNullException(nameof(inputValues));
         }

@@ -1,6 +1,6 @@
 ﻿namespace Qz.Infra.Database.Params;
 
-public class WhereParamsItem
+public class WhereParamsItem : IDbParam
 {
     public WhereParamsItem(string paramName, object value, string column)
     {

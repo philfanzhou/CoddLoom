@@ -47,17 +47,17 @@ public abstract class DbExecutor
     protected abstract Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command);
 
     private IDbCommand BuildCommand(IDbConnection con, string sql,
-        WhereParams whereParams = null)
+        IEnumerable<IDbParam> dbParams = null)
     {
         var command = con.CreateCommand();
         command.CommandText = sql;
 
-        if (whereParams != null)
+        if (dbParams != null)
         {
             var func = GetAddParameterFunc(command);
-            foreach (var item in whereParams.Items)
+            foreach (var item in dbParams)
             {
-                func($"{SqlBuilder.ParamPrefix}{item.ParamName}", item.Value);
+                func(SqlBuilder.GetParamName(item), item.Value);
             }
         }
 
@@ -65,7 +65,7 @@ public abstract class DbExecutor
     }
 
     private void Execute(IDbConnection con, string sql,
-        WhereParams whereParams = null, Action<IDataReader> readerAction = null, IDbTransaction tran = null)
+        IEnumerable<IDbParam> dbParams = null, Action<IDataReader> readerAction = null, IDbTransaction tran = null)
     {
         if (con == null) throw new ArgumentNullException(nameof(con));
         if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
@@ -78,7 +78,7 @@ public abstract class DbExecutor
                 con.Open();
             }
 
-            using var command = BuildCommand(con, sql, whereParams);
+            using var command = BuildCommand(con, sql, dbParams);
 
             if (tran != null)
             {
@@ -164,20 +164,20 @@ public abstract class DbExecutor
     }
 
     public void Execute(string sql,
-        WhereParams whereParams = null, Action<IDataReader> readerAction = null,
+        IEnumerable<IDbParam> dbParams = null, Action<IDataReader> readerAction = null,
         IDbConnection con = null, IDbTransaction tran = null)
     {
         if (tran != null)
         {
-            Execute(tran.Connection, sql, whereParams, readerAction, tran);
+            Execute(tran.Connection, sql, dbParams, readerAction, tran);
         }
         else if (con != null)
         {
-            Execute(con, sql, whereParams, readerAction);
+            Execute(con, sql, dbParams, readerAction);
         }
         else
         {
-            Execute(p => { Execute(p, sql, whereParams, readerAction); });
+            Execute(p => { Execute(p, sql, dbParams, readerAction); });
         }
     }
 
@@ -186,11 +186,11 @@ public abstract class DbExecutor
     #region Execute with reader
 
     public List<T> Select<T>(string sql, Func<IDataRecord, T> convertor,
-        WhereParams whereParams = null, IDbConnection con = null, IDbTransaction tran = null)
+        IEnumerable<IDbParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
     {
         var result = new List<T>();
 
-        Execute(sql, whereParams, reader =>
+        Execute(sql, dbParams, reader =>
         {
             while (reader.Read())
             {
@@ -202,11 +202,11 @@ public abstract class DbExecutor
     }
 
     public T First<T>(string sql, Func<IDataRecord, T> convertor,
-        WhereParams whereParams = null, IDbConnection con = null, IDbTransaction tran = null)
+        IEnumerable<IDbParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
     {
         T result = default;
 
-        Execute(sql, whereParams, reader =>
+        Execute(sql, dbParams, reader =>
         {
             reader.Read();
             result = convertor(reader);
@@ -216,11 +216,11 @@ public abstract class DbExecutor
     }
 
     public int Count(string sql,
-        WhereParams whereParams = null, IDbConnection con = null, IDbTransaction tran = null)
+        IEnumerable<IDbParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
     {
         var count = 0;
 
-        Execute(sql, whereParams, reader =>
+        Execute(sql, dbParams, reader =>
         {
             reader.Read();
             count = reader.GetInt32(0);

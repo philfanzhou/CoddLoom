@@ -1,5 +1,6 @@
 ﻿using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Params;
+using System.Collections.Generic;
 
 namespace Qz.Infra.Database.Sql.Base;
 
@@ -18,5 +19,5 @@ public abstract class SqlBuilderWhereParam : SqlBuilderParam
 
     public WhereConditions WhereConditions { get; }
 
-    public WhereParams WhereParams => WhereConditions?.WhereParams;
+    internal IEnumerable<IDbParam> WhereParams => WhereConditions?.WhereParams?.Items;
 }

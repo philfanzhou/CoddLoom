@@ -16,5 +16,23 @@ namespace TestProject.DbCode.Tables
 
         [DbColumn(Type = DbType.DateTime, AllowEmpty = true)]
         public const string RegistrationDate = "registrationDate";
+
+        [DbColumn(Type = DbType.Binary)]
+        public const string Data = "data";
+
+        [DbColumn(Type = DbType.Double)]
+        public const string DoubleData = "doubleData";
+
+        [DbColumn(Type = DbType.Decimal, FixedLength = true, Length = 10, PointLength = 5)]
+        public const string DecimalData = "decimalData";
+
+        [DbColumn(Type = DbType.Int16)]
+        public const string ShortData = "shortData";
+
+        [DbColumn(Type = DbType.Int32)]
+        public const string IntData = "intData";
+
+        [DbColumn(Type = DbType.Boolean)]
+        public const string BoolData = "boolData";
     }
 }

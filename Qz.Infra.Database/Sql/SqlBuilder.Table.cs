@@ -60,9 +60,11 @@ partial class SqlBuilder
             DbType.String => GetColumnCharType(column),
             DbType.Int32 => "INTEGER",
             DbType.Int16 => "SMALLINT",
-            DbType.Decimal => "DECIMAL(18,2)",
+            DbType.Decimal => GetColumnDecimalType(column),
             DbType.Boolean => "BIT",
+            DbType.Double => "FLOAT",
             DbType.DateTime => "DATETIME",
+            DbType.Binary => "BLOB",
             _ => throw new NotSupportedException($"{column.Type} not support.")
         };
     }
@@ -82,5 +84,15 @@ partial class SqlBuilder
         }
 
         return sql;
+    }
+
+    protected virtual string GetColumnDecimalType(DbColumnBaseAttribute column)
+    {
+        if (!column.FixedLength)
+        {
+            return "DECIMAL(18,2)";
+        }
+
+        return $"DECIMAL({column.Length},{column.PointLength})";
     }
 }
