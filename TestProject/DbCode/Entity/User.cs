@@ -33,5 +33,8 @@ namespace TestProject.DbCode.Entity
 
         [MapColumn(Name = UserTable.BoolData)]
         public bool BoolData { get; set; }
+
+        [MapColumn(Name = UserTable.SpecialString)]
+        public string SpecialString { get; set; }
     }
 }

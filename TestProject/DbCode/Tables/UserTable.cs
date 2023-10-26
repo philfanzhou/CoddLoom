@@ -34,5 +34,8 @@ namespace TestProject.DbCode.Tables
 
         [DbColumn(Type = DbType.Boolean)]
         public const string BoolData = "boolData";
+
+        [DbColumn(Type = DbType.String, AllowUnicode = true)]
+        public const string SpecialString = "specialString";
     }
 }

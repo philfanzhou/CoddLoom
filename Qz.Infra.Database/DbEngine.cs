@@ -32,7 +32,7 @@ public class DbEngine
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var sql = Executor.SqlBuilder.Insert(builderParam);
-        Executor.Execute(sql, builderParam.Values.ParamItems, null, con, tran);
+        Executor.Execute(sql, builderParam.Values.Items, null, con, tran);
     }
 
     public void Delete(SqlBuilderDeleteParam builderParam,
@@ -49,7 +49,7 @@ public class DbEngine
         if (builderParam.WhereParams == null) throw new ArgumentNullException(nameof(builderParam.WhereParams));
         var sql = Executor.SqlBuilder.Update(builderParam);
         var dbParams = new List<IDbParam>();
-        dbParams.AddRange(builderParam.Values.ParamItems);
+        dbParams.AddRange(builderParam.Values.Items);
         dbParams.AddRange(builderParam.WhereParams);
         Executor.Execute(sql, dbParams, null, con, tran);
     }

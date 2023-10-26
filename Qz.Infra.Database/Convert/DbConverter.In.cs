@@ -3,10 +3,10 @@ using Qz.Infra.Database.Input;
 using Qz.Infra.Database.Params;
 using Qz.Infra.Database.Sql;
 using System;
-using System.Data;
 using System.Reflection;
 
 namespace Qz.Infra.Database.Convert;
+
 public static partial class DbConverter
 {
     internal static SqlBuilderInsertParam ToInsert<T>(T entity)
@@ -17,8 +17,8 @@ public static partial class DbConverter
         }
 
         var entityMap = EntityMapCache.Get<T>();
-        var columns = TableColumnsCache.GetInsertColumns(entityMap.Table.Name);
-        if (columns == null)
+        var insertColumns = TableColumnsCache.GetInsertColumns(entityMap.Table.Name);
+        if (insertColumns == null)
         {
             return null;
         }
@@ -26,26 +26,13 @@ public static partial class DbConverter
         var input = new InputValues();
         foreach (var (memberInfo, attribute) in entityMap.Members)
         {
-            if (!columns.Contains(attribute.Name))
+            if (!insertColumns.Contains(attribute.Name))
             {
                 continue;
             }
 
             var value = memberInfo.GetEntityValue(entity);
-            var dbType = memberInfo.GetDbType();
-
-            if (dbType == DbType.String)
-            {
-                // do not add empty string value while insert.
-                if (value != null && !string.IsNullOrEmpty(value.ToString()))
-                {
-                    input.Add(attribute.Name, value.ToString(), attribute.IsUnicode);
-                }
-            }
-            else
-            {
-                input.Add(attribute.Name, value);
-            }
+            input.Add(attribute.Name, value);
         }
 
         var builderParam = new SqlBuilderInsertParam<T>(input);
@@ -60,8 +47,8 @@ public static partial class DbConverter
         }
 
         var entityMap = EntityMapCache.Get<T>();
-        var columns = TableColumnsCache.GetUpdateColumns(entityMap.Table.Name);
-        if (columns == null)
+        var updateColumns = TableColumnsCache.GetUpdateColumns(entityMap.Table.Name);
+        if (updateColumns == null)
         {
             return null;
         }
@@ -71,18 +58,10 @@ public static partial class DbConverter
         foreach (var (memberInfo, attribute) in entityMap.Members)
         {
             var value = memberInfo.GetEntityValue(entity);
-            var dbType = memberInfo.GetDbType();
 
-            if (columns.Contains(attribute.Name))
+            if (updateColumns.Contains(attribute.Name))
             {
-                if (dbType == DbType.String)
-                {
-                    input.Add(attribute.Name, value.ToString(), attribute.IsUnicode);
-                }
-                else
-                {
-                    input.Add(attribute.Name, value);
-                }
+                input.Add(attribute.Name, value);
             }
             else if (attribute.PrimaryKey)
             {
@@ -109,20 +88,5 @@ public static partial class DbConverter
         }
 
         return obj;
-    }
-
-    private static DbType GetDbType(this MemberInfo member)
-    {
-        if (member is FieldInfo field)
-        {
-            return DbTypeConverter.ToDbType(field.FieldType);
-        }
-
-        if (member is PropertyInfo property)
-        {
-            return DbTypeConverter.ToDbType(property.PropertyType);
-        }
-
-        throw new NotSupportedException($"Member type {member.GetType()} not supported.");
     }
 }

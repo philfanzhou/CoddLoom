@@ -66,7 +66,7 @@ partial class DbConverter
         var objValue = record[attribute.Name];
         if (member is FieldInfo field)
         {
-            var setValue = DbTypeConverter.ToEntityValue(field.FieldType, objValue);
+            var setValue = ToEntityValue(field.FieldType, objValue);
             if (setValue != null)
             {
                 field.SetValue(entity, setValue);
@@ -74,11 +74,28 @@ partial class DbConverter
         }
         else if (member is PropertyInfo property)
         {
-            var setValue = DbTypeConverter.ToEntityValue(property.PropertyType, objValue);
+            var setValue = ToEntityValue(property.PropertyType, objValue);
             if (setValue != null)
             {
                 property.SetValue(entity, setValue);
             }
         }
+    }
+
+    private static object ToEntityValue(Type type, object value)
+    {
+        var typeName = type.FullName;
+        return typeName switch
+        {
+            "System.String" => value.ToString().Trim(),
+            "System.Int32" => int.TryParse(value.ToString(), out var ret) ? ret : null,
+            _ => value
+            //"System.Int16" => short.TryParse(strValue, out var ret) ? ret : null,
+            //"System.Decimal" => decimal.TryParse(strValue, out var ret) ? ret : null,
+            //"System.DateTime" => DateTime.TryParse(strValue, out var ret) ? ret : null,
+            //"System.Boolean" => bool.TryParse(strValue, out var ret) ? ret : null,
+            //"System.Double" => double.TryParse(strValue, out var ret) ? ret : null,
+            //_ => throw new NotSupportedException($"{typeName} not support.")
+        };
     }
 }

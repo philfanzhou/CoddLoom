@@ -8,6 +8,4 @@ public class MapColumnAttribute : Attribute
     public string Name { get; set; }
 
     public bool PrimaryKey { get; set; }
-
-    public bool IsUnicode { get; set; }
 }

@@ -5,4 +5,6 @@ public interface IDbParam
     string ParamName { get; }
 
     object Value { get; }
+
+    string Column { get; }
 }

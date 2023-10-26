@@ -1,5 +1,5 @@
 ﻿using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Input;
+using Qz.Infra.Database.Params;
 using Qz.Infra.Database.Sql;
 using Qz.Infra.Database.Table;
 using System;
@@ -47,25 +47,37 @@ public class SqlServerBuilder : SqlBuilder
         return base.Take(tableName, offset, count, where, orderBy);
     }
 
-    protected override string GetStringInputValue(InputValuesItem<string> item)
-    {
-        if (item.Value == null)
-        {
-            item.Value = string.Empty;
-        }
+    //protected override string GetUnicodeStringValue(IDbParam parameter)
+    //{
+    //    var strValue = string.Empty;
+    //    if (parameter.Value != null)
+    //    {
+    //        strValue = parameter.Value.ToString();
+    //    }
 
-        if (item.Value.Contains("'"))
-        {
-            item.Value = item.Value.Replace("'", "''");
-        }
+    //    return $"N'{strValue}'";
+    //}
 
-        if (item.IsUnicode)
-        {
-            return $"N'{item.Value}'";
-        }
-        else
-        {
-            return $"'{item.Value}'";
-        }
-    }
+    //protected override string GetU(IDbParam parameter, bool isUnicode)
+    //{
+    //    var strValue = string.Empty;
+    //    if (parameter.Value != null)
+    //    {
+    //        strValue = parameter.Value.ToString();
+    //    }
+
+    //    if (strValue.Contains("'"))
+    //    {
+    //        strValue = strValue.Replace("'", "''");
+    //    }
+
+    //    if (isUnicode)
+    //    {
+    //        return $"N'{strValue}'";
+    //    }
+    //    else
+    //    {
+    //        return $"'{strValue}'";
+    //    }
+    //}
 }

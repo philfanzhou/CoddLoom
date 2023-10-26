@@ -15,26 +15,11 @@ public partial class SqlBuilder
     public virtual string Insert(string tableName, InputValues input)
     {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
-        if (input == null || input.SqlItems.Count < 1) throw new ArgumentNullException(nameof(input));
+        if (input == null || input.Items.Count < 1) throw new ArgumentNullException(nameof(input));
 
         var columnBuilder = new StringBuilder();
         var valueBuilder = new StringBuilder();
-        foreach (var item in input.SqlItems)
-        {
-            if (columnBuilder.Length > 0)
-            {
-                columnBuilder.Append(",");
-            }
-            columnBuilder.Append(item.Column);
-
-            if (valueBuilder.Length > 0)
-            {
-                valueBuilder.Append(",");
-            }
-            valueBuilder.Append(ToValueSql(item));
-        }
-
-        foreach (var item in input.ParamItems)
+        foreach (var item in input.Items)
         {
             if (columnBuilder.Length > 0)
             {
@@ -68,16 +53,7 @@ public partial class SqlBuilder
         if (where == null) throw new ArgumentNullException(nameof(where));
 
         var valueBuilder = new StringBuilder();
-        foreach (var item in input.SqlItems)
-        {
-            if (valueBuilder.Length > 0)
-            {
-                valueBuilder.Append(", ");
-            }
-            valueBuilder.Append($"{item.Column} = ");
-            valueBuilder.Append(ToValueSql(item));
-        }
-        foreach (var item in input.ParamItems)
+        foreach (var item in input.Items)
         {
             if (valueBuilder.Length > 0)
             {
@@ -191,10 +167,10 @@ public partial class SqlBuilder
         return $"{sql} LIMIT {offset},{count}";
     }
 
-    #endregion
-
-    internal string GetParamName(IDbParam param)
+    protected internal virtual string GetParamName(IDbParam param)
     {
         return $"{ParamPrefix}{param.ParamName}";
     }
+
+    #endregion
 }

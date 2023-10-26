@@ -26,10 +26,10 @@ namespace TestProject.DbTest
         public void Run()
         {
             //var executor = new MySqlExecutor("192.168.50.85", "test", "root", "`12qweasd");
-            var executor = new SQLiteExecutor(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "User.db");
-            //var executor =
-            //    new SqlServerExecutor(
-            //        "Data Source=192.168.53.21;Database=TestDb;User ID=myuser;Password=qwe123!@;Connect Timeout=30");
+            //var executor = new SQLiteExecutor(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "User.db");
+            var executor =
+                new SqlServerExecutor(
+                    "Data Source=192.168.53.21;Database=TestDb;User ID=myuser;Password=qwe123!@;Connect Timeout=30");
 
             var dbEngine = new TestDbEngine(executor);
             DbContainer.Add(dbEngine);
@@ -83,6 +83,7 @@ namespace TestProject.DbTest
 
         private static void InsertTwoTables(int count, TestDbEngine dbEngine, IDbConnection con)
         {
+            var specialString = "test'fdadf_OLOGY£¨KUNSHAN£©ELECTR";
             var flag = false;
             var now = DateTime.Now;
             for (var i = 0; i < count; i++)
@@ -98,7 +99,8 @@ namespace TestProject.DbTest
                     DecimalData = (decimal)(i * 0.00001),
                     ShortData = (short)i,
                     IntData = i,
-                    BoolData = flag
+                    BoolData = flag,
+                    SpecialString = specialString
                 };
                 flag = !flag;
                 dbEngine.Insert(pwdUser, con);
@@ -124,6 +126,7 @@ namespace TestProject.DbTest
                 Assert.AreEqual((short)i, user.ShortData);
                 Assert.AreEqual(i, user.IntData);
                 Assert.AreEqual(flag, user.BoolData);
+                Assert.AreEqual(specialString, user.SpecialString);
                 flag = !flag;
             }
         }
