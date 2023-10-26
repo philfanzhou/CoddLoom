@@ -11,7 +11,7 @@ public class InputValues
     /// </summary>
     private readonly Dictionary<string, IDbParam> _items = new();
 
-    internal IReadOnlyList<IDbParam> Items => _items.Values.ToList().AsReadOnly();
+    public IReadOnlyList<IDbParam> Items => _items.Values.ToList().AsReadOnly();
 
     public void Add(string column, object value)
     {
