@@ -18,29 +18,13 @@ public class InputValues
 
     internal IReadOnlyList<InputValuesItem> ParamItems => _paramItems.Values.ToList().AsReadOnly();
 
-    public void Add(string column, object value, DbType dbType)
+    public void Add(string column, object value)
     {
-        switch (dbType)
+        _paramItems.Add(column, new InputValuesItem
         {
-            case DbType.String:
-                Add(column, value as string);
-                break;
-            case DbType.DateTime:
-            case DbType.Boolean:
-            case DbType.Int32:
-            case DbType.Int16:
-            case DbType.Decimal:
-            case DbType.Double: 
-            case DbType.Binary:
-                _paramItems.Add(column, new InputValuesItem
-                {
-                    Column = column,
-                    Value = value,
-                });
-                break;
-            default:
-                throw new NotSupportedException($"{dbType} not supported.");
-        }
+            Column = column,
+            Value = value,
+        });
     }
 
     public void Add(string column, string value, bool isUnicode = false)

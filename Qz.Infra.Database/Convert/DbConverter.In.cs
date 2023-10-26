@@ -44,7 +44,7 @@ public static partial class DbConverter
             }
             else
             {
-                input.Add(attribute.Name, value, dbType);
+                input.Add(attribute.Name, value);
             }
         }
 
@@ -81,7 +81,7 @@ public static partial class DbConverter
                 }
                 else
                 {
-                    input.Add(attribute.Name, value, dbType);
+                    input.Add(attribute.Name, value);
                 }
             }
             else if (attribute.PrimaryKey)
