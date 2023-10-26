@@ -32,7 +32,10 @@ public static partial class DbConverter
             }
 
             var value = memberInfo.GetEntityValue(entity);
-            input.Add(attribute.Name, value);
+            if (value != null)
+            {
+                input.Add(attribute.Name, value);
+            }
         }
 
         var builderParam = new SqlBuilderInsertParam<T>(input);
