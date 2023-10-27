@@ -21,13 +21,4 @@ public class InputValues
             Value = value,
         });
     }
-
-    public void Add(string column, string value)
-    {
-        _items.Add(column, new InputValuesItem
-        {
-            Column = column,
-            Value = value,
-        });
-    }
 }

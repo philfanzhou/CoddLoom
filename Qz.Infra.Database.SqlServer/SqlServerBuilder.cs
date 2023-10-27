@@ -1,5 +1,4 @@
 ﻿using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Params;
 using Qz.Infra.Database.Sql;
 using Qz.Infra.Database.Table;
 using System;
@@ -46,38 +45,4 @@ public class SqlServerBuilder : SqlBuilder
         }
         return base.Take(tableName, offset, count, where, orderBy);
     }
-
-    //protected override string GetUnicodeStringValue(IDbParam parameter)
-    //{
-    //    var strValue = string.Empty;
-    //    if (parameter.Value != null)
-    //    {
-    //        strValue = parameter.Value.ToString();
-    //    }
-
-    //    return $"N'{strValue}'";
-    //}
-
-    //protected override string GetU(IDbParam parameter, bool isUnicode)
-    //{
-    //    var strValue = string.Empty;
-    //    if (parameter.Value != null)
-    //    {
-    //        strValue = parameter.Value.ToString();
-    //    }
-
-    //    if (strValue.Contains("'"))
-    //    {
-    //        strValue = strValue.Replace("'", "''");
-    //    }
-
-    //    if (isUnicode)
-    //    {
-    //        return $"N'{strValue}'";
-    //    }
-    //    else
-    //    {
-    //        return $"'{strValue}'";
-    //    }
-    //}
 }

@@ -40,7 +40,7 @@ public class WhereParams
         Add(new WhereParamsItem(name, value));
     }
 
-    public void Add(WhereParamsItem item)
+    internal void Add(WhereParamsItem item)
     {
         _items.Add(item);
     }
