@@ -16,26 +16,21 @@ public class WhereParams
         }
     }
 
-    public WhereParams(WhereParamsItem item)
-    {
-        Add(item);
-    }
-
-    public WhereParams(string name, string value)
+    public WhereParams(string name, object value)
         : this(new WhereParamsItem(name, value))
     {
     }
 
-    public WhereParams(string name, string value, string column)
-        : this(new WhereParamsItem(name, value, column))
+    internal WhereParams(WhereParamsItem item)
     {
+        Add(item);
     }
 
     #endregion
 
-    public IReadOnlyCollection<WhereParamsItem> Items => _items.AsReadOnly();
+    internal IReadOnlyCollection<WhereParamsItem> Items => _items.AsReadOnly();
 
-    public void Add(string name, string value)
+    public void Add(string name, object value)
     {
         Add(new WhereParamsItem(name, value));
     }
