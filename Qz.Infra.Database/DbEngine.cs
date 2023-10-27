@@ -48,7 +48,7 @@ public class DbEngine
     {
         if (builderParam.WhereParams == null) throw new ArgumentNullException(nameof(builderParam.WhereParams));
         var sql = Executor.SqlBuilder.Update(builderParam);
-        var dbParams = new List<IDbParam>();
+        var dbParams = new List<ISqlParameter>();
         dbParams.AddRange(builderParam.Values.Items);
         dbParams.AddRange(builderParam.WhereParams);
         Executor.Execute(sql, dbParams, null, con, tran);

@@ -21,7 +21,7 @@ public class JoinConditions
 
     public JoinType Type { get; }
 
-    public IReadOnlyList<JoinConditionsItem> Columns => _columns.AsReadOnly();
+    internal IReadOnlyList<JoinConditionsItem> Columns => _columns.AsReadOnly();
 
     public void Add(string column1, string column2)
     {

@@ -1,4 +1,5 @@
 ﻿using Qz.Infra.Database.Cache;
+using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Convert;
 using Qz.Infra.Database.Params;
 using Qz.Infra.Database.Sql;
@@ -19,8 +20,8 @@ public static class DbEngineExtension
     public static void Delete<T>(this DbEngine self, string keyValue,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var whereParams = GetKeyWhereParam<T>(keyValue);
-        self.Delete(new SqlBuilderDeleteParam<T>(whereParams), con, tran);
+        var where = GetKeyWhere<T>(keyValue);
+        self.Delete(new SqlBuilderDeleteParam<T>(where), con, tran);
     }
 
     public static void Update<T>(this DbEngine self, T entity,
@@ -55,8 +56,8 @@ public static class DbEngineExtension
         IDbConnection con = null, IDbTransaction tran = null)
         where T : new()
     {
-        var whereParams = GetKeyWhereParam<T>(keyValue);
-        var builderParam = new SqlBuilderSelectParam<T>(whereParams);
+        var where = GetKeyWhere<T>(keyValue);
+        var builderParam = new SqlBuilderSelectParam<T>(where);
         return self.Select<T>(builderParam, con, tran);
     }
 
@@ -83,9 +84,9 @@ public static class DbEngineExtension
         var getNewId = new Func<string>(() => DateTime.UtcNow.ToString("yyMMddHHmmss") + new Random().Next(100, 999));
 
         var newId = getNewId();
-        var whereParamItem = new WhereParamsItem(columnName, newId);
-        var whereParam = new WhereParams(whereParamItem);
-        var sqlBuilderParam = new SqlBuilderCountParam(tableName, whereParam);
+        var where = new WhereConditions();
+        where.Add(columnName, newId);
+        var sqlBuilderParam = new SqlBuilderCountParam(tableName, where);
 
         var tryCount = 0;
         while (self.Exist(sqlBuilderParam, con, tran))
@@ -96,14 +97,15 @@ public static class DbEngineExtension
             }
 
             newId = getNewId();
-            whereParamItem.Value = newId;
+            where = new WhereConditions();
+            where.Add(columnName, newId);
             tryCount++;
         }
 
         return newId;
     }
 
-    private static WhereParams GetKeyWhereParam<T>(string keyValue)
+    private static WhereConditions GetKeyWhere<T>(string keyValue)
     {
         if (string.IsNullOrEmpty(keyValue))
         {
@@ -116,7 +118,8 @@ public static class DbEngineExtension
             throw new ArgumentException($"{nameof(T)} does not have a primary key");
         }
 
-        var whereParams = new WhereParams(entityMap.PrimaryKey, keyValue);
-        return whereParams;
+        var where = new WhereConditions();
+        where.Add(entityMap.PrimaryKey, keyValue);
+        return where;
     }
 }

@@ -1,22 +1,27 @@
 ﻿namespace Qz.Infra.Database.Params;
 
-public class WhereParamsItem : IDbParam
+public class WhereParamsItem : ISqlParameter
 {
-    public WhereParamsItem(string paramName, object value, string column)
+    /// <summary>
+    /// Use column as parameter name.
+    /// </summary>
+    /// <param name="column"></param>
+    /// <param name="value"></param>
+    public WhereParamsItem(string column, object value)
+        : this(column, value, column)
     {
-        ParamName = paramName;
-        Value = value;
-        Column = column;
     }
 
-    public WhereParamsItem(string paramName, object value)
-        : this(paramName, value, paramName) // use param name as column
+    public WhereParamsItem(string column, object value, string paramName)
     {
+        Column = column;
+        Value = value;
+        ParamName = paramName;
     }
+
+    public string Column { get; set; }
 
     public string ParamName { get; set; }
 
     public object Value { get; set; }
-
-    public string Column { get; set; }
 }

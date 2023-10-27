@@ -2,11 +2,11 @@
 
 namespace Qz.Infra.Database.Input;
 
-internal class InputValuesItem : IDbParam
+internal class InputValuesItem : ISqlParameter
 {
+    public string Column { get; set; }
+
     public string ParamName => $"V_{Column}";
 
     public object Value { get; set; }
-
-    public string Column { get; set; }
 }

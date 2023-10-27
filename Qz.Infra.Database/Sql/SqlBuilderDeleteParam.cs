@@ -1,5 +1,4 @@
 ﻿using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Params;
 using Qz.Infra.Database.Sql.Base;
 
 namespace Qz.Infra.Database.Sql;
@@ -14,22 +13,12 @@ public class SqlBuilderDeleteParam : SqlBuilderWhereParam
             throw new System.ArgumentNullException(nameof(where));
         }
     }
-
-    public SqlBuilderDeleteParam(string tableName, WhereParams whereParams)
-        : this(tableName, new WhereConditions(whereParams))
-    {
-    }
 }
 
 public class SqlBuilderDeleteParam<T> : SqlBuilderDeleteParam
 {
     public SqlBuilderDeleteParam(WhereConditions where)
         : base(GetTableName<T>(), where)
-    {
-    }
-
-    public SqlBuilderDeleteParam(WhereParams whereParams)
-        : this(new WhereConditions(whereParams))
     {
     }
 }

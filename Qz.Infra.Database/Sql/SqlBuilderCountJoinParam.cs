@@ -14,9 +14,4 @@ public class SqlBuilderCountJoinParam : SqlBuilderCountParam
         : base(builder.GetJoinTable(join), where)
     {
     }
-
-    public SqlBuilderCountJoinParam(SqlBuilder builder, JoinConditions join, WhereParams whereParams)
-        : this(builder, join, new WhereConditions(whereParams))
-    {
-    }
 }

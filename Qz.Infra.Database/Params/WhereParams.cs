@@ -8,14 +8,6 @@ public class WhereParams
 
     #region Constructor
 
-    public WhereParams(IEnumerable<WhereParamsItem> items)
-    {
-        foreach (var item in items)
-        {
-            Add(item);
-        }
-    }
-
     public WhereParams(string name, object value)
         : this(new WhereParamsItem(name, value))
     {

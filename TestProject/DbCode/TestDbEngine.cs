@@ -1,6 +1,5 @@
 ﻿using Qz.Infra.Database;
 using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Params;
 using Qz.Infra.Database.Sql;
 using Qz.Infra.Database.Table;
 using System.Collections.Generic;
@@ -40,18 +39,20 @@ namespace TestProject.DbCode
                 return;
             }
 
-            var whereParamItem = new WhereParamsItem(TenantTable.Id, tenant);
-            var sql = Executor.SqlBuilder.Delete(TenantTable.TableName, new WhereConditions(whereParamItem));
-            Executor.Execute(sql, new WhereParams(whereParamItem).Items, null, conn);
+            var where = new WhereConditions();
+            where.Add(TenantTable.Id, tenant);
+            var sql = Executor.SqlBuilder.Delete(TenantTable.TableName, where);
+            Executor.Execute(sql, where.Parameters, null, conn);
         }
 
         public void DeleteUser(string unionId)
         {
-            var whereParams = new WhereParams(PasswordUserTable.UnionId, unionId);
+            var where = new WhereConditions();
+            where.Add(PasswordUserTable.UnionId, unionId);
             Executor.Transaction(tran =>
             {
-                Delete(new SqlBuilderDeleteParam(PasswordUserTable.TableName, whereParams), null, tran);
-                Delete(new SqlBuilderDeleteParam(UserTable.TableName, whereParams), null, tran);
+                Delete(new SqlBuilderDeleteParam(PasswordUserTable.TableName, where), null, tran);
+                Delete(new SqlBuilderDeleteParam(UserTable.TableName, where), null, tran);
             });
         }
 

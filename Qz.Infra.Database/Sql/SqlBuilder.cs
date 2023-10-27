@@ -167,7 +167,7 @@ public partial class SqlBuilder
         return $"{sql} LIMIT {offset},{count}";
     }
 
-    protected internal virtual string GetParamName(IDbParam param)
+    protected internal virtual string GetParamName(ISqlParameter param)
     {
         return $"{ParamPrefix}{param.ParamName}";
     }

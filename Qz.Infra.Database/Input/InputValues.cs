@@ -9,9 +9,9 @@ public class InputValues
     /// <summary>
     /// use dictionary to make sure will not add same column one time.
     /// </summary>
-    private readonly Dictionary<string, IDbParam> _items = new();
+    private readonly Dictionary<string, ISqlParameter> _items = new();
 
-    public IReadOnlyList<IDbParam> Items => _items.Values.ToList().AsReadOnly();
+    public IReadOnlyList<ISqlParameter> Items => _items.Values.ToList().AsReadOnly();
 
     public void Add(string column, object value)
     {

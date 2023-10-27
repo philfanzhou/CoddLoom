@@ -1,6 +1,6 @@
 ﻿namespace Qz.Infra.Database.Condition;
 
-public class JoinConditionsItem
+internal class JoinConditionsItem
 {
     public JoinConditionsItem(string column1, string column2)
     {

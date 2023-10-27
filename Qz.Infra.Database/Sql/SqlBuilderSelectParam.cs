@@ -1,5 +1,4 @@
 ﻿using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Params;
 
 namespace Qz.Infra.Database.Sql;
 
@@ -17,11 +16,6 @@ public class SqlBuilderSelectParam : SqlBuilderCountParam
         OrderBy = orderBy;
     }
 
-    public SqlBuilderSelectParam(string tableName, WhereParams whereParams, OrderByCondition orderBy = null)
-        : this(tableName, new WhereConditions(whereParams), orderBy)
-    {
-    }
-
     public OrderByCondition OrderBy { get; }
 }
 
@@ -34,11 +28,6 @@ public class SqlBuilderSelectParam<T> : SqlBuilderSelectParam
 
     public SqlBuilderSelectParam(WhereConditions where, OrderByCondition orderBy = null)
         : base(GetTableName<T>(), where, orderBy)
-    {
-    }
-
-    public SqlBuilderSelectParam(WhereParams whereParams, OrderByCondition orderBy = null)
-        : this(new WhereConditions(whereParams), orderBy)
     {
     }
 }

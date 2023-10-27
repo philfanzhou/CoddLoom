@@ -71,8 +71,9 @@ namespace TestProject.DbTest
             var anotherTenant = "another";
             var input = new InputValues();
             input.Add(TenantTable.Id, anotherTenant);
-            var whereParams = new WhereParams(TenantTable.Id, tenantId);
-            dbEngine.Update(new SqlBuilderUpdateParam(TenantTable.TableName, input, whereParams), con);
+            var where = new WhereConditions();
+            where.Add(TenantTable.Id, tenantId);
+            dbEngine.Update(new SqlBuilderUpdateParam(TenantTable.TableName, input, where), con);
             allTenant = dbEngine.GetAllTenant(con).ToList();
             Assert.AreEqual(anotherTenant, allTenant[0].Trim());
 

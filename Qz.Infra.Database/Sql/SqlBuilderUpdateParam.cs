@@ -1,6 +1,5 @@
 ﻿using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Input;
-using Qz.Infra.Database.Params;
 using Qz.Infra.Database.Sql.Base;
 using System;
 
@@ -25,11 +24,6 @@ public class SqlBuilderUpdateParam : SqlBuilderWhereParam
         Values = inputValues;
     }
 
-    public SqlBuilderUpdateParam(string tableName, InputValues inputValues, WhereParams whereParams)
-        : this(tableName, inputValues, new WhereConditions(whereParams))
-    {
-    }
-
     public InputValues Values { get; }
 }
 
@@ -37,11 +31,6 @@ public class SqlBuilderUpdateParam<T> : SqlBuilderUpdateParam
 {
     public SqlBuilderUpdateParam(InputValues inputValues, WhereConditions where)
         : base(GetTableName<T>(), inputValues, where)
-    {
-    }
-
-    public SqlBuilderUpdateParam(InputValues inputValues, WhereParams whereParams)
-        : this(inputValues, new WhereConditions(whereParams))
     {
     }
 }

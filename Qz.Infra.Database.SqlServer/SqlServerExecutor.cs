@@ -1,4 +1,4 @@
-﻿using Qz.Infra.Database.Params;
+﻿using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Sql;
 using Qz.Infra.Database.Table;
 using System;
@@ -33,9 +33,10 @@ namespace Qz.Infra.Database.SqlServer
 
         protected override SqlBuilderCountParam GetExistTableParam(TableDefine table)
         {
-            var whereParams = new WhereParams("xtype", "U");
-            whereParams.Add("name", table.Name);
-            return new SqlBuilderCountParam("sysobjects", whereParams);
+            var where = new WhereConditions();
+            where.Add("xtype", "U");
+            where.Add("name", table.Name);
+            return new SqlBuilderCountParam("sysobjects", where);
         }
     }
 }

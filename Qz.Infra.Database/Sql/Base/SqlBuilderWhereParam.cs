@@ -19,5 +19,5 @@ public abstract class SqlBuilderWhereParam : SqlBuilderParam
 
     public WhereConditions WhereConditions { get; }
 
-    internal IEnumerable<IDbParam> WhereParams => WhereConditions?.WhereParams?.Items;
+    internal IEnumerable<ISqlParameter> WhereParams => WhereConditions?.WhereParams?.Items;
 }

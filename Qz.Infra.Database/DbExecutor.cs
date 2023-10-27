@@ -47,15 +47,15 @@ public abstract class DbExecutor
     protected abstract Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command);
 
     private IDbCommand BuildCommand(IDbConnection con, string sql,
-        IEnumerable<IDbParam> dbParams = null)
+        IEnumerable<ISqlParameter> sqlParams = null)
     {
         var command = con.CreateCommand();
         command.CommandText = sql;
 
-        if (dbParams != null)
+        if (sqlParams != null)
         {
             var func = GetAddParameterFunc(command);
-            foreach (var item in dbParams)
+            foreach (var item in sqlParams)
             {
                 func(SqlBuilder.GetParamName(item), item.Value);
             }
@@ -65,7 +65,7 @@ public abstract class DbExecutor
     }
 
     private void Execute(IDbConnection con, string sql,
-        IEnumerable<IDbParam> dbParams = null, Action<IDataReader> readerAction = null, IDbTransaction tran = null)
+        IEnumerable<ISqlParameter> sqlParams = null, Action<IDataReader> readerAction = null, IDbTransaction tran = null)
     {
         if (con == null) throw new ArgumentNullException(nameof(con));
         if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
@@ -78,7 +78,7 @@ public abstract class DbExecutor
                 con.Open();
             }
 
-            using var command = BuildCommand(con, sql, dbParams);
+            using var command = BuildCommand(con, sql, sqlParams);
 
             if (tran != null)
             {
@@ -164,20 +164,20 @@ public abstract class DbExecutor
     }
 
     public void Execute(string sql,
-        IEnumerable<IDbParam> dbParams = null, Action<IDataReader> readerAction = null,
+        IEnumerable<ISqlParameter> sqlParams = null, Action<IDataReader> readerAction = null,
         IDbConnection con = null, IDbTransaction tran = null)
     {
         if (tran != null)
         {
-            Execute(tran.Connection, sql, dbParams, readerAction, tran);
+            Execute(tran.Connection, sql, sqlParams, readerAction, tran);
         }
         else if (con != null)
         {
-            Execute(con, sql, dbParams, readerAction);
+            Execute(con, sql, sqlParams, readerAction);
         }
         else
         {
-            Execute(p => { Execute(p, sql, dbParams, readerAction); });
+            Execute(p => { Execute(p, sql, sqlParams, readerAction); });
         }
     }
 
@@ -186,11 +186,11 @@ public abstract class DbExecutor
     #region Execute with reader
 
     public List<T> Select<T>(string sql, Func<IDataRecord, T> convertor,
-        IEnumerable<IDbParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
+        IEnumerable<ISqlParameter> sqlParams = null, IDbConnection con = null, IDbTransaction tran = null)
     {
         var result = new List<T>();
 
-        Execute(sql, dbParams, reader =>
+        Execute(sql, sqlParams, reader =>
         {
             while (reader.Read())
             {
@@ -202,11 +202,11 @@ public abstract class DbExecutor
     }
 
     public T First<T>(string sql, Func<IDataRecord, T> convertor,
-        IEnumerable<IDbParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
+        IEnumerable<ISqlParameter> sqlParams = null, IDbConnection con = null, IDbTransaction tran = null)
     {
         T result = default;
 
-        Execute(sql, dbParams, reader =>
+        Execute(sql, sqlParams, reader =>
         {
             reader.Read();
             result = convertor(reader);
@@ -216,11 +216,11 @@ public abstract class DbExecutor
     }
 
     public int Count(string sql,
-        IEnumerable<IDbParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
+        IEnumerable<ISqlParameter> sqlParams = null, IDbConnection con = null, IDbTransaction tran = null)
     {
         var count = 0;
 
-        Execute(sql, dbParams, reader =>
+        Execute(sql, sqlParams, reader =>
         {
             reader.Read();
             count = reader.GetInt32(0);

@@ -1,6 +1,6 @@
 ﻿using Qz.Infra.Database.Cache;
+using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Input;
-using Qz.Infra.Database.Params;
 using Qz.Infra.Database.Sql;
 using System;
 using System.Reflection;
@@ -57,7 +57,7 @@ public static partial class DbConverter
         }
 
         var input = new InputValues();
-        WhereParams whereParams = null;
+        var where = new WhereConditions();
         foreach (var (memberInfo, attribute) in entityMap.Members)
         {
             var value = memberInfo.GetEntityValue(entity);
@@ -66,16 +66,13 @@ public static partial class DbConverter
             {
                 input.Add(attribute.Name, value);
             }
-            else if (attribute.PrimaryKey)
+            else if (attribute.PrimaryKey && value != null)
             {
-                if (value != null && !string.IsNullOrEmpty(value.ToString()))
-                {
-                    whereParams = new WhereParams(attribute.Name, value.ToString());
-                }
+                where.Add(attribute.Name, value);
             }
         }
 
-        return whereParams == null ? null : new SqlBuilderUpdateParam<T>(input, whereParams);
+        return where.Items.Count < 1 ? null : new SqlBuilderUpdateParam<T>(input, where);
     }
 
     private static object GetEntityValue<T>(this MemberInfo member, T entity)

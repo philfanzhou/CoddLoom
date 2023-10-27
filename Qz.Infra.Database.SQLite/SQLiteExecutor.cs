@@ -1,4 +1,4 @@
-﻿using Qz.Infra.Database.Params;
+﻿using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Sql;
 using Qz.Infra.Database.Table;
 using System;
@@ -38,9 +38,10 @@ public class SQLiteExecutor : DbExecutor
 
     protected override SqlBuilderCountParam GetExistTableParam(TableDefine table)
     {
-        var whereParams = new WhereParams("type", "table");
-        whereParams.Add("name", table.Name);
-        return new SqlBuilderCountParam("sqlite_master", whereParams);
+        var where = new WhereConditions();
+        where.Add("type", "table");
+        where.Add("name", table.Name);
+        return new SqlBuilderCountParam("sqlite_master", where);
     }
 
     private static string BuildConnectionString(string directory, string dbFileName)
