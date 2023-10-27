@@ -5,38 +5,37 @@ using System;
 using System.Data;
 using System.Data.SqlClient;
 
-namespace Qz.Infra.Database.SqlServer
+namespace Qz.Infra.Database.SqlServer;
+
+public class SqlServerExecutor : DbExecutor
 {
-    public class SqlServerExecutor : DbExecutor
+    public SqlServerExecutor(string connectionString)
+        : base(connectionString, new SqlConnection(connectionString))
     {
-        public SqlServerExecutor(string connectionString)
-            : base(connectionString, new SqlConnection(connectionString))
+    }
+
+    public override SqlBuilder SqlBuilder { get; } = new SqlServerBuilder();
+
+    public override IDbConnection GetConnection()
+    {
+        return new SqlConnection(ConnectionString);
+    }
+
+    protected override Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command)
+    {
+        if (command is not SqlCommand cmd)
         {
+            throw new ArgumentOutOfRangeException(nameof(command));
         }
 
-        public override SqlBuilder SqlBuilder { get; } = new SqlServerBuilder();
+        return cmd.Parameters.AddWithValue;
+    }
 
-        public override IDbConnection GetConnection()
-        {
-            return new SqlConnection(ConnectionString);
-        }
-
-        protected override Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command)
-        {
-            if (command is not SqlCommand cmd)
-            {
-                throw new ArgumentOutOfRangeException(nameof(command));
-            }
-
-            return cmd.Parameters.AddWithValue;
-        }
-
-        protected override SqlBuilderCountParam GetExistTableParam(TableDefine table)
-        {
-            var where = new WhereConditions();
-            where.Add("xtype", "U");
-            where.Add("name", table.Name);
-            return new SqlBuilderCountParam("sysobjects", where);
-        }
+    protected override SqlBuilderCountParam GetExistTableParam(TableDefine table)
+    {
+        var where = new WhereConditions();
+        where.Add("xtype", "U");
+        where.Add("name", table.Name);
+        return new SqlBuilderCountParam("sysobjects", where);
     }
 }

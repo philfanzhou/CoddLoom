@@ -1,5 +1,4 @@
 ﻿using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Params;
 
 namespace Qz.Infra.Database.Sql;
 
