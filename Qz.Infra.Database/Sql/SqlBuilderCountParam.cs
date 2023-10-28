@@ -5,12 +5,8 @@ namespace Qz.Infra.Database.Sql;
 
 public class SqlBuilderCountParam : SqlBuilderWhereParam
 {
-    public SqlBuilderCountParam(string tableName)
-        : base(tableName)
-    {
-    }
 
-    public SqlBuilderCountParam(string tableName, WhereConditions where)
+    public SqlBuilderCountParam(string tableName, WhereConditions where = null)
         : base(tableName, where)
     {
     }
@@ -18,12 +14,7 @@ public class SqlBuilderCountParam : SqlBuilderWhereParam
 
 public class SqlBuilderCountParam<T> : SqlBuilderCountParam
 {
-    public SqlBuilderCountParam()
-        : base(GetTableName<T>())
-    {
-    }
-
-    public SqlBuilderCountParam(WhereConditions where)
+    public SqlBuilderCountParam(WhereConditions where = null)
         : base(GetTableName<T>(), where)
     {
     }

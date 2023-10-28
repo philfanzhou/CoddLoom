@@ -4,12 +4,8 @@ namespace Qz.Infra.Database.Sql;
 
 public class SqlBuilderCountJoinParam : SqlBuilderCountParam
 {
-    public SqlBuilderCountJoinParam(SqlBuilder builder, JoinConditions join)
-        : base(builder.GetJoinTable(join))
-    {
-    }
-
-    public SqlBuilderCountJoinParam(SqlBuilder builder, JoinConditions join, WhereConditions where)
+    public SqlBuilderCountJoinParam(SqlBuilder builder, JoinConditions join, 
+        WhereConditions where = null)
         : base(builder.GetJoinTable(join), where)
     {
     }
