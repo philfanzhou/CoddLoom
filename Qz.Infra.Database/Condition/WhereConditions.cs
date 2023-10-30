@@ -30,7 +30,7 @@ public class WhereConditions
         Add(new WhereConditionsItem(whereParamsItem, whereOperator, connecter));
     }
 
-    public void Add(string column, bool isNull,
+    public void AddIsNull(string column, bool isNull,
         WhereConnecter whereConnecter = WhereConnecter.And)
     {
         var nullCondition = new WhereConditionsNullItem(column, isNull, whereConnecter);
