@@ -8,9 +8,8 @@ namespace Qz.Infra.Database.Sql;
 
 public partial class SqlBuilder
 {
+    private const string ParamPrefix = "@";
     protected const string KeyWordSelect = "SELECT";
-
-    protected internal string ParamPrefix { get; set; } = "@";
 
     public virtual string Insert(string tableName, InputValues input)
     {

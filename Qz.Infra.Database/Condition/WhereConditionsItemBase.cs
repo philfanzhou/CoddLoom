@@ -1,6 +1,6 @@
 ﻿namespace Qz.Infra.Database.Condition;
 
-public abstract class WhereConditionsItemBase
+internal abstract class WhereConditionsItemBase
 {
     public abstract string Column { get; }
 

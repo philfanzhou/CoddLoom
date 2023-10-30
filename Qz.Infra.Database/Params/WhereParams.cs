@@ -2,16 +2,11 @@
 
 namespace Qz.Infra.Database.Params;
 
-public class WhereParams
+internal class WhereParams
 {
     private readonly List<WhereParamsItem> _items = new();
 
     #region Constructor
-
-    public WhereParams(string name, object value)
-        : this(new WhereParamsItem(name, value))
-    {
-    }
 
     internal WhereParams(WhereParamsItem item)
     {

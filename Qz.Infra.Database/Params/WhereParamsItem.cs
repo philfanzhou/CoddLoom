@@ -1,6 +1,6 @@
 ﻿namespace Qz.Infra.Database.Params;
 
-public class WhereParamsItem : ISqlParameter
+internal class WhereParamsItem : ISqlParameter
 {
     /// <summary>
     /// Use column as parameter name.

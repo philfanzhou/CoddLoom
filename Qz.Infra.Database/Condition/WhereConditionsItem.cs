@@ -2,7 +2,7 @@
 
 namespace Qz.Infra.Database.Condition;
 
-public class WhereConditionsItem : WhereConditionsItemBase
+internal class WhereConditionsItem : WhereConditionsItemBase
 {
     public WhereConditionsItem(WhereParamsItem paramsItem,
         WhereOperator whereOperator = WhereOperator.Equal,

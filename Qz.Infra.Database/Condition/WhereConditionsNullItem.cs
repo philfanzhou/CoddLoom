@@ -1,6 +1,6 @@
 ﻿namespace Qz.Infra.Database.Condition;
 
-public class WhereConditionsNullItem : WhereConditionsItemBase
+internal class WhereConditionsNullItem : WhereConditionsItemBase
 {
     public WhereConditionsNullItem(string column, bool isNull,
         WhereConnecter whereConnecter = WhereConnecter.And)
