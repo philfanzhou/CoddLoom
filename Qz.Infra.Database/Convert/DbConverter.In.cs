@@ -72,7 +72,7 @@ public static partial class DbConverter
             }
         }
 
-        return where.Items.Count < 1 ? null : new SqlBuilderUpdateParam<T>(input, where);
+        return where.IsEmpty() ? null : new SqlBuilderUpdateParam<T>(input, where);
     }
 
     private static object GetEntityValue<T>(this MemberInfo member, T entity)

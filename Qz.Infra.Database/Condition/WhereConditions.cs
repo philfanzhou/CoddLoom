@@ -7,26 +7,18 @@ public class WhereConditions
 {
     private readonly List<WhereConditionsItemBase> _items = new();
     private readonly Dictionary<string, int> _paramNameIndex = new();
+    private readonly List<WhereParamsItem> _whereParams = new();
     
     internal IReadOnlyList<WhereConditionsItemBase> Items => _items.AsReadOnly();
-
-    internal WhereParams WhereParams { get; private set; }
-
-    public IEnumerable<ISqlParameter> Parameters => WhereParams?.Items;
+    
+    public IEnumerable<ISqlParameter> Parameters => _whereParams;
 
     public void Add(string column, object value,
         WhereOperator whereOperator = WhereOperator.Equal,
         WhereConnecter connecter = WhereConnecter.And)
     {
         var whereParamsItem = new WhereParamsItem(column, value);
-        if (WhereParams == null)
-        {
-            WhereParams = new WhereParams(whereParamsItem);
-        }
-        else
-        {
-            WhereParams.Add(whereParamsItem);
-        }
+        _whereParams.Add(whereParamsItem);
         Add(new WhereConditionsItem(whereParamsItem, whereOperator, connecter));
     }
 
@@ -36,6 +28,11 @@ public class WhereConditions
         var nullCondition = new WhereConditionsNullItem(column, isNull, whereConnecter);
         _items.Add(nullCondition);
         // no need add to WhereParams because it's special condition
+    }
+
+    internal bool IsEmpty()
+    {
+        return Items.Count < 1;
     }
 
     #region Private method

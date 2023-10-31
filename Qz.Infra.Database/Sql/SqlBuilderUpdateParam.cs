@@ -11,12 +11,12 @@ public class SqlBuilderUpdateParam : SqlBuilderWhereParam
         : base(tableName, where)
     {
         if (inputValues == null 
-            || inputValues.Items.Count < 1)
+            || inputValues.IsEmpty())
         {
             throw new ArgumentNullException(nameof(inputValues));
         }
 
-        if (where == null || where.Items.Count < 1)
+        if (where == null || where.IsEmpty())
         {
             throw new ArgumentNullException(nameof(where));
         }

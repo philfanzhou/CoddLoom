@@ -14,7 +14,7 @@ public partial class SqlBuilder
     public virtual string Insert(string tableName, InputValues input)
     {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
-        if (input == null || input.Items.Count < 1) throw new ArgumentNullException(nameof(input));
+        if (input == null || input.IsEmpty()) throw new ArgumentNullException(nameof(input));
 
         var columnBuilder = new StringBuilder();
         var valueBuilder = new StringBuilder();
@@ -39,7 +39,7 @@ public partial class SqlBuilder
     public virtual string Delete(string tableName, WhereConditions where)
     {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
-        if (where == null || where.Items.Count < 1) throw new ArgumentNullException(nameof(where));
+        if (where == null || where.IsEmpty()) throw new ArgumentNullException(nameof(where));
 
         var sql = $"DELETE FROM {tableName}";
         return AppendWhere(sql, where);
@@ -49,7 +49,7 @@ public partial class SqlBuilder
     {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
         if (input == null) throw new ArgumentNullException(nameof(input));
-        if (where == null || where.Items.Count < 1) throw new ArgumentNullException(nameof(where));
+        if (where == null || where.IsEmpty()) throw new ArgumentNullException(nameof(where));
 
         var valueBuilder = new StringBuilder();
         foreach (var item in input.Items)
@@ -97,7 +97,7 @@ public partial class SqlBuilder
     protected virtual string AppendWhere(string sql,
         WhereConditions where = null)
     {
-        if (where?.Items == null || where.Items.Count < 1)
+        if (where == null || where.IsEmpty())
         {
             return sql;
         }

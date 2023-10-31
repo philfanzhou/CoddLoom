@@ -38,33 +38,33 @@ public class DbEngine
     public void Delete(SqlBuilderDeleteParam builderParam,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        if (builderParam.WhereConditions?.WhereParams?.Items == null
-            || builderParam.WhereConditions.WhereParams.Items.Count < 1)
+        if (builderParam.WhereConditions == null 
+            || builderParam.WhereConditions.IsEmpty())
         {
             throw new ArgumentNullException(nameof(builderParam.WhereConditions));
         }
         var sql = Executor.SqlBuilder.Delete(builderParam);
-        Executor.Execute(sql, builderParam.WhereConditions.WhereParams.Items, null, con, tran);
+        Executor.Execute(sql, builderParam.WhereConditions.Parameters, null, con, tran);
     }
 
     public void Update(SqlBuilderUpdateParam builderParam,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        if (builderParam.WhereConditions?.WhereParams?.Items == null
-            || builderParam.WhereConditions.WhereParams.Items.Count < 1)
+        if (builderParam.WhereConditions == null
+            || builderParam.WhereConditions.IsEmpty())
         {
             throw new ArgumentNullException(nameof(builderParam.WhereConditions));
         }
 
-        if (builderParam.Values?.Items == null
-            || builderParam.Values.Items.Count < 1)
+        if (builderParam.Values == null
+            || builderParam.Values.IsEmpty())
         {
             throw new ArgumentNullException(nameof(builderParam.Values));
         }
         var sql = Executor.SqlBuilder.Update(builderParam);
         var dbParams = new List<ISqlParameter>();
         dbParams.AddRange(builderParam.Values.Items);
-        dbParams.AddRange(builderParam.WhereConditions.WhereParams.Items);
+        dbParams.AddRange(builderParam.WhereConditions.Parameters);
         Executor.Execute(sql, dbParams, null, con, tran);
     }
 
@@ -72,21 +72,21 @@ public class DbEngine
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var sql = Executor.SqlBuilder.Count(builderParam);
-        return Executor.Count(sql, builderParam.WhereConditions?.WhereParams?.Items, con, tran);
+        return Executor.Count(sql, builderParam.WhereConditions?.Parameters, con, tran);
     }
 
     public List<T> Select<T>(Func<IDataRecord, T> convertor, SqlBuilderSelectParam builderParam,
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var sql = Executor.SqlBuilder.Select(builderParam);
-        return Executor.Select(sql, convertor, builderParam.WhereConditions?.WhereParams?.Items, con, tran);
+        return Executor.Select(sql, convertor, builderParam.WhereConditions?.Parameters, con, tran);
     }
 
     public T First<T>(Func<IDataRecord, T> convertor, SqlBuilderSelectParam builderParam,
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var sql = Executor.SqlBuilder.First(builderParam);
-        return Executor.First(sql, convertor, builderParam.WhereConditions?.WhereParams?.Items, con, tran);
+        return Executor.First(sql, convertor, builderParam.WhereConditions?.Parameters, con, tran);
     }
 
     public List<T> PageSelect<T>(Func<IDataRecord, T> convertor,
@@ -105,7 +105,7 @@ public class DbEngine
         }
 
         var sql = Executor.SqlBuilder.Take(builderParam, pageParam.Offset, pageParam.PageSize);
-        var items = Executor.Select(sql, convertor, builderParam.WhereConditions?.WhereParams?.Items, con, tran).ToList();
+        var items = Executor.Select(sql, convertor, builderParam.WhereConditions?.Parameters, con, tran).ToList();
         return items;
     }
 }

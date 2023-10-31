@@ -38,7 +38,7 @@ public abstract class DbExecutor
             return false;
         }
 
-        var count = Count(SqlBuilder.Count(builderParam), builderParam.WhereConditions.WhereParams.Items, con);
+        var count = Count(SqlBuilder.Count(builderParam), builderParam.WhereConditions?.Parameters, con);
         return count > 0;
     }
 

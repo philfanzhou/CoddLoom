@@ -18,7 +18,12 @@ public class InputValues
         _items.Add(column, new InputValuesItem
         {
             Column = column,
-            Value = value,
+            Value = value ?? string.Empty
         });
+    }
+
+    internal bool IsEmpty()
+    {
+        return _items.Count < 1;
     }
 }

@@ -10,7 +10,7 @@ public class SqlBuilderInsertParam : SqlBuilderParam
         : base(tableName)
     {
         if (inputValues == null
-            || inputValues.Items.Count < 1)
+            || inputValues.IsEmpty())
         {
             throw new ArgumentNullException(nameof(inputValues));
         }
