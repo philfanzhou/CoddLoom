@@ -1,4 +1,5 @@
-﻿using Qz.Infra.Database.Params;
+﻿using Qz.Infra.Database.Condition.Internal;
+using Qz.Infra.Database.Params;
 using System.Collections.Generic;
 
 namespace Qz.Infra.Database.Condition;
@@ -6,12 +7,11 @@ namespace Qz.Infra.Database.Condition;
 public class WhereConditions
 {
     private readonly List<WhereConditionsItemBase> _items = new();
-    private readonly Dictionary<string, int> _paramNameIndex = new();
     private readonly List<WhereParamsItem> _whereParams = new();
     
-    internal IReadOnlyList<WhereConditionsItemBase> Items => _items.AsReadOnly();
+    internal IEnumerable<WhereConditionsItemBase> Items => _items.AsReadOnly();
     
-    public IEnumerable<ISqlParameter> Parameters => _whereParams;
+    public IEnumerable<ISqlParameter> Parameters => _whereParams.AsReadOnly();
 
     public void Add(string column, object value,
         WhereOperator whereOperator = WhereOperator.Equal,
@@ -32,10 +32,11 @@ public class WhereConditions
 
     internal bool IsEmpty()
     {
-        return Items.Count < 1;
+        return _items.Count < 1;
     }
 
     #region Private method
+    private readonly Dictionary<string, int> _paramNameIndex = new();
     private void Add(WhereConditionsItem item)
     {
         if (!_paramNameIndex.ContainsKey(item.Param.ParamName))

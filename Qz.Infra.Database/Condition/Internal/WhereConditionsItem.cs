@@ -1,6 +1,6 @@
 ﻿using Qz.Infra.Database.Params;
 
-namespace Qz.Infra.Database.Condition;
+namespace Qz.Infra.Database.Condition.Internal;
 
 internal class WhereConditionsItem : WhereConditionsItemBase
 {

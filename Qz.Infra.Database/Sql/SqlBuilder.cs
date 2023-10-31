@@ -1,7 +1,9 @@
 ﻿using Qz.Infra.Database.Condition;
+using Qz.Infra.Database.Condition.Internal;
 using Qz.Infra.Database.Input;
 using Qz.Infra.Database.Params;
 using System;
+using System.Linq;
 using System.Text;
 
 namespace Qz.Infra.Database.Sql;
@@ -82,10 +84,10 @@ public partial class SqlBuilder
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
 
         var column = "*";
-        if (where != null && where.Items.Count > 0)
+        if (where != null && !where.IsEmpty())
         {
             // 只查询where条件的第一个column，提高性能
-            column = where.Items[0].Column;
+            column = where.Items.First().Column;
         }
 
         var sql = $"SELECT COUNT({column}) FROM {tableName}";
@@ -107,41 +109,22 @@ public partial class SqlBuilder
         {
             if (whereBuilder.Length > 0)
             {
-                whereBuilder.Append(item.WhereConnecter == WhereConnecter.And ? " AND " : " OR ");
+                whereBuilder.Append(" ");
+                whereBuilder.Append(GetConnecter(item.WhereConnecter));
+                whereBuilder.Append(" ");
             }
 
-            whereBuilder.Append($"{item.Column}");
+            whereBuilder.Append(item.Column);
+            whereBuilder.Append(" ");
 
             if (item is WhereConditionsNullItem nullCondition)
             {
-                whereBuilder.Append($" IS {(nullCondition.IsNull ? "NULL" : "NOT NULL")}");
+                whereBuilder.Append(GetIsNullCondition(nullCondition.IsNull));
             }
             else if (item is WhereConditionsItem condition)
             {
-                switch (condition.WhereOperator)
-                {
-                    case WhereOperator.Equal:
-                        whereBuilder.Append(" = ");
-                        break;
-                    case WhereOperator.NotEqual:
-                        whereBuilder.Append(" != ");
-                        break;
-                    case WhereOperator.GreaterThan:
-                        whereBuilder.Append(" > ");
-                        break;
-                    case WhereOperator.GreaterEqual:
-                        whereBuilder.Append(" >= ");
-                        break;
-                    case WhereOperator.LessThan:
-                        whereBuilder.Append(" < ");
-                        break;
-                    case WhereOperator.LessEqual:
-                        whereBuilder.Append(" <= ");
-                        break;
-                    case WhereOperator.Like:
-                        whereBuilder.Append(" LIKE ");
-                        break;
-                }
+                whereBuilder.Append(GetOperator(condition.WhereOperator));
+                whereBuilder.Append(" ");
                 whereBuilder.Append(GetParamName(condition.Param));
             }
         }
@@ -169,6 +152,31 @@ public partial class SqlBuilder
     protected internal virtual string GetParamName(ISqlParameter param)
     {
         return $"{ParamPrefix}{param.ParamName}";
+    }
+
+    protected virtual string GetOperator(WhereOperator whereOperator)
+    {
+        return whereOperator switch
+        {
+            WhereOperator.Equal => "=",
+            WhereOperator.NotEqual => "!=",
+            WhereOperator.GreaterThan => ">",
+            WhereOperator.GreaterEqual => ">=",
+            WhereOperator.LessThan => "<",
+            WhereOperator.LessEqual => "<=",
+            WhereOperator.Like => "LIKE",
+            _ => throw new NotSupportedException(nameof(whereOperator)),
+        };
+    }
+
+    protected virtual string GetIsNullCondition(bool isNull)
+    {
+        return $"IS {(isNull ? "NULL" : "NOT NULL")}";
+    }
+
+    protected virtual string GetConnecter(WhereConnecter whereConnecter)
+    {
+        return whereConnecter == WhereConnecter.And ? "AND" : "OR";
     }
 
     #endregion

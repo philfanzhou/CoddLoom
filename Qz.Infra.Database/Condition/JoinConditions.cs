@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Qz.Infra.Database.Condition.Internal;
 
 namespace Qz.Infra.Database.Condition;
 
