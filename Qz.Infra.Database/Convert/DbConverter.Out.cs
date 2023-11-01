@@ -8,6 +8,7 @@ namespace Qz.Infra.Database.Convert;
 
 partial class DbConverter
 {
+    // TODO: remove
     public static bool ToBoolean(IDataRecord record, string key)
     {
         if (record?[key] == null)
@@ -31,6 +32,7 @@ partial class DbConverter
         }
     }
 
+    // TODO: remove
     public static DateTime ToDateTime(IDataRecord record, string key)
     {
         if (record?[key] == null)

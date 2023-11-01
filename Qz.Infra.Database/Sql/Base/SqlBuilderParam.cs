@@ -16,9 +16,4 @@ public abstract class SqlBuilderParam
 
     public string TableName { get; }
 
-    protected static string GetTableName<T>()
-    {
-        var entityMap = EntityMapCache.Get<T>();
-        return entityMap.Table.Name;
-    }
 }

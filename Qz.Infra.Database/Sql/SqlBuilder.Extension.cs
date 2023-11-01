@@ -1,6 +1,4 @@
-﻿using Qz.Infra.Database.Condition;
-
-namespace Qz.Infra.Database.Sql;
+﻿namespace Qz.Infra.Database.Sql;
 
 partial class SqlBuilder
 {
@@ -37,19 +35,5 @@ partial class SqlBuilder
     public string Take(SqlBuilderSelectParam builderParam, int offset, int count)
     {
         return Take(builderParam.TableName, offset, count, builderParam.WhereConditions, builderParam.OrderBy);
-    }
-
-    public virtual string First(string tableName,
-        WhereConditions where = null, OrderByCondition orderBy = null)
-    {
-        var selectSql = Select(tableName, where, orderBy);
-        return AppendLimit(selectSql, 1);
-    }
-
-    public virtual string Take(string tableName, int offset, int count,
-        WhereConditions where = null, OrderByCondition orderBy = null)
-    {
-        var selectSql = Select(tableName, where, orderBy);
-        return AppendLimit(selectSql, count, offset);
     }
 }

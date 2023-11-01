@@ -26,11 +26,3 @@ public class SqlBuilderUpdateParam : SqlBuilderWhereParam
 
     public InputValues Values { get; }
 }
-
-public class SqlBuilderUpdateParam<T> : SqlBuilderUpdateParam
-{
-    public SqlBuilderUpdateParam(InputValues inputValues, WhereConditions where)
-        : base(GetTableName<T>(), inputValues, where)
-    {
-    }
-}

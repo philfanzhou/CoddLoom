@@ -9,7 +9,7 @@ namespace Qz.Infra.Database.Convert;
 
 public static partial class DbConverter
 {
-    internal static SqlBuilderInsertParam ToInsert<T>(T entity)
+    internal static SqlBuilderInsertParam ToInsert<T>(T entity, SqlBuilder builder)
     {
         if (entity == null)
         {
@@ -38,11 +38,10 @@ public static partial class DbConverter
             }
         }
 
-        var builderParam = new SqlBuilderInsertParam<T>(input);
-        return builderParam;
+        return builder.CreateInsert<T>(input);
     }
 
-    internal static SqlBuilderUpdateParam ToUpdate<T>(T entity)
+    internal static SqlBuilderUpdateParam ToUpdate<T>(T entity, SqlBuilder builder)
     {
         if (entity == null)
         {
@@ -72,7 +71,7 @@ public static partial class DbConverter
             }
         }
 
-        return where.IsEmpty() ? null : new SqlBuilderUpdateParam<T>(input, where);
+        return where.IsEmpty() ? null : builder.CreateUpdate<T>(input, where);
     }
 
     private static object GetEntityValue<T>(this MemberInfo member, T entity)

@@ -14,11 +14,3 @@ public class SqlBuilderDeleteParam : SqlBuilderWhereParam
         }
     }
 }
-
-public class SqlBuilderDeleteParam<T> : SqlBuilderDeleteParam
-{
-    public SqlBuilderDeleteParam(WhereConditions where)
-        : base(GetTableName<T>(), where)
-    {
-    }
-}

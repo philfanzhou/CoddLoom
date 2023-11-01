@@ -10,11 +10,3 @@ public class SqlBuilderCountParam : SqlBuilderWhereParam
     {
     }
 }
-
-public class SqlBuilderCountParam<T> : SqlBuilderCountParam
-{
-    public SqlBuilderCountParam(WhereConditions where = null)
-        : base(GetTableName<T>(), where)
-    {
-    }
-}

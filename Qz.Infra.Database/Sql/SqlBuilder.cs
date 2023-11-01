@@ -94,6 +94,20 @@ public partial class SqlBuilder
         return AppendWhere(sql, where);
     }
 
+    public virtual string First(string tableName,
+        WhereConditions where = null, OrderByCondition orderBy = null)
+    {
+        var selectSql = Select(tableName, where, orderBy);
+        return AppendLimit(selectSql, 1);
+    }
+
+    public virtual string Take(string tableName, int offset, int count,
+        WhereConditions where = null, OrderByCondition orderBy = null)
+    {
+        var selectSql = Select(tableName, where, orderBy);
+        return AppendLimit(selectSql, count, offset);
+    }
+
     #region Protected virtual
 
     protected virtual string AppendWhere(string sql,

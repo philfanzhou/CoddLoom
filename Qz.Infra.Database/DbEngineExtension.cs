@@ -14,20 +14,23 @@ public static class DbEngineExtension
     public static void Insert<T>(this DbEngine self, T entity,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        self.Insert(DbConverter.ToInsert(entity), con, tran);
+        var builderParam = DbConverter.ToInsert(entity, self.Executor.SqlBuilder);
+        self.Insert(builderParam, con, tran);
     }
 
     public static void Delete<T>(this DbEngine self, string keyValue,
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var where = GetKeyWhere<T>(keyValue);
-        self.Delete(new SqlBuilderDeleteParam<T>(where), con, tran);
+        var builderParam = self.Executor.SqlBuilder.CreateDelete<T>(where);
+        self.Delete(builderParam, con, tran);
     }
 
     public static void Update<T>(this DbEngine self, T entity,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        self.Update(DbConverter.ToUpdate(entity), con, tran);
+        var builderParam = DbConverter.ToUpdate(entity, self.Executor.SqlBuilder);
+        self.Update(builderParam, con, tran);
     }
 
     public static bool Exist(this DbEngine self, SqlBuilderCountParam builderParam,
@@ -57,7 +60,7 @@ public static class DbEngineExtension
         where T : new()
     {
         var where = GetKeyWhere<T>(keyValue);
-        var builderParam = new SqlBuilderSelectParam<T>(where);
+        var builderParam = self.Executor.SqlBuilder.CreateSelect<T>(where);
         return self.Select<T>(builderParam, con, tran);
     }
 
@@ -81,7 +84,8 @@ public static class DbEngineExtension
         string tableName, string columnName,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var getNewId = new Func<string>(() => DateTime.UtcNow.ToString("yyMMddHHmmss") + new Random().Next(100, 999));
+        var format = "yyMMddHHmmss";
+        var getNewId = new Func<string>(() => DateTime.UtcNow.ToString(format) + new Random().Next(100, 999));
 
         var newId = getNewId();
         var where = new WhereConditions();

@@ -50,7 +50,7 @@ namespace TestProject.DbTest
 
             var pwsUserJoin = new JoinConditions(UserTable.TableName, UserTable.UnionId,
                 PasswordUserTable.TableName, PasswordUserTable.UnionId);
-            var sqlBuilderParam = new SqlBuilderSelectJoinParam(dbEngine.Executor.SqlBuilder, pwsUserJoin);
+            var sqlBuilderParam = dbEngine.Executor.SqlBuilder.CreateSelect(pwsUserJoin);
             var allPwdUser = dbEngine.Select<PasswordUser>(sqlBuilderParam, con).ToList();
             Assert.IsTrue(allPwdUser.Count == count);
 
@@ -108,7 +108,7 @@ namespace TestProject.DbTest
                 dbEngine.Insert<User>(pwdUser, con);
             }
 
-            var allUser = dbEngine.Select<User>(new SqlBuilderSelectParam<User>());
+            var allUser = dbEngine.Select<User>(dbEngine.Executor.SqlBuilder.CreateSelect<User>());
             Assert.IsTrue(allUser.Count == count);
             flag = false;
             for (var i = 0; i < count; i++)
@@ -134,28 +134,29 @@ namespace TestProject.DbTest
 
         private static void TestOrderBy(TestDbEngine dbEngine, IDbConnection con)
         {
-            var firstUser = dbEngine.First<User>(new SqlBuilderSelectParam<User>(), con);
+            var firstUser = dbEngine.First<User>(dbEngine.Executor.SqlBuilder.CreateSelect<User>(), con);
             Assert.IsTrue(firstUser.Id.Trim() == "0");
 
-            firstUser = dbEngine.First<User>(new SqlBuilderSelectParam<User>(new OrderByCondition(UserTable.Id, true)), con);
+            firstUser = dbEngine.First<User>(dbEngine.Executor.SqlBuilder.CreateSelect<User>(new OrderByCondition(UserTable.Id, true)), con);
             Assert.IsTrue(firstUser.Id.Trim() == "99");
         }
 
         private static void PageSelectTest(TestDbEngine dbEngine, IDbConnection con)
         {
-            var firstPage = dbEngine.PageSelect<User>(new PageParam { PageSize = 10, PageNumber = 1 }, 
-                new SqlBuilderSelectParam<User>(new OrderByCondition(UserTable.Id)), out var _, out var _, con);
+            var builderParam = dbEngine.Executor.SqlBuilder.CreateSelect<User>(new OrderByCondition(UserTable.Id));
+            var firstPage = dbEngine.PageSelect<User>(new PageParam { PageSize = 10, PageNumber = 1 },
+                builderParam, out var _, out var _, con);
             Assert.IsTrue(firstPage.Count == 10);
             Assert.IsTrue(firstPage[0].Id.Trim() == "0");
 
-            var secondPage = dbEngine.PageSelect<User>(new PageParam { PageSize = 10, PageNumber = 2 }, 
-                new SqlBuilderSelectParam<User>(new OrderByCondition(UserTable.Id)), out var _, out var _, con);
+            var secondPage = dbEngine.PageSelect<User>(new PageParam { PageSize = 10, PageNumber = 2 },
+                builderParam, out var _, out var _, con);
             Assert.IsTrue(secondPage.Count == 10);
             Assert.IsTrue(secondPage[0].Id.Trim() == "10");
         }
 
         private static void DeleteTwoTables(List<PasswordUser> allPwdUser, TestDbEngine dbEngine, IDbConnection con,
-            SqlBuilderSelectJoinParam sqlBuilderParam)
+            SqlBuilderSelectParam sqlBuilderParam)
         {
             foreach (var user in allPwdUser)
             {
@@ -163,7 +164,7 @@ namespace TestProject.DbTest
                 dbEngine.DeleteUser(user.UnionId);
             }
 
-            Assert.IsTrue(!dbEngine.Select<User>(new SqlBuilderSelectParam<User>(), con).Any());
+            Assert.IsTrue(!dbEngine.Select<User>(dbEngine.Executor.SqlBuilder.CreateSelect<User>(), con).Any());
             Assert.IsTrue(!dbEngine.Select<PasswordUser>(sqlBuilderParam, con).Any());
         }
 

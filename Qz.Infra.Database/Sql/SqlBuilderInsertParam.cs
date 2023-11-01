@@ -20,11 +20,3 @@ public class SqlBuilderInsertParam : SqlBuilderParam
 
     public InputValues Values { get; }
 }
-
-public class SqlBuilderInsertParam<T> : SqlBuilderInsertParam
-{
-    public SqlBuilderInsertParam(InputValues inputValues)
-        : base(GetTableName<T>(), inputValues)
-    {
-    }
-}
