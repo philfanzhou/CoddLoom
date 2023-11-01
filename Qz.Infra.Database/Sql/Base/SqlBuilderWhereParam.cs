@@ -2,9 +2,9 @@
 
 namespace Qz.Infra.Database.Sql.Base;
 
-public abstract class SqlBuilderWhereParam : SqlBuilderParam
+public class SqlBuilderWhereParam : SqlBuilderParam
 {
-    protected SqlBuilderWhereParam(string tableName, WhereConditions where = null)
+    public SqlBuilderWhereParam(string tableName, WhereConditions where = null)
         : base(tableName)
     {
         WhereConditions = where;

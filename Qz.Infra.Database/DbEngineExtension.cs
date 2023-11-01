@@ -3,6 +3,7 @@ using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Convert;
 using Qz.Infra.Database.Params;
 using Qz.Infra.Database.Sql;
+using Qz.Infra.Database.Sql.Base;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -33,7 +34,7 @@ public static class DbEngineExtension
         self.Update(builderParam, con, tran);
     }
 
-    public static bool Exist(this DbEngine self, SqlBuilderCountParam builderParam,
+    public static bool Exist(this DbEngine self, SqlBuilderWhereParam builderParam,
         IDbConnection con = null, IDbTransaction tran = null)
     {
         return self.Count(builderParam, con, tran) > 0;
@@ -90,7 +91,7 @@ public static class DbEngineExtension
         var newId = getNewId();
         var where = new WhereConditions();
         where.Add(columnName, newId);
-        var sqlBuilderParam = new SqlBuilderCountParam(tableName, where);
+        var sqlBuilderParam = new SqlBuilderWhereParam(tableName, where);
 
         var tryCount = 0;
         while (self.Exist(sqlBuilderParam, con, tran))

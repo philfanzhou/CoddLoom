@@ -1,6 +1,7 @@
 ﻿using Qz.Infra.Database.Cache;
 using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Input;
+using Qz.Infra.Database.Sql.Base;
 
 namespace Qz.Infra.Database.Sql;
 
@@ -72,19 +73,19 @@ partial class SqlBuilder
         return CreateSelect(join, null, orderBy);
     }
 
-    public SqlBuilderCountParam CreateCount(string tableName,
+    public SqlBuilderWhereParam CreateCount(string tableName,
         WhereConditions where = null)
     {
-        return new SqlBuilderCountParam(tableName, where);
+        return new SqlBuilderWhereParam(tableName, where);
     }
 
-    public SqlBuilderCountParam CreateCount<T>(
+    public SqlBuilderWhereParam CreateCount<T>(
         WhereConditions where = null)
     {
         return CreateCount(GetTableName<T>(), where);
     }
 
-    public SqlBuilderCountParam CreateCount(JoinConditions join,
+    public SqlBuilderWhereParam CreateCount(JoinConditions join,
         WhereConditions where = null)
     {
         return CreateCount(GetJoinTable(join), where);

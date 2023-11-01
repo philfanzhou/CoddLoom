@@ -1,6 +1,7 @@
 ﻿using Qz.Infra.Database.Cache;
 using Qz.Infra.Database.Params;
 using Qz.Infra.Database.Sql;
+using Qz.Infra.Database.Sql.Base;
 using Qz.Infra.Database.Table;
 using System;
 using System.Collections.Generic;
@@ -68,7 +69,7 @@ public class DbEngine
         Executor.Execute(sql, dbParams, null, con, tran);
     }
 
-    public int Count(SqlBuilderCountParam builderParam,
+    public int Count(SqlBuilderWhereParam builderParam,
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var sql = Executor.SqlBuilder.Count(builderParam);

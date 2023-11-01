@@ -1,5 +1,5 @@
 ﻿using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Sql;
+using Qz.Infra.Database.Sql.Base;
 using Qz.Infra.Database.Table;
 using System;
 using System.Data;
@@ -36,12 +36,12 @@ public class SQLiteExecutor : DbExecutor
         return cmd.Parameters.AddWithValue;
     }
 
-    protected override SqlBuilderCountParam GetExistTableParam(TableDefine table)
+    protected override SqlBuilderWhereParam GetExistTableParam(TableDefine table)
     {
         var where = new WhereConditions();
         where.Add("type", "table");
         where.Add("name", table.Name);
-        return new SqlBuilderCountParam("sqlite_master", where);
+        return new SqlBuilderWhereParam("sqlite_master", where);
     }
 
     private static string BuildConnectionString(string directory, string dbFileName)

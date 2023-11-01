@@ -66,6 +66,11 @@ partial class DbConverter
     private static void SetEntityValue<T>(T entity, MemberInfo member, MapColumnAttribute attribute, IDataRecord record)
     {
         var objValue = record[attribute.Name];
+        if (objValue is null or DBNull)
+        {
+            return;
+        }
+
         if (member is FieldInfo field)
         {
             var setValue = ToEntityValue(field.FieldType, objValue);

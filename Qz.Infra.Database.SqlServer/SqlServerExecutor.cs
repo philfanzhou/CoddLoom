@@ -1,5 +1,6 @@
 ﻿using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Sql;
+using Qz.Infra.Database.Sql.Base;
 using Qz.Infra.Database.Table;
 using System;
 using System.Data;
@@ -31,11 +32,11 @@ public class SqlServerExecutor : DbExecutor
         return cmd.Parameters.AddWithValue;
     }
 
-    protected override SqlBuilderCountParam GetExistTableParam(TableDefine table)
+    protected override SqlBuilderWhereParam GetExistTableParam(TableDefine table)
     {
         var where = new WhereConditions();
         where.Add("xtype", "U");
         where.Add("name", table.Name);
-        return new SqlBuilderCountParam("sysobjects", where);
+        return new SqlBuilderWhereParam("sysobjects", where);
     }
 }

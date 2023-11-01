@@ -1,4 +1,6 @@
-﻿namespace Qz.Infra.Database.Sql;
+﻿using Qz.Infra.Database.Sql.Base;
+
+namespace Qz.Infra.Database.Sql;
 
 partial class SqlBuilder
 {
@@ -17,7 +19,7 @@ partial class SqlBuilder
         return Update(builderParam.TableName, builderParam.Values, builderParam.WhereConditions);
     }
 
-    public string Count(SqlBuilderCountParam builderParam)
+    public string Count(SqlBuilderWhereParam builderParam)
     {
         return Count(builderParam.TableName, builderParam.WhereConditions);
     }

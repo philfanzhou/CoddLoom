@@ -1,5 +1,6 @@
 ﻿using MySql.Data.MySqlClient;
 using Qz.Infra.Database.Sql;
+using Qz.Infra.Database.Sql.Base;
 using Qz.Infra.Database.Table;
 using System;
 using System.Data;
@@ -35,7 +36,7 @@ public class MySqlExecutor : DbExecutor
         return cmd.Parameters.AddWithValue;
     }
 
-    protected override SqlBuilderCountParam GetExistTableParam(TableDefine table)
+    protected override SqlBuilderWhereParam GetExistTableParam(TableDefine table)
     {
         // use create table sql to check exist, not here
         return null;

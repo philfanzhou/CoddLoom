@@ -1,5 +1,6 @@
 ﻿using Qz.Infra.Database.Params;
 using Qz.Infra.Database.Sql;
+using Qz.Infra.Database.Sql.Base;
 using Qz.Infra.Database.Table;
 using System;
 using System.Collections.Generic;
@@ -42,7 +43,7 @@ public abstract class DbExecutor
         return count > 0;
     }
 
-    protected abstract SqlBuilderCountParam GetExistTableParam(TableDefine table);
+    protected abstract SqlBuilderWhereParam GetExistTableParam(TableDefine table);
 
     protected abstract Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command);
 
