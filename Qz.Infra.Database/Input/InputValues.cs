@@ -18,7 +18,7 @@ public class InputValues
         _items.Add(column, new InputValuesItem
         {
             Column = column,
-            Value = value ?? string.Empty
+            Value = value ?? System.DBNull.Value
         });
     }
 

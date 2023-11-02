@@ -1,6 +1,6 @@
-﻿using Qz.Infra.Database.Params;
+﻿using Qz.Infra.Database.Condition;
+using Qz.Infra.Database.Params;
 using Qz.Infra.Database.Sql;
-using Qz.Infra.Database.Sql.Base;
 using Qz.Infra.Database.Table;
 using System;
 using System.Collections.Generic;
@@ -33,17 +33,19 @@ public abstract class DbExecutor
 
     internal bool ExistTable(TableDefine table, IDbConnection con)
     {
-        var builderParam = GetExistTableParam(table);
-        if (builderParam == null)
+        GetExistTableParam(table, out var checkTable, out var where);
+        if (string.IsNullOrEmpty(checkTable) || where == null)
         {
             return false;
         }
 
-        var count = Count(SqlBuilder.Count(builderParam), builderParam.WhereConditions?.Parameters, con);
+        var sql = SqlBuilder.Count(checkTable, where);
+        var count = Count(sql, where.Parameters, con);
         return count > 0;
     }
 
-    protected abstract SqlBuilderWhereParam GetExistTableParam(TableDefine table);
+    protected abstract void GetExistTableParam(TableDefine table, 
+        out string checkTable, out WhereConditions where);
 
     protected abstract Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command);
 

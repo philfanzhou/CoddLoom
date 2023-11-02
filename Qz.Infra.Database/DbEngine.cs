@@ -1,7 +1,7 @@
 ﻿using Qz.Infra.Database.Cache;
+using Qz.Infra.Database.Condition;
+using Qz.Infra.Database.Input;
 using Qz.Infra.Database.Params;
-using Qz.Infra.Database.Sql;
-using Qz.Infra.Database.Sql.Base;
 using Qz.Infra.Database.Table;
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace Qz.Infra.Database;
 
-public class DbEngine
+public partial class DbEngine
 {
     public DbEngine(DbExecutor executor, IEnumerable<TableDefine> tables)
     {
@@ -22,79 +22,65 @@ public class DbEngine
         {
             foreach (var table in tableList.Where(table => !Executor.ExistTable(table, con)))
             {
-                Executor.Execute(Executor.SqlBuilder.GetCreateTableSql(table), null, null, con);
+                var sql = Executor.SqlBuilder.GetCreateTableSql(table);
+                Executor.Execute(sql, null, null, con);
             }
         });
     }
 
     public DbExecutor Executor { get; }
 
-    public void Insert(SqlBuilderInsertParam builderParam,
+    public void Insert(string tableName, InputValues input,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var sql = Executor.SqlBuilder.Insert(builderParam);
-        Executor.Execute(sql, builderParam.Values.Items, null, con, tran);
+        var sql = Executor.SqlBuilder.Insert(tableName, input);
+        Executor.Execute(sql, input.Items, null, con, tran);
     }
 
-    public void Delete(SqlBuilderDeleteParam builderParam,
+    public void Delete(string tableName, WhereConditions where, 
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        if (builderParam.WhereConditions == null 
-            || builderParam.WhereConditions.IsEmpty())
-        {
-            throw new ArgumentNullException(nameof(builderParam.WhereConditions));
-        }
-        var sql = Executor.SqlBuilder.Delete(builderParam);
-        Executor.Execute(sql, builderParam.WhereConditions.Parameters, null, con, tran);
+        var sql = Executor.SqlBuilder.Delete(tableName, where);
+        Executor.Execute(sql, where.Parameters, null, con, tran);
     }
 
-    public void Update(SqlBuilderUpdateParam builderParam,
+    public void Update(string tableName, InputValues input, WhereConditions where, 
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        if (builderParam.WhereConditions == null
-            || builderParam.WhereConditions.IsEmpty())
-        {
-            throw new ArgumentNullException(nameof(builderParam.WhereConditions));
-        }
-
-        if (builderParam.Values == null
-            || builderParam.Values.IsEmpty())
-        {
-            throw new ArgumentNullException(nameof(builderParam.Values));
-        }
-        var sql = Executor.SqlBuilder.Update(builderParam);
+        var sql = Executor.SqlBuilder.Update(tableName, input, where);
         var dbParams = new List<ISqlParameter>();
-        dbParams.AddRange(builderParam.Values.Items);
-        dbParams.AddRange(builderParam.WhereConditions.Parameters);
+        dbParams.AddRange(input.Items);
+        dbParams.AddRange(where.Parameters);
         Executor.Execute(sql, dbParams, null, con, tran);
     }
 
-    public int Count(SqlBuilderWhereParam builderParam,
+    public List<T> Select<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var sql = Executor.SqlBuilder.Count(builderParam);
-        return Executor.Count(sql, builderParam.WhereConditions?.Parameters, con, tran);
+        var sql = Executor.SqlBuilder.Select(tableName, where, orderBy);
+        return Executor.Select(sql, convertor, where?.Parameters, con, tran);
     }
 
-    public List<T> Select<T>(Func<IDataRecord, T> convertor, SqlBuilderSelectParam builderParam,
+    public int Count(string tableName, WhereConditions where,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var sql = Executor.SqlBuilder.Select(builderParam);
-        return Executor.Select(sql, convertor, builderParam.WhereConditions?.Parameters, con, tran);
+        var sql = Executor.SqlBuilder.Count(tableName, where);
+        return Executor.Count(sql, where?.Parameters, con, tran);
     }
 
-    public T First<T>(Func<IDataRecord, T> convertor, SqlBuilderSelectParam builderParam,
+    public T First<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var sql = Executor.SqlBuilder.First(builderParam);
-        return Executor.First(sql, convertor, builderParam.WhereConditions?.Parameters, con, tran);
+        var sql = Executor.SqlBuilder.First(tableName, where, orderBy);
+        return Executor.First(sql, convertor, where?.Parameters, con, tran);
     }
 
     public List<T> PageSelect<T>(Func<IDataRecord, T> convertor,
-        PageParam pageParam, SqlBuilderSelectParam builderParam, out int totalPages, out int totalCount,
+        PageParam pageParam, string tableName, WhereConditions where, OrderByCondition orderBy, 
+        out int totalPages, out int totalCount,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        totalCount = Count(builderParam, con, tran);
+        totalCount = Count(tableName, where, con, tran);
         totalPages = 0;
         if (totalCount > 0)
         {
@@ -104,9 +90,21 @@ public class DbEngine
                 totalPages++;
             }
         }
-
-        var sql = Executor.SqlBuilder.Take(builderParam, pageParam.Offset, pageParam.PageSize);
-        var items = Executor.Select(sql, convertor, builderParam.WhereConditions?.Parameters, con, tran).ToList();
+        
+        var sql = Executor.SqlBuilder.Take(tableName, pageParam.Offset, pageParam.PageSize, where, orderBy);
+        var items = Executor.Select(sql, convertor, where?.Parameters, con, tran).ToList();
         return items;
+    }
+
+    public bool Exist(string tableName, WhereConditions where,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        return Count(tableName, where, con, tran) > 0;
+    }
+
+    private string GetTableName<T>()
+    {
+        var entityMap = EntityMapCache.Get<T>();
+        return entityMap.Table.Name;
     }
 }

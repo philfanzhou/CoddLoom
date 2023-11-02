@@ -1,9 +1,9 @@
 ﻿using MySql.Data.MySqlClient;
 using Qz.Infra.Database.Sql;
-using Qz.Infra.Database.Sql.Base;
 using Qz.Infra.Database.Table;
 using System;
 using System.Data;
+using Qz.Infra.Database.Condition;
 
 namespace Qz.Infra.Database.MySql;
 
@@ -26,6 +26,13 @@ public class MySqlExecutor : DbExecutor
         return new MySqlConnection(ConnectionString);
     }
 
+    protected override void GetExistTableParam(TableDefine table, out string checkTable, out WhereConditions where)
+    {
+        // use create table sql to check exist, not here
+        checkTable = null;
+        where = null;
+    }
+
     protected override Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command)
     {
         if (command is not MySqlCommand cmd)
@@ -34,12 +41,6 @@ public class MySqlExecutor : DbExecutor
         }
 
         return cmd.Parameters.AddWithValue;
-    }
-
-    protected override SqlBuilderWhereParam GetExistTableParam(TableDefine table)
-    {
-        // use create table sql to check exist, not here
-        return null;
     }
 
     private static string BuildConnectionString(string server, string database,

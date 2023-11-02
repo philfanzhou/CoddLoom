@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace Qz.Infra.Database.Convert;
 
-partial class DbConverter
+public static partial class DbConverter
 {
     // TODO: remove
     public static bool ToBoolean(IDataRecord record, string key)
@@ -44,7 +44,7 @@ partial class DbConverter
         return DateTime.TryParse(strValue, out var result) ? result : DateTime.MinValue;
     }
 
-    internal static T ToEntity<T>(IDataRecord record)
+    public static T ToEntity<T>(IDataRecord record)
         where T : new()
     {
         var entityMap = EntityMapCache.Get<T>();

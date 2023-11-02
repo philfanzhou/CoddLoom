@@ -6,7 +6,7 @@ namespace Qz.Infra.Database.Sql;
 
 partial class SqlBuilder
 {
-    protected internal virtual string GetJoinTable(JoinConditions joinCondition)
+    public virtual string GetJoinTable(JoinConditions joinCondition)
     {
         if (joinCondition?.Columns == null
             || joinCondition.Columns.Count < 1

@@ -1,5 +1,4 @@
 ﻿using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Sql.Base;
 using Qz.Infra.Database.Table;
 using System;
 using System.Data;
@@ -26,6 +25,14 @@ public class SQLiteExecutor : DbExecutor
         return new SQLiteConnection(ConnectionString);
     }
 
+    protected override void GetExistTableParam(TableDefine table, out string checkTable, out WhereConditions where)
+    {
+        where = new WhereConditions();
+        where.Add("type", "table");
+        where.Add("name", table.Name);
+        checkTable = "sqlite_master";
+    }
+
     protected override Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command)
     {
         if (command is not SQLiteCommand cmd)
@@ -34,14 +41,6 @@ public class SQLiteExecutor : DbExecutor
         }
 
         return cmd.Parameters.AddWithValue;
-    }
-
-    protected override SqlBuilderWhereParam GetExistTableParam(TableDefine table)
-    {
-        var where = new WhereConditions();
-        where.Add("type", "table");
-        where.Add("name", table.Name);
-        return new SqlBuilderWhereParam("sqlite_master", where);
     }
 
     private static string BuildConnectionString(string directory, string dbFileName)

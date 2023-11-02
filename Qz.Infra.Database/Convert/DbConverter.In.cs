@@ -1,15 +1,14 @@
 ﻿using Qz.Infra.Database.Cache;
 using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Input;
-using Qz.Infra.Database.Sql;
 using System;
 using System.Reflection;
 
 namespace Qz.Infra.Database.Convert;
 
-public static partial class DbConverter
+partial class DbConverter
 {
-    internal static SqlBuilderInsertParam ToInsert<T>(T entity, SqlBuilder builder)
+    internal static InputValues ToInsert<T>(T entity)
     {
         if (entity == null)
         {
@@ -38,25 +37,28 @@ public static partial class DbConverter
             }
         }
 
-        return builder.CreateInsert<T>(input);
+        return input;
     }
 
-    internal static SqlBuilderUpdateParam ToUpdate<T>(T entity, SqlBuilder builder)
+    internal static void ToUpdate<T>(T entity, out InputValues input, out WhereConditions where)
     {
         if (entity == null)
         {
             throw new ArgumentNullException(nameof(entity));
         }
 
+        input = null;
+        where = null;
+
         var entityMap = EntityMapCache.Get<T>();
         var updateColumns = TableColumnsCache.GetUpdateColumns(entityMap.Table.Name);
         if (updateColumns == null)
         {
-            return null;
+            return;
         }
 
-        var input = new InputValues();
-        var where = new WhereConditions();
+        input = new InputValues();
+        where = new WhereConditions();
         foreach (var (memberInfo, attribute) in entityMap.Members)
         {
             var value = memberInfo.GetEntityValue(entity);
@@ -70,8 +72,6 @@ public static partial class DbConverter
                 where.Add(attribute.Name, value);
             }
         }
-
-        return where.IsEmpty() ? null : builder.CreateUpdate<T>(input, where);
     }
 
     private static object GetEntityValue<T>(this MemberInfo member, T entity)

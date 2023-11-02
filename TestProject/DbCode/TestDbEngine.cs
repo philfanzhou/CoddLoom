@@ -1,6 +1,5 @@
 ﻿using Qz.Infra.Database;
 using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Sql;
 using Qz.Infra.Database.Table;
 using System.Collections.Generic;
 using System.Data;
@@ -51,8 +50,8 @@ namespace TestProject.DbCode
             where.Add(PasswordUserTable.UnionId, unionId);
             Executor.Transaction(tran =>
             {
-                Delete(new SqlBuilderDeleteParam(PasswordUserTable.TableName, where), null, tran);
-                Delete(new SqlBuilderDeleteParam(UserTable.TableName, where), null, tran);
+                Delete(PasswordUserTable.TableName, where, null, tran);
+                Delete(UserTable.TableName, where, null, tran);
             });
         }
 

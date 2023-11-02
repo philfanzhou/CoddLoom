@@ -1,18 +1,16 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Qz.Infra.Database;
 using Qz.Infra.Database.Condition;
+using Qz.Infra.Database.Convert;
 using Qz.Infra.Database.Input;
 using Qz.Infra.Database.Params;
-using Qz.Infra.Database.Sql;
-using Qz.Infra.Database.SqlServer;
+using Qz.Infra.Database.SQLite;
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using Qz.Infra.Database.SQLite;
 using TestProject.DbCode;
 using TestProject.DbCode.Entity;
 using TestProject.DbCode.Tables;
@@ -50,11 +48,19 @@ namespace TestProject.DbTest
 
             var pwsUserJoin = new JoinConditions(UserTable.TableName, UserTable.UnionId,
                 PasswordUserTable.TableName, PasswordUserTable.UnionId);
-            var sqlBuilderParam = dbEngine.Executor.SqlBuilder.CreateSelect(pwsUserJoin);
-            var allPwdUser = dbEngine.Select<PasswordUser>(sqlBuilderParam, con).ToList();
+            var joinTable = dbEngine.Executor.SqlBuilder.GetJoinTable(pwsUserJoin);
+
+            var allPwdUser = dbEngine.Select(DbConverter.ToEntity<PasswordUser>, joinTable, null, null, con).ToList();
             Assert.IsTrue(allPwdUser.Count == count);
 
-            DeleteTwoTables(allPwdUser, dbEngine, con, sqlBuilderParam);
+            foreach (var user in allPwdUser)
+            {
+                Assert.IsTrue(user.Id == user.Password.Trim());
+                dbEngine.DeleteUser(user.UnionId);
+            }
+
+            Assert.IsTrue(!dbEngine.Select<User>(null, null, con).Any());
+            Assert.IsTrue(!dbEngine.Select(DbConverter.ToEntity<PasswordUser>, joinTable, null, null, con).Any());
 
             con.Close();
         }
@@ -73,7 +79,7 @@ namespace TestProject.DbTest
             input.Add(TenantTable.Id, anotherTenant);
             var where = new WhereConditions();
             where.Add(TenantTable.Id, tenantId);
-            dbEngine.Update(new SqlBuilderUpdateParam(TenantTable.TableName, input, where), con);
+            dbEngine.Update(TenantTable.TableName, input, where, con);
             allTenant = dbEngine.GetAllTenant(con).ToList();
             Assert.AreEqual(anotherTenant, allTenant[0].Trim());
 
@@ -108,7 +114,7 @@ namespace TestProject.DbTest
                 dbEngine.Insert<User>(pwdUser, con);
             }
 
-            var allUser = dbEngine.Select<User>(dbEngine.Executor.SqlBuilder.CreateSelect<User>());
+            var allUser = dbEngine.Select<User>(null, null);
             Assert.IsTrue(allUser.Count == count);
             flag = false;
             for (var i = 0; i < count; i++)
@@ -134,38 +140,25 @@ namespace TestProject.DbTest
 
         private static void TestOrderBy(TestDbEngine dbEngine, IDbConnection con)
         {
-            var firstUser = dbEngine.First<User>(dbEngine.Executor.SqlBuilder.CreateSelect<User>(), con);
+            var firstUser = dbEngine.First<User>(null, null, con);
             Assert.IsTrue(firstUser.Id.Trim() == "0");
 
-            firstUser = dbEngine.First<User>(dbEngine.Executor.SqlBuilder.CreateSelect<User>(new OrderByCondition(UserTable.Id, true)), con);
+            firstUser = dbEngine.First<User>(null, new OrderByCondition(UserTable.Id, true), con);
             Assert.IsTrue(firstUser.Id.Trim() == "99");
         }
 
         private static void PageSelectTest(TestDbEngine dbEngine, IDbConnection con)
         {
-            var builderParam = dbEngine.Executor.SqlBuilder.CreateSelect<User>(new OrderByCondition(UserTable.Id));
+            var orderBy = new OrderByCondition(UserTable.Id);
             var firstPage = dbEngine.PageSelect<User>(new PageParam { PageSize = 10, PageNumber = 1 },
-                builderParam, out var _, out var _, con);
+                null, orderBy, out var _, out var _, con);
             Assert.IsTrue(firstPage.Count == 10);
             Assert.IsTrue(firstPage[0].Id.Trim() == "0");
 
             var secondPage = dbEngine.PageSelect<User>(new PageParam { PageSize = 10, PageNumber = 2 },
-                builderParam, out var _, out var _, con);
+                null, orderBy, out var _, out var _, con);
             Assert.IsTrue(secondPage.Count == 10);
             Assert.IsTrue(secondPage[0].Id.Trim() == "10");
-        }
-
-        private static void DeleteTwoTables(List<PasswordUser> allPwdUser, TestDbEngine dbEngine, IDbConnection con,
-            SqlBuilderSelectParam sqlBuilderParam)
-        {
-            foreach (var user in allPwdUser)
-            {
-                Assert.IsTrue(user.Id == user.Password.Trim());
-                dbEngine.DeleteUser(user.UnionId);
-            }
-
-            Assert.IsTrue(!dbEngine.Select<User>(dbEngine.Executor.SqlBuilder.CreateSelect<User>(), con).Any());
-            Assert.IsTrue(!dbEngine.Select<PasswordUser>(sqlBuilderParam, con).Any());
         }
 
         private static void AssertDateTime(DateTime time1, DateTime time2)
