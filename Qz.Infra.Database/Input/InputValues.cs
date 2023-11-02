@@ -9,16 +9,17 @@ public class InputValues
     /// <summary>
     /// use dictionary to make sure will not add same column one time.
     /// </summary>
-    private readonly Dictionary<string, ISqlParameter> _items = new();
+    private readonly Dictionary<string, ColumnValueParameter> _items = new();
 
-    public IReadOnlyList<ISqlParameter> Items => _items.Values.ToList().AsReadOnly();
+    public IReadOnlyList<ColumnValueParameter> Items => _items.Values.ToList().AsReadOnly();
 
     public void Add(string column, object value)
     {
-        _items.Add(column, new InputValuesItem
+        _items.Add(column, new ColumnValueParameter
         {
             Column = column,
-            Value = value ?? System.DBNull.Value
+            Value = value ?? System.DBNull.Value,
+            ParamName = $"V_{column}"
         });
     }
 

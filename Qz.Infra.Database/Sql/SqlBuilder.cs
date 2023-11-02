@@ -139,7 +139,7 @@ public partial class SqlBuilder
             {
                 whereBuilder.Append(GetOperator(condition.WhereOperator));
                 whereBuilder.Append(" ");
-                whereBuilder.Append(GetParamName(condition.Param));
+                whereBuilder.Append(GetParamName(condition.Parameter));
             }
         }
 
@@ -163,7 +163,7 @@ public partial class SqlBuilder
         return $"{sql} LIMIT {offset},{count}";
     }
 
-    protected internal virtual string GetParamName(ISqlParameter param)
+    protected internal virtual string GetParamName(ColumnValueParameter param)
     {
         return $"{ParamPrefix}{param.ParamName}";
     }

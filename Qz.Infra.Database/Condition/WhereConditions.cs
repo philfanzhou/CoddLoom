@@ -7,17 +7,22 @@ namespace Qz.Infra.Database.Condition;
 public class WhereConditions
 {
     private readonly List<WhereConditionsItemBase> _items = new();
-    private readonly List<WhereParamsItem> _whereParams = new();
+    private readonly List<ColumnValueParameter> _whereParams = new();
     
     internal IEnumerable<WhereConditionsItemBase> Items => _items.AsReadOnly();
     
-    public IEnumerable<ISqlParameter> Parameters => _whereParams.AsReadOnly();
+    public IEnumerable<ColumnValueParameter> Parameters => _whereParams.AsReadOnly();
 
     public void Add(string column, object value,
         WhereOperator whereOperator = WhereOperator.Equal,
         WhereConnecter connecter = WhereConnecter.And)
     {
-        var whereParamsItem = new WhereParamsItem(column, value);
+        var whereParamsItem = new ColumnValueParameter
+        {
+            Column = column,
+            Value = value,
+            ParamName = column
+        };
         _whereParams.Add(whereParamsItem);
         Add(new WhereConditionsItem(whereParamsItem, whereOperator, connecter));
     }
@@ -39,19 +44,19 @@ public class WhereConditions
     private readonly Dictionary<string, int> _paramNameIndex = new();
     private void Add(WhereConditionsItem item)
     {
-        if (!_paramNameIndex.ContainsKey(item.Param.ParamName))
+        if (!_paramNameIndex.ContainsKey(item.Parameter.ParamName))
         {
-            _paramNameIndex.Add(item.Param.ParamName, 0);
+            _paramNameIndex.Add(item.Parameter.ParamName, 0);
         }
         else
         {
-            _paramNameIndex[item.Param.ParamName] += 1;
+            _paramNameIndex[item.Parameter.ParamName] += 1;
         }
 
-        var index = _paramNameIndex[item.Param.ParamName];
+        var index = _paramNameIndex[item.Parameter.ParamName];
         if (index > 0)
         {
-            item.Param.ParamName = $"{item.Param.ParamName}{index}";
+            item.Parameter.ParamName = $"{item.Parameter.ParamName}{index}";
         }
 
         _items.Add(item);

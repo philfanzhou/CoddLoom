@@ -50,15 +50,15 @@ public abstract class DbExecutor
     protected abstract Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command);
 
     private IDbCommand BuildCommand(IDbConnection con, string sql,
-        IEnumerable<ISqlParameter> sqlParams = null)
+        IEnumerable<ColumnValueParameter> dbParams = null)
     {
         var command = con.CreateCommand();
         command.CommandText = sql;
 
-        if (sqlParams != null)
+        if (dbParams != null)
         {
             var func = GetAddParameterFunc(command);
-            foreach (var item in sqlParams)
+            foreach (var item in dbParams)
             {
                 func(SqlBuilder.GetParamName(item), item.Value);
             }
@@ -68,7 +68,7 @@ public abstract class DbExecutor
     }
 
     private void Execute(IDbConnection con, string sql,
-        IEnumerable<ISqlParameter> sqlParams = null, Action<IDataReader> readerAction = null, IDbTransaction tran = null)
+        IEnumerable<ColumnValueParameter> dbParams = null, Action<IDataReader> readerAction = null, IDbTransaction tran = null)
     {
         if (con == null) throw new ArgumentNullException(nameof(con));
         if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
@@ -81,7 +81,7 @@ public abstract class DbExecutor
                 con.Open();
             }
 
-            using var command = BuildCommand(con, sql, sqlParams);
+            using var command = BuildCommand(con, sql, dbParams);
 
             if (tran != null)
             {
@@ -167,20 +167,20 @@ public abstract class DbExecutor
     }
 
     public void Execute(string sql,
-        IEnumerable<ISqlParameter> sqlParams = null, Action<IDataReader> readerAction = null,
+        IEnumerable<ColumnValueParameter> dbParams = null, Action<IDataReader> readerAction = null,
         IDbConnection con = null, IDbTransaction tran = null)
     {
         if (tran != null)
         {
-            Execute(tran.Connection, sql, sqlParams, readerAction, tran);
+            Execute(tran.Connection, sql, dbParams, readerAction, tran);
         }
         else if (con != null)
         {
-            Execute(con, sql, sqlParams, readerAction);
+            Execute(con, sql, dbParams, readerAction);
         }
         else
         {
-            Execute(p => { Execute(p, sql, sqlParams, readerAction); });
+            Execute(p => { Execute(p, sql, dbParams, readerAction); });
         }
     }
 
@@ -189,11 +189,11 @@ public abstract class DbExecutor
     #region Execute with reader
 
     public List<T> Select<T>(string sql, Func<IDataRecord, T> convertor,
-        IEnumerable<ISqlParameter> sqlParams = null, IDbConnection con = null, IDbTransaction tran = null)
+        IEnumerable<ColumnValueParameter> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
     {
         var result = new List<T>();
 
-        Execute(sql, sqlParams, reader =>
+        Execute(sql, dbParams, reader =>
         {
             while (reader.Read())
             {
@@ -205,11 +205,11 @@ public abstract class DbExecutor
     }
 
     public T First<T>(string sql, Func<IDataRecord, T> convertor,
-        IEnumerable<ISqlParameter> sqlParams = null, IDbConnection con = null, IDbTransaction tran = null)
+        IEnumerable<ColumnValueParameter> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
     {
         T result = default;
 
-        Execute(sql, sqlParams, reader =>
+        Execute(sql, dbParams, reader =>
         {
             reader.Read();
             result = convertor(reader);
@@ -219,11 +219,11 @@ public abstract class DbExecutor
     }
 
     public int Count(string sql,
-        IEnumerable<ISqlParameter> sqlParams = null, IDbConnection con = null, IDbTransaction tran = null)
+        IEnumerable<ColumnValueParameter> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
     {
         var count = 0;
 
-        Execute(sql, sqlParams, reader =>
+        Execute(sql, dbParams, reader =>
         {
             reader.Read();
             count = reader.GetInt32(0);
