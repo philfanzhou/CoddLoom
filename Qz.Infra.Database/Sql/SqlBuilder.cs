@@ -140,6 +140,13 @@ public partial class SqlBuilder
                 whereBuilder.Append(GetOperator(condition.WhereOperator));
                 whereBuilder.Append(" ");
                 whereBuilder.Append(GetParamName(condition.Parameter));
+                
+                // update like condition value
+                if (condition.WhereOperator == WhereOperator.Like)
+                {
+                    var value = GetLikeValue(condition.Parameter.Value.ToString());
+                    condition.Parameter.Value = value;
+                }
             }
         }
 
@@ -191,6 +198,21 @@ public partial class SqlBuilder
     protected virtual string GetConnecter(WhereConnecter whereConnecter)
     {
         return whereConnecter == WhereConnecter.And ? "AND" : "OR";
+    }
+
+    protected virtual string GetLikeValue(string value)
+    {
+        if (!value.StartsWith("%"))
+        {
+            value = $"%{value}";
+        }
+
+        if (!value.EndsWith("%"))
+        {
+            value = $"{value}%";
+        }
+
+        return value;
     }
 
     #endregion

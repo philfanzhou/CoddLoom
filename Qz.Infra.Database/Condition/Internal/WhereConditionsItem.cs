@@ -17,5 +17,5 @@ internal class WhereConditionsItem : WhereConditionsItemBase
 
     public WhereOperator WhereOperator { get; protected set; }
 
-    public override string Column => Parameter?.Column;
+    public override string Column => Parameter.Column;
 }
