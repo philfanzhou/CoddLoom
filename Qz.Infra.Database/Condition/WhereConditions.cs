@@ -44,7 +44,7 @@ public class WhereConditions
         _itemList.Add(conditionItem);
     }
 
-    internal bool IsEmpty()
+    public bool IsEmpty()
     {
         return _itemList.Count < 1;
     }
