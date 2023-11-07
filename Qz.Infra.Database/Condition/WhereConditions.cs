@@ -1,6 +1,8 @@
 ﻿using Qz.Infra.Database.Condition.Internal;
 using Qz.Infra.Database.Params;
+using System;
 using System.Collections.Generic;
+using System.Data;
 
 namespace Qz.Infra.Database.Condition;
 
@@ -17,28 +19,36 @@ public class WhereConditions
         WhereOperator whereOperator = WhereOperator.Equal,
         WhereConnecter connecter = WhereConnecter.And)
     {
-        if(string.IsNullOrEmpty(column)) throw new System.ArgumentNullException(nameof(column));
+        if(string.IsNullOrEmpty(column)) throw new ArgumentNullException(nameof(column));
 
-        if (value == null)
+        if (IsValidValue(value, whereOperator) == false)
         {
             return;
         }
 
-        var param = new ColumnValueParameter
-        {
-            Column = column,
-            Value = value,
-            ParamName = GetParamName(column)
-        };
-
+        var param = CreateAndAddParameter(column, value);
         _itemList.Add(new WhereConditionsItem(param, whereOperator, connecter));
-        _paramList.Add(param);
+    }
+
+    public void Add(string column, object value, DbType castType,
+        WhereOperator whereOperator = WhereOperator.Equal,
+        WhereConnecter connecter = WhereConnecter.And)
+    {
+        if (string.IsNullOrEmpty(column)) throw new ArgumentNullException(nameof(column));
+
+        if (IsValidValue(value, whereOperator) == false)
+        {
+            return;
+        }
+
+        var param = CreateAndAddParameter(column, value);
+        _itemList.Add(new WhereConditionsItem(param, castType, whereOperator, connecter));
     }
 
     public void AddIsNull(string column, bool isNull,
         WhereConnecter connecter = WhereConnecter.And)
     {
-        if (string.IsNullOrEmpty(column)) throw new System.ArgumentNullException(nameof(column));
+        if (string.IsNullOrEmpty(column)) throw new ArgumentNullException(nameof(column));
 
         var conditionItem = new WhereConditionsNullItem(column, isNull, connecter);
         _itemList.Add(conditionItem);
@@ -50,6 +60,36 @@ public class WhereConditions
     }
 
     #region Private method
+
+    private bool IsValidValue(object value, WhereOperator whereOperator)
+    {
+        if (value == null)
+        {
+            return false;
+        }
+
+        if (whereOperator == WhereOperator.Like
+            && string.IsNullOrEmpty(value.ToString()))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private ColumnValueParameter CreateAndAddParameter(string column, object value)
+    {
+        var param = new ColumnValueParameter
+        {
+            Column = column,
+            Value = value,
+            ParamName = GetParamName(column)
+        };
+
+        _paramList.Add(param);
+        return param;
+    }
+
     private readonly Dictionary<string, int> _paramNameIndex = new();
     private string GetParamName(string paramName)
     {
@@ -64,5 +104,6 @@ public class WhereConditions
 
         return $"{paramName}{_paramNameIndex[paramName]}";
     }
+
     #endregion
 }

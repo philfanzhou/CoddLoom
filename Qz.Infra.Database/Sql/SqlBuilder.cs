@@ -1,8 +1,8 @@
 ﻿using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Condition.Internal;
 using Qz.Infra.Database.Input;
 using Qz.Infra.Database.Params;
 using System;
+using System.Data;
 using System.Linq;
 using System.Text;
 
@@ -123,31 +123,9 @@ public partial class SqlBuilder
         {
             if (whereBuilder.Length > 0)
             {
-                whereBuilder.Append(" ");
                 whereBuilder.Append(GetConnecter(item.WhereConnecter));
-                whereBuilder.Append(" ");
             }
-
-            whereBuilder.Append(item.Column);
-            whereBuilder.Append(" ");
-
-            if (item is WhereConditionsNullItem nullCondition)
-            {
-                whereBuilder.Append(GetIsNullCondition(nullCondition.IsNull));
-            }
-            else if (item is WhereConditionsItem condition)
-            {
-                whereBuilder.Append(GetOperator(condition.WhereOperator));
-                whereBuilder.Append(" ");
-                whereBuilder.Append(GetParamName(condition.Parameter));
-                
-                // update like condition value
-                if (condition.WhereOperator == WhereOperator.Like)
-                {
-                    var value = GetLikeValue(condition.Parameter.Value.ToString());
-                    condition.Parameter.Value = value;
-                }
-            }
+            whereBuilder.Append(item.GetWhereString(this));
         }
 
         return $"{sql} WHERE {whereBuilder}";
@@ -170,37 +148,51 @@ public partial class SqlBuilder
         return $"{sql} LIMIT {offset},{count}";
     }
 
+    protected virtual string GetConnecter(WhereConnecter whereConnecter)
+    {
+        return whereConnecter == WhereConnecter.And ? " AND " : " OR ";
+    }
+
     protected internal virtual string GetParamName(ColumnValueParameter param)
     {
         return $"{ParamPrefix}{param.ParamName}";
     }
 
-    protected virtual string GetOperator(WhereOperator whereOperator)
+    protected internal virtual string GetCastColumn(string column, DbType dbType)
     {
-        return whereOperator switch
+        var typeStr = dbType switch
         {
-            WhereOperator.Equal => "=",
-            WhereOperator.NotEqual => "!=",
-            WhereOperator.GreaterThan => ">",
-            WhereOperator.GreaterEqual => ">=",
-            WhereOperator.LessThan => "<",
-            WhereOperator.LessEqual => "<=",
-            WhereOperator.Like => "LIKE",
-            _ => throw new NotSupportedException(nameof(whereOperator)),
+            DbType.DateTime => "DateTime",
+            _ => throw new NotSupportedException(dbType.ToString())
         };
+        return $"CAST({column} AS {typeStr})";
     }
 
-    protected virtual string GetIsNullCondition(bool isNull)
+    #endregion
+
+    #region WhereCondition
+
+    protected internal virtual string GetIsNullCondition(bool isNull)
     {
         return $"IS {(isNull ? "NULL" : "NOT NULL")}";
     }
 
-    protected virtual string GetConnecter(WhereConnecter whereConnecter)
+    protected internal virtual string GetOperator(WhereOperator whereOperator)
     {
-        return whereConnecter == WhereConnecter.And ? "AND" : "OR";
+        return whereOperator switch
+        {
+            WhereOperator.Equal => " = ",
+            WhereOperator.NotEqual => " != ",
+            WhereOperator.GreaterThan => " > ",
+            WhereOperator.GreaterEqual => " >= ",
+            WhereOperator.LessThan => " < ",
+            WhereOperator.LessEqual => " <= ",
+            WhereOperator.Like => " LIKE ",
+            _ => throw new NotSupportedException(nameof(whereOperator)),
+        };
     }
 
-    protected virtual string GetLikeValue(string value)
+    protected internal virtual string GetLikeParamValue(string value)
     {
         if (!value.StartsWith("%"))
         {

@@ -1,4 +1,6 @@
-﻿namespace Qz.Infra.Database.Condition.Internal;
+﻿using Qz.Infra.Database.Sql;
+
+namespace Qz.Infra.Database.Condition.Internal;
 
 internal class WhereConditionsNullItem : WhereConditionsItemBase
 {
@@ -13,4 +15,9 @@ internal class WhereConditionsNullItem : WhereConditionsItemBase
     public bool IsNull { get; }
 
     public override string Column { get; }
+
+    public override string GetWhereString(SqlBuilder builder)
+    {
+        return $"{Column} {builder.GetIsNullCondition(IsNull)}";
+    }
 }
