@@ -3,7 +3,6 @@ using Qz.Infra.Database.Input;
 using Qz.Infra.Database.Params;
 using System;
 using System.Data;
-using System.Linq;
 using System.Text;
 
 namespace Qz.Infra.Database.Sql;
@@ -84,11 +83,11 @@ public partial class SqlBuilder
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
 
         var column = "*";
-        if (where != null && !where.IsEmpty())
-        {
-            // 只查询where条件的第一个column，提高性能
-            column = where.Items.First().Column;
-        }
+        //if (where != null && !where.IsEmpty())
+        //{
+        //    // 只查询where条件的第一个column，提高性能
+        //    column = where.Items.First().Column;
+        //}
 
         var sql = $"SELECT COUNT({column}) FROM {tableName}";
         return AppendWhere(sql, where);
