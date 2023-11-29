@@ -10,8 +10,10 @@ public class WhereConditions
 {
     private readonly List<WhereConditionsItemBase> _itemList = new();
     private readonly List<ColumnValueParameter> _paramList = new();
-    
+    private readonly List<Tuple<WhereConditions, WhereConnecter>> _partialConditions = new();
+
     internal IEnumerable<WhereConditionsItemBase> Items => _itemList.AsReadOnly();
+    internal IEnumerable<Tuple<WhereConditions, WhereConnecter>> PartialItems => _partialConditions.AsReadOnly();
 
     public IEnumerable<ColumnValueParameter> Parameters => _paramList.AsReadOnly();
 
@@ -19,7 +21,7 @@ public class WhereConditions
         WhereOperator whereOperator = WhereOperator.Equal,
         WhereConnecter connecter = WhereConnecter.And)
     {
-        if(string.IsNullOrEmpty(column)) throw new ArgumentNullException(nameof(column));
+        if (string.IsNullOrEmpty(column)) throw new ArgumentNullException(nameof(column));
 
         if (IsValidValue(value, whereOperator) == false)
         {
@@ -54,9 +56,15 @@ public class WhereConditions
         _itemList.Add(conditionItem);
     }
 
+    public void Add(WhereConditions partialCondition,
+        WhereConnecter connecter = WhereConnecter.And)
+    {
+        _partialConditions.Add(new Tuple<WhereConditions, WhereConnecter>(partialCondition, connecter));
+    }
+
     public bool IsEmpty()
     {
-        return _itemList.Count < 1;
+        return _itemList.Count < 1 && _partialConditions.Count < 1;
     }
 
     #region Private method

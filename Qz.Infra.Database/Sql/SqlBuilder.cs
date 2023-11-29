@@ -117,17 +117,7 @@ public partial class SqlBuilder
             return sql;
         }
 
-        var whereBuilder = new StringBuilder();
-        foreach (var item in where.Items)
-        {
-            if (whereBuilder.Length > 0)
-            {
-                whereBuilder.Append(GetConnecter(item.WhereConnecter));
-            }
-            whereBuilder.Append(item.GetWhereString(this));
-        }
-
-        return $"{sql} WHERE {whereBuilder}";
+        return $"{sql} WHERE {GetConditionString(where)}";
     }
 
     protected virtual string AppendOrderBy(string sql,
@@ -204,6 +194,30 @@ public partial class SqlBuilder
         }
 
         return value;
+    }
+
+    private string GetConditionString(WhereConditions where)
+    {
+        var whereBuilder = new StringBuilder();
+        foreach (var item in where.Items)
+        {
+            if (whereBuilder.Length > 0)
+            {
+                whereBuilder.Append(GetConnecter(item.WhereConnecter));
+            }
+            whereBuilder.Append(item.GetWhereString(this));
+        }
+
+        foreach (var condition in where.PartialItems)
+        {
+            if (whereBuilder.Length > 0)
+            {
+                whereBuilder.Append(GetConnecter(condition.Item2));
+            }
+            whereBuilder.Append($"({GetConditionString(condition.Item1)})");
+        }
+
+        return whereBuilder.ToString();
     }
 
     #endregion
