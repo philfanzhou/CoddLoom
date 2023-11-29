@@ -15,7 +15,21 @@ public class WhereConditions
     internal IEnumerable<WhereConditionsItemBase> Items => _itemList.AsReadOnly();
     internal IEnumerable<Tuple<WhereConditions, WhereConnecter>> PartialItems => _partialConditions.AsReadOnly();
 
-    public IEnumerable<ColumnValueParameter> Parameters => _paramList.AsReadOnly();
+    public IEnumerable<ColumnValueParameter> Parameters
+    {
+        get
+        {
+            var paramList = new List<ColumnValueParameter>();
+            paramList.AddRange(_paramList);
+
+            foreach (var condition in _partialConditions)
+            {
+                paramList.AddRange(condition.Item1.Parameters);
+            }
+
+            return paramList;
+        }
+    }
 
     public void Add(string column, object value,
         WhereOperator whereOperator = WhereOperator.Equal,
