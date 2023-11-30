@@ -73,6 +73,14 @@ public class WhereConditions
     public void Add(WhereConditions partialCondition,
         WhereConnecter connecter = WhereConnecter.And)
     {
+        foreach (var item in partialCondition.Items)
+        {
+            if (item is WhereConditionsItem condition)
+            {
+                condition.Parameter.ParamName = GetParamName(condition.Parameter.ParamName);
+            }
+        }
+
         _partialConditions.Add(new Tuple<WhereConditions, WhereConnecter>(partialCondition, connecter));
     }
 
