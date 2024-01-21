@@ -30,6 +30,11 @@ public static class DbContainer
 
     public static DbEngine Get(string engineName)
     {
-        return Engines[engineName];
+        if (Engines.ContainsKey(engineName))
+        {
+            return Engines[engineName];
+        }
+
+        return null;
     }
 }
