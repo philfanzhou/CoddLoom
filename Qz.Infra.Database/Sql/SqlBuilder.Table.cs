@@ -58,11 +58,12 @@ partial class SqlBuilder
         return column.Type switch
         {
             DbType.String => GetColumnCharType(column),
-            DbType.Int32 => "INTEGER",
             DbType.Int16 => "SMALLINT",
+            DbType.Int32 => "INTEGER",
+            DbType.Int64 => "BIGINT",
+            DbType.Double => "FLOAT",
             DbType.Decimal => GetColumnDecimalType(column),
             DbType.Boolean => "BIT",
-            DbType.Double => "FLOAT",
             DbType.DateTime => "DATETIME",
             DbType.Binary => "BLOB",
             _ => throw new NotSupportedException($"{column.Type} not support.")
