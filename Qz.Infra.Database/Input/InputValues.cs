@@ -15,10 +15,27 @@ public class InputValues
 
     public void Add(string column, object value)
     {
+        AddItem(column, value ?? System.DBNull.Value);
+    }
+
+    public void Add(string column, string value)
+    {
+        if (string.IsNullOrEmpty(value) || string.IsNullOrWhiteSpace(value))
+        {
+            AddItem(column, System.DBNull.Value);
+        }
+        else
+        {
+            AddItem(column, value.Trim());
+        }
+    }
+
+    private void AddItem(string column, object value)
+    {
         _items.Add(column, new ColumnValueParameter
         {
             Column = column,
-            Value = value ?? System.DBNull.Value,
+            Value = value,
             ParamName = $"V_{column}"
         });
     }

@@ -1,5 +1,6 @@
 ﻿using Qz.Infra.Database.Cache;
 using Qz.Infra.Database.Condition;
+using Qz.Infra.Database.Entity;
 using Qz.Infra.Database.Input;
 using System;
 using System.Reflection;
@@ -31,10 +32,7 @@ partial class DbConverter
             }
 
             var value = memberInfo.GetEntityValue(entity);
-            if (value != null)
-            {
-                input.Add(attribute.Name, value);
-            }
+            SetInputItems(input, memberInfo, attribute, value);
         }
 
         return input;
@@ -63,16 +61,22 @@ partial class DbConverter
         {
             var value = memberInfo.GetEntityValue(entity);
 
-            if (updateColumns.Contains(attribute.Name))
-            {
-                input.Add(attribute.Name, value);
-            }
-            else if (attribute.PrimaryKey && value != null)
+            if (attribute.PrimaryKey)
             {
                 where.Add(attribute.Name, value);
+                continue;
             }
+
+            if (!updateColumns.Contains(attribute.Name))
+            {
+                continue;
+            }
+
+            SetInputItems(input, memberInfo, attribute, value);
         }
     }
+
+    #region Private method
 
     private static object GetEntityValue<T>(this MemberInfo member, T entity)
     {
@@ -88,4 +92,41 @@ partial class DbConverter
 
         return obj;
     }
+
+    private static string GetMemberType(this MemberInfo member)
+    {
+        string type = null;
+        if (member is FieldInfo field)
+        {
+            type = field.FieldType.FullName;
+        }
+        else if (member is PropertyInfo property)
+        {
+            type = property.PropertyType.FullName;
+        }
+
+        return type;
+    }
+
+    private static void SetInputItems(InputValues input, MemberInfo memberInfo, MapColumnAttribute attribute, object value)
+    {
+        if (value == null)
+        {
+            input.Add(attribute.Name, null);
+        }
+        else
+        {
+            var memberType = memberInfo.GetMemberType();
+            if (memberType == "System.String")
+            {
+                input.Add(attribute.Name, value.ToString());
+            }
+            else
+            {
+                input.Add(attribute.Name, value);
+            }
+        }
+    }
+
+    #endregion
 }
