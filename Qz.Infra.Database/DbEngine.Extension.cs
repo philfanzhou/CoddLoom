@@ -1,5 +1,4 @@
-﻿using Qz.Infra.Database.Cache;
-using Qz.Infra.Database.Condition;
+﻿using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Convert;
 using Qz.Infra.Database.Params;
 using System;
@@ -13,24 +12,21 @@ partial class DbEngine
     public void Insert<T>(T entity,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var table = GetTableName<T>();
-        var inputValues = DbConverter.ToInsert(entity);
-        Insert(table, inputValues, con, tran);
+        DbConverter.ToInsert(entity, out var table, out var input);
+        Insert(table, input, con, tran);
     }
 
     public void Delete<T>(string primaryKeyValue,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var table = GetTableName<T>();
-        var where = GetPrimaryKeyCondition<T>(primaryKeyValue);
+        DbConverter.ToDelete<T>(primaryKeyValue, out var table, out var where);
         Delete(table, where, con, tran);
     }
 
     public void Update<T>(T entity,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var table = GetTableName<T>();
-        DbConverter.ToUpdate(entity, out var input, out var where);
+        DbConverter.ToUpdate(entity, out var table, out var input, out var where);
         Update(table, input, where, con, tran);
     }
 
@@ -39,7 +35,7 @@ partial class DbEngine
         where T : new()
     {
         var table = GetTableName<T>();
-        return Select(DbConverter.ToEntity<T>, table, where, orderBy, con, tran);
+        return Select(DataRecordExtension.ToEntity<T>, table, where, orderBy, con, tran);
     }
 
     public T First<T>(WhereConditions where, OrderByCondition orderBy,
@@ -47,7 +43,7 @@ partial class DbEngine
         where T : new()
     {
         var table = GetTableName<T>();
-        return First(DbConverter.ToEntity<T>, table, where, orderBy, con, tran);
+        return First(DataRecordExtension.ToEntity<T>, table, where, orderBy, con, tran);
     }
 
     public List<T> PageSelect<T>(PageParam pageParam, WhereConditions where, OrderByCondition orderBy, 
@@ -56,15 +52,25 @@ partial class DbEngine
         where T : new()
     {
         var table = GetTableName<T>();
-        return PageSelect(DbConverter.ToEntity<T>, pageParam, table, where, orderBy, out totalPages, out totalCount,
+        return PageSelect(DataRecordExtension.ToEntity<T>, pageParam, table, where, orderBy, out totalPages, out totalCount,
             con, tran);
     }
 
-    public string GenerateTimeStampId(string tableName, string columnName,
+    public string GenerateUtcTimeStampId(string tableName, string columnName,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        return GenerateTimeStampId(tableName, columnName, () => DateTime.UtcNow, con, tran);
+    }
+
+    public string GenerateTimeStampId(string tableName, string columnName, Func<DateTime> getTime,
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var format = "yyMMddHHmmss";
-        var getNewId = new Func<string>(() => DateTime.UtcNow.ToString(format) + new Random().Next(100, 999));
+        var getNewId = new Func<string>(() =>
+        {
+            var time = getTime();
+            return time.ToString(format) + new Random().Next(100, 999).ToString().PadRight(3, '0');
+        });
 
         var newId = getNewId();
         var where = new WhereConditions();
@@ -87,21 +93,12 @@ partial class DbEngine
         return newId;
     }
 
-    private WhereConditions GetPrimaryKeyCondition<T>(string primaryKeyValue)
+    public int GenerateMaxId(string tableName, string columnName,
+        IDbConnection con = null, IDbTransaction tran = null)
     {
-        if (string.IsNullOrEmpty(primaryKeyValue))
-        {
-            throw new ArgumentNullException(nameof(primaryKeyValue));
-        }
-
-        var entityMap = EntityMapCache.Get<T>();
-        if (string.IsNullOrEmpty(entityMap.PrimaryKey))
-        {
-            throw new ArgumentException($"{nameof(T)} does not have a primary key");
-        }
-
-        var where = new WhereConditions();
-        where.Add(entityMap.PrimaryKey, primaryKeyValue);
-        return where;
+        var orderBy = new OrderByCondition(columnName, true);
+        var max = First(record => int.Parse(record[columnName].ToString()),
+            tableName, null, orderBy, con, tran);
+        return checked(max + 1);
     }
 }

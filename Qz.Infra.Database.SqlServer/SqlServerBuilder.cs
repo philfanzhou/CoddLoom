@@ -1,26 +1,23 @@
 ﻿using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Sql;
 using Qz.Infra.Database.Table;
+using Qz.Infra.Database.Table.Base;
 using System;
-using System.Data;
 
 namespace Qz.Infra.Database.SqlServer;
 
 public class SqlServerBuilder : SqlBuilder
 {
-    protected override string GetColumnTypeSql(DbColumnBaseAttribute column)
+    protected override string GetColumnBinaryType(DbColumnBinaryAttribute binaryColumn)
     {
-        if (column.Type == DbType.Binary)
-        {
-            var length = column.Length > 8000 ? "MAX" : column.Length.ToString();
-            return $"VARBINARY({length})";
-        }
-        return base.GetColumnTypeSql(column);
+        var length = binaryColumn.Length > 8000 ? "MAX" : binaryColumn.Length.ToString();
+        return $"VARBINARY({length})";
     }
 
-    protected override string GetPrimaryKeySql(DbPrimaryKeyAttribute primaryKey)
+    protected override string GetPrimaryKeySql(DbPrimaryKeyBaseAttribute primaryKey)
     {
-        var keySql = primaryKey.IsIdentity ? "BIGINT IDENTITY(1,1)" : GetColumnTypeSql(primaryKey);
+        var isIdentity = primaryKey is DbPrimaryKeyIdentityAttribute;
+        var keySql = isIdentity ? "BIGINT IDENTITY(1,1)" : GetPrimaryKeyTypeSql(primaryKey);
         return $"{primaryKey.Name} {keySql} PRIMARY KEY NOT NULL";
     }
 

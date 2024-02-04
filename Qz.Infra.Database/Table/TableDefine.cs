@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Qz.Infra.Database.Common;
+using Qz.Infra.Database.Table.Base;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -6,16 +9,39 @@ namespace Qz.Infra.Database.Table;
 
 public class TableDefine
 {
+    private const BindingFlags MemberFlags = BindingFlags.Public
+                                             | BindingFlags.NonPublic
+                                             | BindingFlags.Instance
+                                             | BindingFlags.Static;
+
+    public string Name { get; protected set; }
+
+    public IReadOnlyList<DbColumnBaseAttribute> Columns { get; protected set; }
+
+    public DbPrimaryKeyBaseAttribute PrimaryKey { get; protected set; }
+
     public TableDefine(IReflect tableType)
     {
-        const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
-                                   BindingFlags.Static;
+        GetTableMembers(tableType, out var tableNameInfo, out var columnInfo, out var primaryKeyInfo);
 
-        var tempTableName = new List<MemberInfo>();
-        var tempColumns = new List<MemberInfo>();
-        var tempPrimaryKey = new List<MemberInfo>();
+        CheckTableName(tableNameInfo);
+        CheckColumns(columnInfo, primaryKeyInfo);
 
-        var members = tableType.GetMembers(flags);
+        Name = tableNameInfo[0].GetMemberValue(null).ToString();
+        Columns = GetColumns(columnInfo).AsReadOnly();
+        PrimaryKey = GetPrimaryKey(primaryKeyInfo);
+    }
+
+    #region Private method
+
+    private static void GetTableMembers(IReflect tableType,
+        out List<MemberInfo> tableName, out List<MemberInfo> columns, out List<MemberInfo> primaryKey)
+    {
+        tableName = new List<MemberInfo>();
+        columns = new List<MemberInfo>();
+        primaryKey = new List<MemberInfo>();
+
+        var members = tableType.GetMembers(MemberFlags);
         foreach (var member in members)
         {
             var attributes = member.GetCustomAttributes(true);
@@ -23,107 +49,88 @@ public class TableDefine
             {
                 if (attribute is DbTableNameAttribute)
                 {
-                    tempTableName.Add(member);
+                    tableName.Add(member);
                     break;
                 }
 
-                if (attribute is DbColumnAttribute)
+                if (attribute is DbColumnBaseAttribute)
                 {
-                    tempColumns.Add(member);
+                    columns.Add(member);
                     break;
                 }
 
-                if (attribute is DbPrimaryKeyAttribute)
+                if (attribute is DbPrimaryKeyBaseAttribute)
                 {
-                    tempPrimaryKey.Add(member);
+                    primaryKey.Add(member);
                     break;
                 }
             }
         }
+    }
 
-        #region Check
-
-        if (tempTableName.Count < 1)
+    private static void CheckTableName(List<MemberInfo> tableNameInfo)
+    {
+        if (tableNameInfo.Count < 1)
         {
             throw new InvalidOperationException("Table name not found.");
         }
 
-        if (tempTableName.Count > 1)
+        if (tableNameInfo.Count > 1)
         {
             var msg = "Table name: ";
-            foreach (var item in tempTableName)
+            foreach (var item in tableNameInfo)
             {
                 msg += $"'{item.Name}' ";
             }
 
             msg += "is not allow.";
             throw new InvalidOperationException(msg);
-        }
-
-        if (tempColumns.Count < 1 && tempPrimaryKey.Count < 1)
-        {
-            throw new InvalidOperationException("Table column not found.");
-        }
-
-        if (tempPrimaryKey.Count > 1)
-        {
-            var msg = "Primary key: ";
-            foreach (var item in tempPrimaryKey)
-            {
-                msg += $"'{item.Name}' ";
-            }
-
-            msg += "is not allow.";
-            throw new InvalidOperationException(msg);
-        }
-
-        #endregion
-
-        Name = GetMemberValue(tempTableName[0]);
-
-        var columns = new List<DbColumnAttribute>();
-        foreach (var column in tempColumns)
-        {
-            var columnAttribute = column.GetCustomAttribute<DbColumnAttribute>();
-            columnAttribute.Name = GetMemberValue(column);
-            columns.Add(columnAttribute);
-        }
-
-        Columns = columns.AsReadOnly();
-
-        if (tempPrimaryKey.Count < 1)
-        {
-            PrimaryKey = null;
-        }
-        else
-        {
-            var primaryKeyAttribute = tempPrimaryKey[0].GetCustomAttribute<DbPrimaryKeyAttribute>();
-            primaryKeyAttribute.Name = GetMemberValue(tempPrimaryKey[0]);
-            PrimaryKey = primaryKeyAttribute;
         }
     }
 
-    public string Name { get; protected set; }
-
-    public DbPrimaryKeyAttribute PrimaryKey { get; protected set; }
-
-    public IReadOnlyList<DbColumnAttribute> Columns { get; protected set; }
-
-    #region Private method
-
-    private static string GetMemberValue(MemberInfo memberInfo)
+    private static void CheckColumns(ICollection columnInfo, List<MemberInfo> primaryKeyInfo)
     {
-        if (memberInfo is FieldInfo field)
+        if (columnInfo.Count < 1 && primaryKeyInfo.Count < 1)
         {
-            return field.GetValue(null).ToString();
+            throw new InvalidOperationException("Table columns not found.");
         }
 
-        if (memberInfo is PropertyInfo property)
+        if (primaryKeyInfo.Count > 1)
         {
-            return property.GetValue(null).ToString();
+            var msg = "Primary key: ";
+            foreach (var item in primaryKeyInfo)
+            {
+                msg += $"'{item.Name}' ";
+            }
+
+            msg += "is not allow.";
+            throw new InvalidOperationException(msg);
+        }
+    }
+
+    private static List<DbColumnBaseAttribute> GetColumns(List<MemberInfo> columnInfo)
+    {
+        var columns = new List<DbColumnBaseAttribute>();
+        foreach (var column in columnInfo)
+        {
+            var columnAttribute = column.GetCustomAttribute<DbColumnBaseAttribute>();
+            columnAttribute.Name = column.GetMemberValue(null).ToString();
+            columns.Add(columnAttribute);
         }
 
-        return string.Empty;
+        return columns;
+    }
+
+    private static DbPrimaryKeyBaseAttribute GetPrimaryKey(IReadOnlyList<MemberInfo> primaryKeyInfo)
+    {
+        if (primaryKeyInfo.Count < 1)
+        {
+            return null;
+        }
+
+        var primaryKeyAttribute = primaryKeyInfo[0].GetCustomAttribute<DbPrimaryKeyBaseAttribute>();
+        primaryKeyAttribute.Name = primaryKeyInfo[0].GetMemberValue(null).ToString();
+        return primaryKeyAttribute;
     }
 
     #endregion

@@ -16,7 +16,7 @@ internal static class TableColumnsCache
             UpdateColumnCache.Add(table.Name, new List<string>());
 
             if (table.PrimaryKey != null 
-                && table.PrimaryKey.IsIdentity == false)
+                && table.PrimaryKey is not DbPrimaryKeyIdentityAttribute)
             {
                 InsertColumnCache[table.Name].Add(table.PrimaryKey.Name);
             }
