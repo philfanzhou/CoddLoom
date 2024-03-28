@@ -1,16 +1,14 @@
 ﻿using Qz.Infra.Database.Cache;
+using Qz.Infra.Database.Common;
 using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Entity;
 using Qz.Infra.Database.Input;
 using System;
-using System.Reflection;
-using Qz.Infra.Database.Common;
 
 namespace Qz.Infra.Database.Convert;
 
 partial class DbConverter
 {
-    internal static void ToInsert<T>(T entity, 
+    internal static void ToInsert<T>(T entity,
         out string tableName, out InputValues input)
     {
         if (entity == null)
@@ -38,11 +36,11 @@ partial class DbConverter
             }
 
             var value = memberInfo.GetMemberValue(entity);
-            SetInputItems(input, memberInfo, attribute, value);
+            input.Add(attribute.Name, value);
         }
     }
 
-    internal static void ToUpdate<T>(T entity, 
+    internal static void ToUpdate<T>(T entity,
         out string tableName, out InputValues input, out WhereConditions where)
     {
         if (entity == null)
@@ -79,7 +77,7 @@ partial class DbConverter
                 continue;
             }
 
-            SetInputItems(input, memberInfo, attribute, value);
+            input.Add(attribute.Name, value);
         }
     }
 
@@ -104,28 +102,4 @@ partial class DbConverter
         where = new WhereConditions();
         where.Add(entityMap.PrimaryKey, id);
     }
-
-    #region Private method
-
-    private static void SetInputItems(InputValues input, MemberInfo memberInfo, MapColumnAttribute attribute, object value)
-    {
-        if (value == null)
-        {
-            input.Add(attribute.Name, null);
-        }
-        else
-        {
-            var memberType = memberInfo.GetMemberTypeName();
-            if (memberType == "System.String")
-            {
-                input.Add(attribute.Name, value.ToString());
-            }
-            else
-            {
-                input.Add(attribute.Name, value);
-            }
-        }
-    }
-
-    #endregion
 }

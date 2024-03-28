@@ -1,4 +1,5 @@
 ﻿using Qz.Infra.Database.Params;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -15,14 +16,41 @@ public class InputValues
 
     public void Add(string column, object value)
     {
-        AddItem(column, value ?? System.DBNull.Value);
+        if (null == value)
+        {
+            AddItem(column, DBNull.Value);
+        }
+        else if (value is string str)
+        {
+            Add(column, str);
+        }
+        else if (value is DateTime time)
+        {
+            Add(column, time);
+        }
+        else
+        {
+            AddItem(column, value);
+        }
+    }
+
+    public void Add(string column, DateTime value)
+    {
+        if (value == DateTime.MinValue)
+        {
+            AddItem(column, DBNull.Value);
+        }
+        else
+        {
+            AddItem(column, value);
+        }
     }
 
     public void Add(string column, string value)
     {
         if (string.IsNullOrEmpty(value) || string.IsNullOrWhiteSpace(value))
         {
-            AddItem(column, System.DBNull.Value);
+            AddItem(column, DBNull.Value);
         }
         else
         {
