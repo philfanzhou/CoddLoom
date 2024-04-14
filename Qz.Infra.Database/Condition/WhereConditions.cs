@@ -123,6 +123,11 @@ public class WhereConditions
     private readonly Dictionary<string, int> _paramNameIndex = new();
     private string GetParamName(string paramName)
     {
+        if(paramName.Contains("."))
+        {
+            paramName = paramName.Replace('.', '_');
+        }
+
         if (!_paramNameIndex.ContainsKey(paramName))
         {
             _paramNameIndex.Add(paramName, 0);
