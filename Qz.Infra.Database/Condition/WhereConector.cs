@@ -1,6 +1,6 @@
 ﻿namespace Qz.Infra.Database.Condition;
 
-public enum WhereConnecter
+public enum WhereConnector
 {
     And,
     Or

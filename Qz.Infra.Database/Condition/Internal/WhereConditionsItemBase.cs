@@ -6,7 +6,7 @@ internal abstract class WhereConditionsItemBase
 {
     public abstract string Column { get; }
 
-    public WhereConnecter WhereConnecter { get; protected set; }
+    public WhereConnector WhereConnecter { get; protected set; }
 
     public abstract string GetWhereString(SqlBuilder builder);
 }

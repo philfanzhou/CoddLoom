@@ -8,10 +8,10 @@ namespace TestProject.DbCode.Tables
         [DbTableName]
         internal const string TableName = "PasswordUser";
 
-        [DbPrimaryKey(Type = DbType.String)]
+        [DbPrimaryKeyString]
         internal const string UnionId = "unionId";
 
-        [DbColumn(Type = DbType.String)]
+        [DbColumnString]
         internal const string Password = "password";
     }
 }

@@ -137,9 +137,9 @@ public partial class SqlBuilder
         return $"{sql} LIMIT {offset},{count}";
     }
 
-    protected virtual string GetConnecter(WhereConnecter whereConnecter)
+    protected virtual string GetConnecter(WhereConnector whereConnecter)
     {
-        return whereConnecter == WhereConnecter.And ? " AND " : " OR ";
+        return whereConnecter == WhereConnector.And ? " AND " : " OR ";
     }
 
     protected internal virtual string GetParamName(ColumnValueParameter param)

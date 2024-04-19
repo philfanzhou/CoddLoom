@@ -11,7 +11,7 @@ namespace TestProject.DbCode.Tables
         [DbPrimaryKey(Type = DbType.Int32)]
         internal const string Id = "id";
 
-        [DbColumn(Type = DbType.String, AllowEmpty = false)]
+        [DbColumnString(AllowEmpty = false)]
         internal const string UnionId = "unionId";
 
         [DbColumn(Type = DbType.DateTime, AllowEmpty = true)]
@@ -23,7 +23,7 @@ namespace TestProject.DbCode.Tables
         [DbColumn(Type = DbType.Double)]
         public const string DoubleData = "doubleData";
 
-        [DbColumn(Type = DbType.Decimal, FixedLength = true, Length = 10, PointLength = 5)]
+        [DbColumnDecimal(Length = 10, PointLength = 5)]
         public const string DecimalData = "decimalData";
 
         [DbColumn(Type = DbType.Int16)]
@@ -35,7 +35,7 @@ namespace TestProject.DbCode.Tables
         [DbColumn(Type = DbType.Boolean)]
         public const string BoolData = "boolData";
 
-        [DbColumn(Type = DbType.String, AllowUnicode = true)]
+        [DbColumnString(AllowUnicode = true)]
         public const string SpecialString = "specialString";
     }
 }

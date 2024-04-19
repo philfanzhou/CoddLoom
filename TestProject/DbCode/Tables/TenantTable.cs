@@ -8,7 +8,7 @@ namespace TestProject.DbCode.Tables
         [DbTableName]
         internal const string TableName = "Tenant";
 
-        [DbPrimaryKey(Type = DbType.String)]
+        [DbPrimaryKeyString]
         internal const string Id = "id";
     }
 }

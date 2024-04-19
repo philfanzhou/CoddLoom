@@ -5,7 +5,7 @@ namespace Qz.Infra.Database.Condition.Internal;
 internal class WhereConditionsNullItem : WhereConditionsItemBase
 {
     public WhereConditionsNullItem(string column, bool isNull,
-        WhereConnecter whereConnecter = WhereConnecter.And)
+        WhereConnector whereConnecter = WhereConnector.And)
     {
         Column = column;
         IsNull = isNull;

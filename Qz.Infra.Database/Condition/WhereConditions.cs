@@ -10,10 +10,10 @@ public class WhereConditions
 {
     private readonly List<WhereConditionsItemBase> _itemList = new();
     private readonly List<ColumnValueParameter> _paramList = new();
-    private readonly List<Tuple<WhereConditions, WhereConnecter>> _partialConditions = new();
+    private readonly List<Tuple<WhereConditions, WhereConnector>> _partialConditions = new();
 
     internal IEnumerable<WhereConditionsItemBase> Items => _itemList.AsReadOnly();
-    internal IEnumerable<Tuple<WhereConditions, WhereConnecter>> PartialItems => _partialConditions.AsReadOnly();
+    internal IEnumerable<Tuple<WhereConditions, WhereConnector>> PartialItems => _partialConditions.AsReadOnly();
 
     public IEnumerable<ColumnValueParameter> Parameters
     {
@@ -33,7 +33,7 @@ public class WhereConditions
 
     public void Add(string column, object value,
         WhereOperator whereOperator = WhereOperator.Equal,
-        WhereConnecter connecter = WhereConnecter.And)
+        WhereConnector connecter = WhereConnector.And)
     {
         if (string.IsNullOrEmpty(column)) throw new ArgumentNullException(nameof(column));
 
@@ -48,7 +48,7 @@ public class WhereConditions
 
     public void Add(string column, object value, DbType castType,
         WhereOperator whereOperator = WhereOperator.Equal,
-        WhereConnecter connecter = WhereConnecter.And)
+        WhereConnector connecter = WhereConnector.And)
     {
         if (string.IsNullOrEmpty(column)) throw new ArgumentNullException(nameof(column));
 
@@ -62,7 +62,7 @@ public class WhereConditions
     }
 
     public void AddIsNull(string column, bool isNull,
-        WhereConnecter connecter = WhereConnecter.And)
+        WhereConnector connecter = WhereConnector.And)
     {
         if (string.IsNullOrEmpty(column)) throw new ArgumentNullException(nameof(column));
 
@@ -71,7 +71,7 @@ public class WhereConditions
     }
 
     public void Add(WhereConditions partialCondition,
-        WhereConnecter connecter = WhereConnecter.And)
+        WhereConnector connecter = WhereConnector.And)
     {
         foreach (var item in partialCondition.Items)
         {
@@ -81,7 +81,7 @@ public class WhereConditions
             }
         }
 
-        _partialConditions.Add(new Tuple<WhereConditions, WhereConnecter>(partialCondition, connecter));
+        _partialConditions.Add(new Tuple<WhereConditions, WhereConnector>(partialCondition, connecter));
     }
 
     public bool IsEmpty()

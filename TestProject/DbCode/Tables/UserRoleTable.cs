@@ -8,10 +8,10 @@ namespace TestProject.DbCode.Tables
         [DbTableName]
         internal const string TableName = "UserRole";
 
-        [DbColumn(Type = DbType.String)]
+        [DbColumnString]
         internal const string UserId = "userId";
 
-        [DbColumn(Type = DbType.String)]
+        [DbColumnString]
         internal const string TenantId = "tenantId";
 
         [DbColumn(Type = DbType.Int32)]
