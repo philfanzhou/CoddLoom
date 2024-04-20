@@ -1,14 +1,8 @@
 ﻿namespace Qz.Infra.Database.Condition.Internal;
 
-internal class JoinConditionsItem
+internal class JoinConditionsItem(string column1, string column2)
 {
-    public JoinConditionsItem(string column1, string column2)
-    {
-        Column1 = column1;
-        Column2 = column2;
-    }
+    public string Column1 { get; } = column1;
 
-    public string Column1 { get; }
-
-    public string Column2 { get; }
+    public string Column2 { get; } = column2;
 }

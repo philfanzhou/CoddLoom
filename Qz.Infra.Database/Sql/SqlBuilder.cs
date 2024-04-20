@@ -9,8 +9,9 @@ namespace Qz.Infra.Database.Sql;
 
 public partial class SqlBuilder
 {
-    private const string ParamPrefix = "@";
+    protected const string DbParameterPrefix = "@";
     protected const string KeyWordSelect = "SELECT";
+    protected const string KeyWordWhere = "WHERE";
 
     public virtual string Insert(string tableName, InputValues input)
     {
@@ -89,7 +90,7 @@ public partial class SqlBuilder
         //    column = where.Items.First().Column;
         //}
 
-        var sql = $"SELECT COUNT({column}) FROM {tableName}";
+        var sql = $"{KeyWordSelect} COUNT({column}) FROM {tableName}";
         return AppendWhere(sql, where);
     }
 
@@ -117,7 +118,7 @@ public partial class SqlBuilder
             return sql;
         }
 
-        return $"{sql} WHERE {GetConditionString(where)}";
+        return $"{sql} {KeyWordWhere} {where.GetWhereString(this)}";
     }
 
     protected virtual string AppendOrderBy(string sql,
@@ -137,14 +138,9 @@ public partial class SqlBuilder
         return $"{sql} LIMIT {offset},{count}";
     }
 
-    protected virtual string GetConnector(WhereConnector whereConnector)
-    {
-        return whereConnector == WhereConnector.And ? " AND " : " OR ";
-    }
-
     protected internal virtual string GetParamName(ColumnValueParameter param)
     {
-        return $"{ParamPrefix}{param.ParamName}";
+        return $"{DbParameterPrefix}{param.ParamName}";
     }
 
     protected internal virtual string GetCastColumn(string column, DbType dbType)
@@ -155,69 +151,6 @@ public partial class SqlBuilder
             _ => throw new NotSupportedException(dbType.ToString())
         };
         return $"CAST({column} AS {typeStr})";
-    }
-
-    #endregion
-
-    #region WhereCondition
-
-    protected internal virtual string GetIsNullCondition(bool isNull)
-    {
-        return $"IS {(isNull ? "NULL" : "NOT NULL")}";
-    }
-
-    protected internal virtual string GetOperator(WhereOperator whereOperator)
-    {
-        return whereOperator switch
-        {
-            WhereOperator.Equal => " = ",
-            WhereOperator.NotEqual => " != ",
-            WhereOperator.GreaterThan => " > ",
-            WhereOperator.GreaterEqual => " >= ",
-            WhereOperator.LessThan => " < ",
-            WhereOperator.LessEqual => " <= ",
-            WhereOperator.Like => " LIKE ",
-            _ => throw new NotSupportedException(nameof(whereOperator)),
-        };
-    }
-
-    protected internal virtual string GetLikeParamValue(string value)
-    {
-        if (!value.StartsWith("%"))
-        {
-            value = $"%{value}";
-        }
-
-        if (!value.EndsWith("%"))
-        {
-            value = $"{value}%";
-        }
-
-        return value;
-    }
-
-    private string GetConditionString(WhereConditions where)
-    {
-        var whereBuilder = new StringBuilder();
-        foreach (var item in where.Items)
-        {
-            if (whereBuilder.Length > 0)
-            {
-                whereBuilder.Append(GetConnector(item.WhereConnector));
-            }
-            whereBuilder.Append(item.GetWhereString(this));
-        }
-
-        foreach (var condition in where.PartialItems)
-        {
-            if (whereBuilder.Length > 0)
-            {
-                whereBuilder.Append(GetConnector(condition.Item2));
-            }
-            whereBuilder.Append($"({GetConditionString(condition.Item1)})");
-        }
-
-        return whereBuilder.ToString();
     }
 
     #endregion

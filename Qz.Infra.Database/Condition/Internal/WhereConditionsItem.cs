@@ -38,10 +38,10 @@ internal class WhereConditionsItem : WhereConditionsItemBase
         if (WhereOperator == WhereOperator.Like)
         {
             var value = builder.GetLikeParamValue(Parameter.Value.ToString());
-            Parameter.Value = value;
+            Parameter.Value = value; // refresh for set db parameter value later.
         }
 
-        var whereColumn = Parameter.Column;
+        var whereColumn = Parameter.Column; // do not update column name in parameter, just update in sql.
         if (NeedCast)
         {
             whereColumn = builder.GetCastColumn(Parameter.Column, CastType);

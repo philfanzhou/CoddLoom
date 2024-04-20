@@ -18,6 +18,6 @@ internal class WhereConditionsNullItem : WhereConditionsItemBase
 
     public override string GetWhereString(SqlBuilder builder)
     {
-        return $"{Column} {builder.GetIsNullCondition(IsNull)}";
+        return builder.GetIsNullCondition(Column, IsNull);
     }
 }
