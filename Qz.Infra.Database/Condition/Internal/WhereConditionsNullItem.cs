@@ -5,11 +5,11 @@ namespace Qz.Infra.Database.Condition.Internal;
 internal class WhereConditionsNullItem : WhereConditionsItemBase
 {
     public WhereConditionsNullItem(string column, bool isNull,
-        WhereConnector whereConnecter = WhereConnector.And)
+        WhereConnector whereConnector = WhereConnector.And)
     {
         Column = column;
         IsNull = isNull;
-        WhereConnecter = whereConnecter;
+        WhereConnector = whereConnector;
     }
 
     public bool IsNull { get; }

@@ -7,16 +7,16 @@ namespace Qz.Infra.Database.Condition.Internal;
 internal class WhereConditionsItem : WhereConditionsItemBase
 {
     public WhereConditionsItem(ColumnValueParameter parameter,
-        WhereOperator whereOperator, WhereConnector connecter)
+        WhereOperator whereOperator, WhereConnector connector)
     {
         Parameter = parameter;
         WhereOperator = whereOperator;
-        WhereConnecter = connecter;
+        WhereConnector = connector;
     }
 
     public WhereConditionsItem(ColumnValueParameter parameter, DbType castType,
-        WhereOperator whereOperator, WhereConnector connecter)
-        : this(parameter, whereOperator, connecter)
+        WhereOperator whereOperator, WhereConnector connector)
+        : this(parameter, whereOperator, connector)
     {
         NeedCast = true;
         CastType = castType;

@@ -21,6 +21,13 @@ namespace TestProject.DbTest
     public class DbTest
     {
         [TestMethod]
+        public void TestCreateOrderBy()
+        {
+            var orderBy = new OrderByCondition(typeof(UserRoleTable), "userid");
+            Assert.AreEqual(UserRoleTable.UserId, orderBy.Column);
+        }
+
+        [TestMethod]
         public void Run()
         {
             //var executor = new MySqlExecutor("192.168.50.85", "test", "root", "`12qweasd");

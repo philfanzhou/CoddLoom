@@ -137,9 +137,9 @@ public partial class SqlBuilder
         return $"{sql} LIMIT {offset},{count}";
     }
 
-    protected virtual string GetConnecter(WhereConnector whereConnecter)
+    protected virtual string GetConnector(WhereConnector whereConnector)
     {
-        return whereConnecter == WhereConnector.And ? " AND " : " OR ";
+        return whereConnector == WhereConnector.And ? " AND " : " OR ";
     }
 
     protected internal virtual string GetParamName(ColumnValueParameter param)
@@ -203,7 +203,7 @@ public partial class SqlBuilder
         {
             if (whereBuilder.Length > 0)
             {
-                whereBuilder.Append(GetConnecter(item.WhereConnecter));
+                whereBuilder.Append(GetConnector(item.WhereConnector));
             }
             whereBuilder.Append(item.GetWhereString(this));
         }
@@ -212,7 +212,7 @@ public partial class SqlBuilder
         {
             if (whereBuilder.Length > 0)
             {
-                whereBuilder.Append(GetConnecter(condition.Item2));
+                whereBuilder.Append(GetConnector(condition.Item2));
             }
             whereBuilder.Append($"({GetConditionString(condition.Item1)})");
         }
