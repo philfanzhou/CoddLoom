@@ -57,8 +57,10 @@ public class OrderByCondition
     }
 }
 
-public class OrderByCondition<T>(string orderBy, string defaultOrderBy = "", bool descending = false)
-    : OrderByCondition(typeof(T), orderBy, defaultOrderBy, descending)
-    where T : class
+public class OrderByCondition<T> : OrderByCondition where T : class
 {
+    public OrderByCondition(string orderBy, string defaultOrderBy = "", bool descending = false)
+        : base(typeof(T), orderBy, defaultOrderBy, descending)
+    {
+    }
 }
