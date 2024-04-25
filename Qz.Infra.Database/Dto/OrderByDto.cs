@@ -16,7 +16,7 @@ public interface IOrderByQuery
     bool IsDesc { get; }
 }
 
-public static class IOrderByQueryExt
+public static class OrderByQueryExt
 {
     public static OrderByCondition GetOrderByCondition<TTable>(this IOrderByQuery self,
         string defaultOrderBy = "")

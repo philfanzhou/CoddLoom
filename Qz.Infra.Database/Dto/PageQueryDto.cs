@@ -16,7 +16,7 @@ public interface IPageQuery
     int PageSize { get; }
 }
 
-public static class IPageQueryExt
+public static class PageQueryExt
 {
     public static PageParam GetPageParam(this IPageQuery self)
     {
