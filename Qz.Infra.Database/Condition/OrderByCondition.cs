@@ -24,6 +24,11 @@ public class OrderByCondition
 
     private static string GetColumn(IReflect tableType, string orderBy, string defaultOrderBy)
     {
+        if(string.IsNullOrEmpty(orderBy) && string.IsNullOrEmpty(defaultOrderBy))
+        {
+            throw new ArgumentNullException(nameof(defaultOrderBy));
+        }
+
         if (string.IsNullOrEmpty(orderBy))
         {
             return defaultOrderBy;
@@ -57,10 +62,10 @@ public class OrderByCondition
     }
 }
 
-public class OrderByCondition<T> : OrderByCondition where T : class
+public class OrderByCondition<TTable> : OrderByCondition where TTable : class
 {
     public OrderByCondition(string orderBy, string defaultOrderBy = "", bool descending = false)
-        : base(typeof(T), orderBy, defaultOrderBy, descending)
+        : base(typeof(TTable), orderBy, defaultOrderBy, descending)
     {
     }
 }
