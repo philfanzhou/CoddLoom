@@ -9,7 +9,7 @@ namespace TestProject.DbCode.Tables
         internal const string TableName = "UserRole";
 
         [DbColumnString]
-        internal const string UserId = "userId";
+        internal const string UserId = "id";
 
         [DbColumnString]
         internal const string TenantId = "tenantId";

@@ -23,8 +23,9 @@ namespace TestProject.DbTest
         [TestMethod]
         public void TestCreateOrderBy()
         {
-            var orderBy = new OrderByCondition(typeof(UserRoleTable), "userid");
-            Assert.AreEqual(UserRoleTable.UserId, orderBy.Column);
+            var orderBy1 = new OrderByCondition(typeof(UserRoleTable), "id");
+            var orderBy2 = new OrderByCondition(typeof(UserRoleTable), UserRoleTable.UserId);
+            Assert.AreEqual(orderBy1.Column, orderBy2.Column);
         }
 
         [TestMethod]

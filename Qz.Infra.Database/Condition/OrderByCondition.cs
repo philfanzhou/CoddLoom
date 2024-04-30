@@ -51,7 +51,8 @@ public class OrderByCondition
                 }
 
                 var column = valueObj.ToString();
-                if (string.Equals(orderBy, column, StringComparison.CurrentCultureIgnoreCase))
+                if (string.Equals(orderBy, field.Name, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(orderBy, column, StringComparison.CurrentCultureIgnoreCase))
                 {
                     return column;
                 }
