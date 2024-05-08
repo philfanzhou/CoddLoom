@@ -2,7 +2,9 @@
 using Qz.Infra.Database.Input;
 using Qz.Infra.Database.Params;
 using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Text;
 
 namespace Qz.Infra.Database.Sql;
@@ -18,24 +20,28 @@ public partial class SqlBuilder
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
         if (input == null || input.IsEmpty()) throw new ArgumentNullException(nameof(input));
 
-        var columnBuilder = new StringBuilder();
-        var valueBuilder = new StringBuilder();
-        foreach (var item in input.Items)
+        var columns = $"({string.Join(",", input.Items.Select(p => p.Column))})";
+        var values = $"({string.Join(",", input.Items.Select(GetParamName))})";
+
+        return $"INSERT INTO {tableName} {columns} VALUES {values}";
+    }
+
+    public virtual string Insert(string tableName, IEnumerable<InputValues> inputs)
+    {
+        if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
+        if(inputs == null) throw new ArgumentNullException(nameof(inputs));
+        var inputList = inputs.ToList();
+        if(inputList.Count < 1 || inputList.Any(p => p == null || p.IsEmpty())) throw new ArgumentNullException(nameof(inputs));
+
+        var columns = $"({string.Join(",", inputList[0].Items.Select(p => p.Column))})";
+        var valueList = new List<string>();
+        foreach(var input in inputList)
         {
-            if (columnBuilder.Length > 0)
-            {
-                columnBuilder.Append(",");
-            }
-            columnBuilder.Append(item.Column);
-
-            if (valueBuilder.Length > 0)
-            {
-                valueBuilder.Append(",");
-            }
-            valueBuilder.Append(GetParamName(item));
+            valueList.Add($"({string.Join(",", input.Items.Select(GetParamName))})");
         }
+        var values = $"{string.Join(",", valueList.Select(p => p))}";
 
-        return $"INSERT INTO {tableName} ({columnBuilder}) VALUES({valueBuilder})";
+        return $"INSERT INTO {tableName} {columns} VALUES {values}";
     }
 
     public virtual string Delete(string tableName, WhereConditions where)

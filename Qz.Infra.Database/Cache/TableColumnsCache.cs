@@ -31,9 +31,9 @@ internal static class TableColumnsCache
 
     internal static List<string> GetInsertColumns(string tableName)
     {
-        if (InsertColumnCache.ContainsKey(tableName))
+        if (InsertColumnCache.TryGetValue(tableName, out var columns))
         {
-            return InsertColumnCache[tableName];
+            return columns;
         }
 
         return null;
@@ -41,9 +41,9 @@ internal static class TableColumnsCache
 
     internal static List<string> GetUpdateColumns(string tableName)
     {
-        if (UpdateColumnCache.ContainsKey(tableName))
+        if (UpdateColumnCache.TryGetValue(tableName, out var columns))
         {
-            return UpdateColumnCache[tableName];
+            return columns;
         }
 
         return null;

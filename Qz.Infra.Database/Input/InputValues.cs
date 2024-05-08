@@ -12,7 +12,38 @@ public class InputValues
     /// </summary>
     private readonly Dictionary<string, ColumnValueParameter> _items = new();
 
+    private readonly string _paramPrefix;
+
+    public InputValues(int paramPrefixIndex = 0)
+    {
+        _paramPrefix = $"V{paramPrefixIndex}_";
+    }
+
     public IReadOnlyList<ColumnValueParameter> Items => _items.Values.ToList().AsReadOnly();
+
+    public void Add(string column, string value)
+    {
+        if (string.IsNullOrEmpty(value) || string.IsNullOrWhiteSpace(value))
+        {
+            AddItem(column, DBNull.Value);
+        }
+        else
+        {
+            AddItem(column, value.Trim());
+        }
+    }
+
+    public void Add(string column, DateTime value)
+    {
+        if (value == DateTime.MinValue)
+        {
+            AddItem(column, DBNull.Value);
+        }
+        else
+        {
+            AddItem(column, value);
+        }
+    }
 
     public void Add(string column, object value)
     {
@@ -34,38 +65,9 @@ public class InputValues
         }
     }
 
-    public void Add(string column, DateTime value)
-    {
-        if (value == DateTime.MinValue)
-        {
-            AddItem(column, DBNull.Value);
-        }
-        else
-        {
-            AddItem(column, value);
-        }
-    }
-
-    public void Add(string column, string value)
-    {
-        if (string.IsNullOrEmpty(value) || string.IsNullOrWhiteSpace(value))
-        {
-            AddItem(column, DBNull.Value);
-        }
-        else
-        {
-            AddItem(column, value.Trim());
-        }
-    }
-
     private void AddItem(string column, object value)
     {
-        _items.Add(column, new ColumnValueParameter
-        {
-            Column = column,
-            Value = value,
-            ParamName = $"V_{column}"
-        });
+        _items.Add(column, new ColumnValueParameter(column, value, $"{_paramPrefix}{column}"));
     }
 
     internal bool IsEmpty()

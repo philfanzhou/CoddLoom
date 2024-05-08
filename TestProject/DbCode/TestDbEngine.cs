@@ -4,6 +4,7 @@ using Qz.Infra.Database.Table;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using TestProject.DbCode.Entity;
 using TestProject.DbCode.Tables;
 
 namespace TestProject.DbCode
@@ -13,6 +14,7 @@ namespace TestProject.DbCode
         public TestDbEngine(DbExecutor executor)
             : base(executor, new List<TableDefine>
             {
+                //new(typeof(CodeFirstEntity)),
                 new(typeof(PasswordUserTable)),
                 new(typeof(TenantTable)),
                 new(typeof(UserRoleTable)),

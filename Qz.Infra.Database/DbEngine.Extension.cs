@@ -1,5 +1,6 @@
 ﻿using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Convert;
+using Qz.Infra.Database.Input;
 using Qz.Infra.Database.Params;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,13 @@ partial class DbEngine
     {
         DbConverter.ToInsert(entity, out var table, out var input);
         Insert(table, input, con, tran);
+    }
+
+    public void Insert<T>(IEnumerable<T> entities, 
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        DbConverter.ToInsert(entities, out var table, out List<InputValues> inputs);
+        Insert(table, inputs, con, tran);
     }
 
     public void Delete<T>(string primaryKeyValue,

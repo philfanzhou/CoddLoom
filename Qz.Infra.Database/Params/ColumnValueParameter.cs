@@ -2,8 +2,6 @@
 
 public class ColumnValueParameter
 {
-    internal ColumnValueParameter() {}
-
     public ColumnValueParameter(string column, object value, string paramName)
     {
         Column = column;
@@ -11,7 +9,7 @@ public class ColumnValueParameter
         ParamName = paramName;
     }
 
-    public string Column { get; internal set; }
+    public string Column { get; }
 
     public object Value { get; internal set; }
 

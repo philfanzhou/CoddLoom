@@ -17,7 +17,7 @@ namespace TestProject.DbCode.Tables
         [DbColumn(Type = DbType.DateTime, AllowEmpty = true)]
         public const string RegistrationDate = "registrationDate";
 
-        [DbColumn(Type = DbType.Binary)]
+        [DbColumnBinary]
         public const string Data = "data";
 
         [DbColumn(Type = DbType.Double)]

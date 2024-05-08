@@ -37,6 +37,19 @@ public partial class DbEngine
         Executor.Execute(sql, input.Items, null, con, tran);
     }
 
+    public void Insert(string tableName, IEnumerable<InputValues> inputs, 
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        var inputList = inputs.ToList();
+        var sql = Executor.SqlBuilder.Insert(tableName, inputList);
+        var paramList = new List<ColumnValueParameter>();
+        foreach (var input in inputList)
+        {
+            paramList.AddRange(input.Items);
+        }
+        Executor.Execute(sql, paramList, null, con, tran);
+    }
+
     public void Delete(string tableName, WhereConditions where, 
         IDbConnection con = null, IDbTransaction tran = null)
     {

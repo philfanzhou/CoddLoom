@@ -3,6 +3,8 @@ using Qz.Infra.Database.Common;
 using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Input;
 using System;
+using System.Collections.Generic;
+using Qz.Infra.Database.Entity;
 
 namespace Qz.Infra.Database.Convert;
 
@@ -11,32 +13,26 @@ partial class DbConverter
     internal static void ToInsert<T>(T entity,
         out string tableName, out InputValues input)
     {
-        if (entity == null)
+        var entityMap = GetEntityInfo<T>(out tableName, out var insertColumns);
+        input = GetInputValues(entity, entityMap, insertColumns);
+    }
+
+    internal static void ToInsert<T>(IEnumerable<T> entities, 
+        out string tableName, out List<InputValues> inputs)
+    {
+        if(entities == null) 
         {
-            throw new ArgumentNullException(nameof(entity));
+            throw new ArgumentNullException(nameof(entities));
         }
 
-        tableName = null;
-        input = null;
+        var entityMap = GetEntityInfo<T>(out tableName, out var insertColumns);
 
-        var entityMap = EntityMapCache.Get<T>();
-        var insertColumns = TableColumnsCache.GetInsertColumns(entityMap.Table.Name);
-        if (insertColumns == null)
+        inputs = new List<InputValues>();
+        var index = 0;
+        foreach(var entity in entities)
         {
-            return;
-        }
-
-        tableName = entityMap.Table.Name;
-        input = new InputValues();
-        foreach (var (memberInfo, attribute) in entityMap.Members)
-        {
-            if (!insertColumns.Contains(attribute.Name))
-            {
-                continue;
-            }
-
-            var value = memberInfo.GetMemberValue(entity);
-            input.Add(attribute.Name, value);
+            inputs.Add(GetInputValues(entity, entityMap, insertColumns, index));
+            index++;
         }
     }
 
@@ -101,5 +97,41 @@ partial class DbConverter
         tableName = entityMap.Table.Name;
         where = new WhereConditions();
         where.Add(entityMap.PrimaryKey, id);
+    }
+
+    private static EntityMap GetEntityInfo<T>(out string tableName, out List<string> insertColumns)
+    {
+        var entityMap = EntityMapCache.Get<T>();
+        tableName = entityMap.Table.Name;
+
+        insertColumns = TableColumnsCache.GetInsertColumns(tableName);
+        if (insertColumns == null)
+        {
+            throw new InvalidOperationException("Can't get insert columns");
+        }
+
+        return entityMap;
+    }
+
+    private static InputValues GetInputValues<T>(T entity, EntityMap entityMap, List<string> insertColumns, 
+        int inputIndex = 0)
+    {
+        if (entity == null)
+        {
+            throw new ArgumentNullException(nameof(entity));
+        }
+
+        var input = new InputValues(inputIndex);
+        foreach (var (memberInfo, attribute) in entityMap.Members)
+        {
+            if (!insertColumns.Contains(attribute.Name))
+            {
+                continue;
+            }
+
+            var value = memberInfo.GetMemberValue(entity);
+            input.Add(attribute.Name, value);
+        }
+        return input;
     }
 }

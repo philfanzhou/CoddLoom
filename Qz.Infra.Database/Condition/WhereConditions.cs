@@ -112,12 +112,7 @@ public class WhereConditions
         if (value == null) return; // use AddIsNull condition to instead null value.
         if (!allowEmptyValue && string.IsNullOrEmpty(value.ToString())) return;
 
-        var param = new ColumnValueParameter
-        {
-            Column = column,
-            Value = value,
-            ParamName = _parameterNameGenerator.Get(column)
-        };
+        var param = new ColumnValueParameter(column, value, _parameterNameGenerator.Get(column));
 
         _valueParamList.Add(param);
         _conditionsItemList.Add(castType != null
