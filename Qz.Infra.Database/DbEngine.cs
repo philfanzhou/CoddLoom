@@ -37,33 +37,31 @@ public partial class DbEngine
         Executor.Execute(sql, input.Items, null, con, tran);
     }
 
-    public void Insert(string tableName, IEnumerable<InputValues> inputs, int chunkSize = 0,
-        IDbConnection con = null, IDbTransaction tran = null)
+    public void BatchInsert(string tableName, IEnumerable<InputValues> inputs,
+        IDbConnection con = null, IDbTransaction tran = null, int chunkSize = 0)
     {
-        if(chunkSize == 0)
+        if(chunkSize < 1)
         {
-            Insert(tableName, inputs, con, tran);
+            chunkSize = 500;
         }
-        else
-        {
-            var tmpList = new List<InputValues>();
-            foreach(var input in inputs)
-            {
-                if(tmpList.Count < chunkSize)
-                {
-                    tmpList.Add(input);
-                }
-                else
-                {
-                    Insert(tableName, tmpList, con, tran);
-                    tmpList.Clear();
-                }
-            }
 
-            if(tmpList.Count > 0)
+        var tmpList = new List<InputValues>();
+        foreach (var input in inputs)
+        {
+            if (tmpList.Count < chunkSize)
             {
-                Insert(tableName, tmpList, con, tran);
+                tmpList.Add(input);
             }
+            else
+            {
+                DoBatchInsert(tableName, tmpList, con, tran);
+                tmpList.Clear();
+            }
+        }
+
+        if (tmpList.Count > 0)
+        {
+            DoBatchInsert(tableName, tmpList, con, tran);
         }
     }
 
@@ -138,16 +136,26 @@ public partial class DbEngine
         return entityMap.Table.Name;
     }
 
-    private void Insert(string tableName, IEnumerable<InputValues> inputs,
-        IDbConnection con = null, IDbTransaction tran = null)
+    private void DoBatchInsert(string tableName, IEnumerable<InputValues> inputs,
+        IDbConnection con, IDbTransaction tran)
     {
         var inputList = inputs.ToList();
-        var sql = Executor.SqlBuilder.Insert(tableName, inputList);
-        var paramList = new List<ColumnValueParameter>();
-        foreach (var input in inputList)
+
+        var parameterCount = inputList.Count * inputList[0].Items.Count;
+        if(parameterCount >= 2100) // sqlserver default parameter count limit.
         {
-            paramList.AddRange(input.Items);
+            var sql = Executor.SqlBuilder.Insert(tableName, inputList, false);
+            Executor.Execute(sql, null, null, con, tran);
         }
-        Executor.Execute(sql, paramList, null, con, tran);
+        else
+        {
+            var sql = Executor.SqlBuilder.Insert(tableName, inputList);
+            var paramList = new List<ColumnValueParameter>();
+            foreach (var input in inputList)
+            {
+                paramList.AddRange(input.Items);
+            }
+            Executor.Execute(sql, paramList, null, con, tran);
+        }
     }
 }

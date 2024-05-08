@@ -20,24 +20,24 @@ public partial class SqlBuilder
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
         if (input == null || input.IsEmpty()) throw new ArgumentNullException(nameof(input));
 
-        var columns = $"({string.Join(",", input.Items.Select(p => p.Column))})";
-        var values = $"({string.Join(",", input.Items.Select(GetParamName))})";
+        var columns = GetInsertColumns(input.Items);
+        var values = GetInsertValues(input.Items);
 
         return $"INSERT INTO {tableName} {columns} VALUES {values}";
     }
 
-    public virtual string Insert(string tableName, IEnumerable<InputValues> inputs)
+    public virtual string Insert(string tableName, IEnumerable<InputValues> inputs, bool useParameter = true)
     {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
         if(inputs == null) throw new ArgumentNullException(nameof(inputs));
         var inputList = inputs.ToList();
         if(inputList.Count < 1 || inputList.Any(p => p == null || p.IsEmpty())) throw new ArgumentNullException(nameof(inputs));
 
-        var columns = $"({string.Join(",", inputList[0].Items.Select(p => p.Column))})";
+        var columns = GetInsertColumns(inputList[0].Items);
         var valueList = new List<string>();
         foreach(var input in inputList)
         {
-            valueList.Add($"({string.Join(",", input.Items.Select(GetParamName))})");
+            valueList.Add(GetInsertValues(input.Items, useParameter));
         }
         var values = $"{string.Join(",", valueList.Select(p => p))}";
 
@@ -149,6 +149,26 @@ public partial class SqlBuilder
         return $"{DbParameterPrefix}{param.ParamName}";
     }
 
+    protected virtual string GetInsertValue(ColumnValueParameter param)
+    {
+        if(param.Value == DBNull.Value)
+        {
+            return "NULL";
+        }
+        else if(param.Value is string)
+        {
+            return $"'{param.Value.ToString().Replace("'", "''")}'";
+        }
+        else if(param.Value is DateTime)
+        {
+            return $"'{param.Value:yyyy-MM-DD HH:mm:ss}'";
+        }
+        else
+        {
+            return param.ToString();
+        }
+    }
+
     protected internal virtual string GetCastColumn(string column, DbType dbType)
     {
         var typeStr = dbType switch
@@ -157,6 +177,27 @@ public partial class SqlBuilder
             _ => throw new NotSupportedException(dbType.ToString())
         };
         return $"CAST({column} AS {typeStr})";
+    }
+
+    protected virtual string GetInsertColumns(IEnumerable<ColumnValueParameter> parameters)
+    {
+        var columns = $"({string.Join(",", parameters.Select(p => p.Column))})";
+        return columns;
+    }
+
+    protected virtual string GetInsertValues(IEnumerable<ColumnValueParameter> parameters,
+        bool useParameter = true)
+    {
+        string values;
+        if(useParameter)
+        {
+            values = $"({string.Join(",", parameters.Select(GetParamName))})";
+        }
+        else
+        {
+            values = $"({string.Join(",", parameters.Select(GetInsertValue))})";
+        }
+        return values;
     }
 
     #endregion
