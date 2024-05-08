@@ -17,11 +17,11 @@ partial class DbEngine
         Insert(table, input, con, tran);
     }
 
-    public void Insert<T>(IEnumerable<T> entities, 
+    public void Insert<T>(IEnumerable<T> entities, int chunkSize = 0,
         IDbConnection con = null, IDbTransaction tran = null)
     {
         DbConverter.ToInsert(entities, out var table, out List<InputValues> inputs);
-        Insert(table, inputs, con, tran);
+        Insert(table, inputs, chunkSize, con, tran);
     }
 
     public void Delete<T>(string primaryKeyValue,

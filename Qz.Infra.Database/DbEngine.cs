@@ -37,17 +37,34 @@ public partial class DbEngine
         Executor.Execute(sql, input.Items, null, con, tran);
     }
 
-    public void Insert(string tableName, IEnumerable<InputValues> inputs, 
+    public void Insert(string tableName, IEnumerable<InputValues> inputs, int chunkSize = 0,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var inputList = inputs.ToList();
-        var sql = Executor.SqlBuilder.Insert(tableName, inputList);
-        var paramList = new List<ColumnValueParameter>();
-        foreach (var input in inputList)
+        if(chunkSize == 0)
         {
-            paramList.AddRange(input.Items);
+            Insert(tableName, inputs, con, tran);
         }
-        Executor.Execute(sql, paramList, null, con, tran);
+        else
+        {
+            var tmpList = new List<InputValues>();
+            foreach(var input in inputs)
+            {
+                if(tmpList.Count < chunkSize)
+                {
+                    tmpList.Add(input);
+                }
+                else
+                {
+                    Insert(tableName, tmpList, con, tran);
+                    tmpList.Clear();
+                }
+            }
+
+            if(tmpList.Count > 0)
+            {
+                Insert(tableName, tmpList, con, tran);
+            }
+        }
     }
 
     public void Delete(string tableName, WhereConditions where, 
@@ -119,5 +136,18 @@ public partial class DbEngine
     {
         var entityMap = EntityMapCache.Get<T>();
         return entityMap.Table.Name;
+    }
+
+    private void Insert(string tableName, IEnumerable<InputValues> inputs,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        var inputList = inputs.ToList();
+        var sql = Executor.SqlBuilder.Insert(tableName, inputList);
+        var paramList = new List<ColumnValueParameter>();
+        foreach (var input in inputList)
+        {
+            paramList.AddRange(input.Items);
+        }
+        Executor.Execute(sql, paramList, null, con, tran);
     }
 }
