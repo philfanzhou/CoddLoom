@@ -39,7 +39,7 @@ public partial class DbEngine
     public void Insert(string tableName, IEnumerable<InputValues> inputs,
         IDbConnection con = null, IDbTransaction tran = null, int chunkSize = 500)
     {
-        if(chunkSize < 10)
+        if (chunkSize < 10)
         {
             chunkSize = 500;
         }
@@ -47,11 +47,8 @@ public partial class DbEngine
         var tmpList = new List<InputValues>();
         foreach (var input in inputs)
         {
-            if (tmpList.Count < chunkSize)
-            {
-                tmpList.Add(input);
-            }
-            else
+            tmpList.Add(input);
+            if (tmpList.Count >= chunkSize)
             {
                 DoBatchInsert(tableName, tmpList, con, tran);
                 tmpList.Clear();
