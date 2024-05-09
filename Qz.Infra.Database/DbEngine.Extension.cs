@@ -13,14 +13,13 @@ partial class DbEngine
     public void Insert<T>(T entity,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        DbConverter.ToInsert(entity, out var table, out var input);
-        Insert(table, input, con, tran);
+        BatchInsert(new[] { entity }, con, tran);
     }
 
     public void BatchInsert<T>(IEnumerable<T> entities,
         IDbConnection con = null, IDbTransaction tran = null, int chunkSize = 0)
     {
-        DbConverter.ToInsert(entities, out var table, out List<InputValues> inputs);
+        DbConverter.ToInsert(entities, out var table, out var inputs);
         Insert(table, inputs, con, tran, chunkSize);
     }
 
