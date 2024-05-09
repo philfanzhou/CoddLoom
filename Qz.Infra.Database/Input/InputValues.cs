@@ -25,23 +25,23 @@ public class InputValues
     {
         if (string.IsNullOrEmpty(value) || string.IsNullOrWhiteSpace(value))
         {
-            AddItem(column, DBNull.Value);
+            AddItem(column, DBNull.Value, forceParameter);
         }
         else
         {
-            AddItem(column, value.Trim());
+            AddItem(column, value.Trim(), forceParameter);
         }
     }
 
-    public void Add(string column, DateTime value)
+    public void Add(string column, DateTime value, bool forceParameter = false)
     {
         if (value == DateTime.MinValue)
         {
-            AddItem(column, DBNull.Value);
+            AddItem(column, DBNull.Value, forceParameter);
         }
         else
         {
-            AddItem(column, value);
+            AddItem(column, value, forceParameter);
         }
     }
 
@@ -49,7 +49,7 @@ public class InputValues
     {
         if (null == value)
         {
-            AddItem(column, DBNull.Value);
+            AddItem(column, DBNull.Value, forceParameter);
         }
         else if (value is string str)
         {
@@ -57,7 +57,7 @@ public class InputValues
         }
         else if (value is DateTime time)
         {
-            Add(column, time);
+            Add(column, time, forceParameter);
         }
         else
         {

@@ -155,11 +155,11 @@ public partial class SqlBuilder
         }
         else if(param.Value is DateTime)
         {
-            return $"'{param.Value:yyyy-MM-DD HH:mm:ss}'";
+            return $"'{param.Value:yyyy-MM-dd HH:mm:ss}'";
         }
         else
         {
-            return param.ToString();
+            return param.Value.ToString();
         }
     }
 

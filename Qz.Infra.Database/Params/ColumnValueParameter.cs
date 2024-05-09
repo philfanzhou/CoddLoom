@@ -21,5 +21,5 @@ public class ColumnValueParameter
 
     public string ParamName { get; internal set; }
 
-    internal bool ForceParameter { get; set; } = false;
+    internal bool ForceParameter { get; set; }
 }
