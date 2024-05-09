@@ -130,7 +130,7 @@ partial class DbConverter
             }
 
             var value = memberInfo.GetMemberValue(entity);
-            input.Add(attribute.Name, value);
+            input.Add(attribute.Name, value, attribute.ForceParameter);
         }
         return input;
     }

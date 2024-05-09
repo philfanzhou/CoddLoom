@@ -21,7 +21,7 @@ partial class DbEngine
         IDbConnection con = null, IDbTransaction tran = null, int chunkSize = 0)
     {
         DbConverter.ToInsert(entities, out var table, out List<InputValues> inputs);
-        BatchInsert(table, inputs, con, tran, chunkSize);
+        Insert(table, inputs, con, tran, chunkSize);
     }
 
     public void Delete<T>(string primaryKeyValue,

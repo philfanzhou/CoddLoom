@@ -33,14 +33,13 @@ public partial class DbEngine
     public void Insert(string tableName, InputValues input,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var sql = Executor.SqlBuilder.Insert(tableName, input);
-        Executor.Execute(sql, input.Items, null, con, tran);
+        Insert(tableName, new[] { input }, con, tran);
     }
 
-    public void BatchInsert(string tableName, IEnumerable<InputValues> inputs,
-        IDbConnection con = null, IDbTransaction tran = null, int chunkSize = 0)
+    public void Insert(string tableName, IEnumerable<InputValues> inputs,
+        IDbConnection con = null, IDbTransaction tran = null, int chunkSize = 500)
     {
-        if(chunkSize < 1)
+        if(chunkSize < 10)
         {
             chunkSize = 500;
         }
@@ -141,21 +140,9 @@ public partial class DbEngine
     {
         var inputList = inputs.ToList();
 
-        var parameterCount = inputList.Count * inputList[0].Items.Count;
-        if(parameterCount >= 2100) // sqlserver default parameter count limit.
-        {
-            var sql = Executor.SqlBuilder.Insert(tableName, inputList, false);
-            Executor.Execute(sql, null, null, con, tran);
-        }
-        else
-        {
-            var sql = Executor.SqlBuilder.Insert(tableName, inputList);
-            var paramList = new List<ColumnValueParameter>();
-            foreach (var input in inputList)
-            {
-                paramList.AddRange(input.Items);
-            }
-            Executor.Execute(sql, paramList, null, con, tran);
-        }
+        var valuesCount = inputList.Count * inputList[0].Items.Count;
+        var useParameter = valuesCount < 2100; // sqlserver default parameter count limit.
+        var sql = Executor.SqlBuilder.Insert(tableName, inputList, out var dbParams, useParameter);
+        Executor.Execute(sql, dbParams, null, con, tran);
     }
 }

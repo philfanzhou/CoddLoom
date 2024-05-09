@@ -21,7 +21,7 @@ public class InputValues
 
     public IReadOnlyList<ColumnValueParameter> Items => _items.Values.ToList().AsReadOnly();
 
-    public void Add(string column, string value)
+    public void Add(string column, string value, bool forceParameter = false)
     {
         if (string.IsNullOrEmpty(value) || string.IsNullOrWhiteSpace(value))
         {
@@ -45,7 +45,7 @@ public class InputValues
         }
     }
 
-    public void Add(string column, object value)
+    public void Add(string column, object value, bool forceParameter = false)
     {
         if (null == value)
         {
@@ -53,7 +53,7 @@ public class InputValues
         }
         else if (value is string str)
         {
-            Add(column, str);
+            Add(column, str, forceParameter);
         }
         else if (value is DateTime time)
         {
@@ -61,13 +61,13 @@ public class InputValues
         }
         else
         {
-            AddItem(column, value);
+            AddItem(column, value, forceParameter);
         }
     }
 
-    private void AddItem(string column, object value)
+    private void AddItem(string column, object value, bool forceParameter = false)
     {
-        _items.Add(column, new ColumnValueParameter(column, value, $"{_paramPrefix}{column}"));
+        _items.Add(column, new ColumnValueParameter(column, value, $"{_paramPrefix}{column}", forceParameter));
     }
 
     internal bool IsEmpty()

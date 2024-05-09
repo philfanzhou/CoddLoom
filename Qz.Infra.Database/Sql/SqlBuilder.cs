@@ -15,33 +15,27 @@ public partial class SqlBuilder
     protected const string KeyWordSelect = "SELECT";
     protected const string KeyWordWhere = "WHERE";
 
-    public virtual string Insert(string tableName, InputValues input)
-    {
-        if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
-        if (input == null || input.IsEmpty()) throw new ArgumentNullException(nameof(input));
-
-        var columns = GetInsertColumns(input.Items);
-        var values = GetInsertValues(input.Items);
-
-        return $"INSERT INTO {tableName} {columns} VALUES {values}";
-    }
-
-    public virtual string Insert(string tableName, IEnumerable<InputValues> inputs, bool useParameter = true)
+    public virtual string Insert(string tableName, IEnumerable<InputValues> inputs, out List<ColumnValueParameter> dbParams,  
+        bool useParameter = true)
     {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
         if(inputs == null) throw new ArgumentNullException(nameof(inputs));
         var inputList = inputs.ToList();
         if(inputList.Count < 1 || inputList.Any(p => p == null || p.IsEmpty())) throw new ArgumentNullException(nameof(inputs));
 
-        var columns = GetInsertColumns(inputList[0].Items);
+        var columnSql = GetInsertColumns(inputList[0].Items);
+
+        dbParams = new List<ColumnValueParameter>();
         var valueList = new List<string>();
         foreach(var input in inputList)
         {
-            valueList.Add(GetInsertValues(input.Items, useParameter));
+            var values = GetInsertValues(input.Items, out var innerDbParams, useParameter);
+            valueList.Add(values);
+            dbParams.AddRange(innerDbParams);
         }
-        var values = $"{string.Join(",", valueList.Select(p => p))}";
+        var valueSql = $"{string.Join(",", valueList.Select(p => p))}";
 
-        return $"INSERT INTO {tableName} {columns} VALUES {values}";
+        return $"INSERT INTO {tableName} {columnSql} VALUES {valueSql}";
     }
 
     public virtual string Delete(string tableName, WhereConditions where)
@@ -186,18 +180,28 @@ public partial class SqlBuilder
     }
 
     protected virtual string GetInsertValues(IEnumerable<ColumnValueParameter> parameters,
-        bool useParameter = true)
+        out List<ColumnValueParameter> dbParams, bool useParameter = true)
     {
-        string values;
-        if(useParameter)
+        dbParams = new List<ColumnValueParameter>();
+        var valuesStrBuilder = new StringBuilder();
+        foreach(var item in parameters)
         {
-            values = $"({string.Join(",", parameters.Select(GetParamName))})";
+            if(valuesStrBuilder.Length > 0)
+            {
+                valuesStrBuilder.Append(",");
+            }
+            if (useParameter || item.ForceParameter)
+            {
+                valuesStrBuilder.Append(GetParamName(item));
+                dbParams.Add(item);
+            }
+            else
+            {
+                valuesStrBuilder.Append(GetInsertValue(item));
+            }
         }
-        else
-        {
-            values = $"({string.Join(",", parameters.Select(GetInsertValue))})";
-        }
-        return values;
+
+        return $"({valuesStrBuilder})";
     }
 
     #endregion
