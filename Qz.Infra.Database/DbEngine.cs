@@ -33,22 +33,22 @@ public partial class DbEngine
     public void Insert(string tableName, InputValues input,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        Insert(tableName, new[] { input }, con, tran);
+        Insert(tableName, new[] { input }, 10, con, tran);
     }
 
-    public void Insert(string tableName, IEnumerable<InputValues> inputs,
-        IDbConnection con = null, IDbTransaction tran = null, int chunkSize = 500)
+    public void Insert(string tableName, IEnumerable<InputValues> inputs, int batchSize, 
+        IDbConnection con = null, IDbTransaction tran = null)
     {
-        if (chunkSize < 10)
+        if (batchSize < 2)
         {
-            chunkSize = 500;
+            batchSize = 10;
         }
 
         var tmpList = new List<InputValues>();
         foreach (var input in inputs)
         {
             tmpList.Add(input);
-            if (tmpList.Count >= chunkSize)
+            if (tmpList.Count >= batchSize)
             {
                 DoBatchInsert(tableName, tmpList, con, tran);
                 tmpList.Clear();
