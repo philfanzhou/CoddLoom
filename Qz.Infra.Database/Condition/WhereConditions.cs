@@ -11,9 +11,11 @@ namespace Qz.Infra.Database.Condition;
 public class WhereConditions
 {
     private readonly ParameterNameGenerator _parameterNameGenerator = new();
+
+    private readonly List<PartialWhereConditions> _partialConditions = new();
+
     private readonly List<ColumnValueParameter> _valueParamList = new();
     private readonly List<WhereConditionsItemBase> _conditionsItemList = new();
-    private readonly List<PartialWhereConditions> _partialConditions = new();
 
     #region Property
 
@@ -36,15 +38,28 @@ public class WhereConditions
     #endregion
 
     public void Add(string column, object value,
-        WhereOperator whereOperator = WhereOperator.Equal, WhereConnector connector = WhereConnector.And, bool allowEmptyValue = false)
+        WhereOperator whereOperator = WhereOperator.Equal, 
+        WhereConnector connector = WhereConnector.And, 
+        bool allowEmptyValue = false)
     {
-        Add(column, value, whereOperator, connector, null, allowEmptyValue);
+        Add(column, value, null, whereOperator, connector, allowEmptyValue);
     }
 
-    public void Add(string column, object value, DbType castType,
-        WhereOperator whereOperator = WhereOperator.Equal, WhereConnector connector = WhereConnector.And, bool allowEmptyValue = false)
+    public void Add(string column, object value, DbType? castType,
+        WhereOperator whereOperator = WhereOperator.Equal, 
+        WhereConnector connector = WhereConnector.And, 
+        bool allowEmptyValue = false)
     {
-        Add(column, value, whereOperator, connector, castType, allowEmptyValue);
+        if (string.IsNullOrEmpty(column)) throw new ArgumentNullException(nameof(column));
+        if (value == null) return; // use AddIsNull condition to instead null value.
+        if (!allowEmptyValue && string.IsNullOrEmpty(value.ToString())) return;
+
+        var param = new ColumnValueParameter(column, value, _parameterNameGenerator.Get(column));
+
+        _valueParamList.Add(param);
+        _conditionsItemList.Add(castType != null
+            ? new WhereConditionsItem(param, castType.Value, whereOperator, connector)
+            : new WhereConditionsItem(param, whereOperator, connector));
     }
 
     public void AddIsNull(string column, 
@@ -102,25 +117,6 @@ public class WhereConditions
 
         return whereBuilder.ToString();
     }
-
-    #region Private method
-
-    private void Add(string column, object value, WhereOperator whereOperator, WhereConnector connector,
-        DbType? castType = null, bool allowEmptyValue = false)
-    {
-        if (string.IsNullOrEmpty(column)) throw new ArgumentNullException(nameof(column));
-        if (value == null) return; // use AddIsNull condition to instead null value.
-        if (!allowEmptyValue && string.IsNullOrEmpty(value.ToString())) return;
-
-        var param = new ColumnValueParameter(column, value, _parameterNameGenerator.Get(column));
-
-        _valueParamList.Add(param);
-        _conditionsItemList.Add(castType != null
-            ? new WhereConditionsItem(param, castType.Value, whereOperator, connector)
-            : new WhereConditionsItem(param, whereOperator, connector));
-    }
-
-    #endregion
 
     private class ParameterNameGenerator
     {

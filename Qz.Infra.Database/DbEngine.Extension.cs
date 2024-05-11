@@ -1,6 +1,6 @@
-﻿using Qz.Infra.Database.Condition;
+﻿using Qz.Infra.Database.Cache;
+using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Convert;
-using Qz.Infra.Database.Input;
 using Qz.Infra.Database.Params;
 using System;
 using System.Collections.Generic;
@@ -37,12 +37,10 @@ partial class DbEngine
         Update(table, input, where, con, tran);
     }
 
-    public List<T> Select<T>(WhereConditions where, OrderByCondition orderBy,
+    public bool Exist(string tableName, WhereConditions where,
         IDbConnection con = null, IDbTransaction tran = null)
-        where T : new()
     {
-        var table = GetTableName<T>();
-        return Select(DataRecordExtension.ToEntity<T>, table, where, orderBy, con, tran);
+        return Count(tableName, where, con, tran) > 0;
     }
 
     public T First<T>(WhereConditions where, OrderByCondition orderBy,
@@ -53,14 +51,23 @@ partial class DbEngine
         return First(DataRecordExtension.ToEntity<T>, table, where, orderBy, con, tran);
     }
 
-    public List<T> PageSelect<T>(PageParam pageParam, WhereConditions where, OrderByCondition orderBy, 
-        out int totalPages, out int totalCount,
+    public List<T> Select<T>(WhereConditions where, OrderByCondition orderBy,
         IDbConnection con = null, IDbTransaction tran = null)
         where T : new()
     {
         var table = GetTableName<T>();
-        return PageSelect(DataRecordExtension.ToEntity<T>, pageParam, table, where, orderBy, out totalPages, out totalCount,
-            con, tran);
+        return Select(DataRecordExtension.ToEntity<T>, 
+            table, where, orderBy, con, tran);
+    }
+
+    public List<T> PageSelect<T>(WhereConditions where, OrderByCondition orderBy,
+        PageParam pageParam, out int totalPages, out int totalCount,
+        IDbConnection con = null, IDbTransaction tran = null)
+        where T : new()
+    {
+        var table = GetTableName<T>();
+        return PageSelect(DataRecordExtension.ToEntity<T>, 
+            table, where, orderBy, pageParam, out totalPages, out totalCount, con, tran);
     }
 
     public string GenerateUtcTimeStampId(string tableName, string columnName,
@@ -107,5 +114,11 @@ partial class DbEngine
         var max = First(record => int.Parse(record[columnName].ToString()),
             tableName, null, orderBy, con, tran);
         return checked(max + 1);
+    }
+
+    private static string GetTableName<T>()
+    {
+        var entityMap = EntityMapCache.Get<T>();
+        return entityMap.Table.Name;
     }
 }

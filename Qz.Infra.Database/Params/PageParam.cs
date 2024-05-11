@@ -31,5 +31,5 @@ public class PageParam
         }
     }
 
-    internal int Offset => PageSize * (PageNumber - 1);
+    public int Offset => PageSize * (PageNumber - 1);
 }

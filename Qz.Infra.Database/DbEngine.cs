@@ -78,13 +78,6 @@ public partial class DbEngine
         Executor.Execute(sql, dbParams, null, con, tran);
     }
 
-    public List<T> Select<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy,
-        IDbConnection con = null, IDbTransaction tran = null)
-    {
-        var sql = Executor.SqlBuilder.Select(tableName, where, orderBy);
-        return Executor.Select(sql, convertor, where?.Parameters, con, tran);
-    }
-
     public int Count(string tableName, WhereConditions where,
         IDbConnection con = null, IDbTransaction tran = null)
     {
@@ -99,13 +92,20 @@ public partial class DbEngine
         return Executor.First(sql, convertor, where?.Parameters, con, tran);
     }
 
-    public List<T> PageSelect<T>(Func<IDataRecord, T> convertor,
-        PageParam pageParam, string tableName, WhereConditions where, OrderByCondition orderBy, 
-        out int totalPages, out int totalCount,
+    public List<T> Select<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        totalCount = Count(tableName, where, con, tran);
+        var sql = Executor.SqlBuilder.Select(tableName, where, orderBy);
+        return Executor.Select(sql, convertor, where?.Parameters, con, tran);
+    }
+
+    public List<T> PageSelect<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy, 
+        PageParam pageParam, out int totalPages, out int totalCount,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
         totalPages = 0;
+
+        totalCount = Count(tableName, where, con, tran);
         if (totalCount > 0)
         {
             totalPages = totalCount / pageParam.PageSize;
@@ -115,21 +115,8 @@ public partial class DbEngine
             }
         }
         
-        var sql = Executor.SqlBuilder.Take(tableName, pageParam.Offset, pageParam.PageSize, where, orderBy);
-        var items = Executor.Select(sql, convertor, where?.Parameters, con, tran).ToList();
-        return items;
-    }
-
-    public bool Exist(string tableName, WhereConditions where,
-        IDbConnection con = null, IDbTransaction tran = null)
-    {
-        return Count(tableName, where, con, tran) > 0;
-    }
-
-    private string GetTableName<T>()
-    {
-        var entityMap = EntityMapCache.Get<T>();
-        return entityMap.Table.Name;
+        var sql = Executor.SqlBuilder.Select(tableName, where, orderBy, pageParam);
+        return Executor.Select(sql, convertor, where?.Parameters, con, tran);
     }
 
     private void DoBatchInsert(string tableName, IEnumerable<InputValues> inputs,
@@ -138,8 +125,9 @@ public partial class DbEngine
         var inputList = inputs.ToList();
 
         var valuesCount = inputList.Count * inputList[0].Items.Count;
-        var useParameter = valuesCount < 2100; // sqlserver default parameter count limit.
-        var sql = Executor.SqlBuilder.Insert(tableName, inputList, out var dbParams, useParameter);
+        var forceUseParameter = valuesCount < 2100; // sqlserver default parameter count limit.
+
+        var sql = Executor.SqlBuilder.Insert(tableName, inputList, out var dbParams, forceUseParameter);
         Executor.Execute(sql, dbParams, null, con, tran);
     }
 }

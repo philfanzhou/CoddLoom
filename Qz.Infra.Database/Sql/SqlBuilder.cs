@@ -16,7 +16,7 @@ public partial class SqlBuilder
     protected const string KeyWordWhere = "WHERE";
 
     public virtual string Insert(string tableName, IEnumerable<InputValues> inputs, out List<ColumnValueParameter> dbParams,  
-        bool useParameter = true)
+        bool forceParameter = true)
     {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
         if(inputs == null) throw new ArgumentNullException(nameof(inputs));
@@ -29,7 +29,7 @@ public partial class SqlBuilder
         var valueList = new List<string>();
         foreach(var input in inputList)
         {
-            var values = GetInsertValues(input.Items, out var innerDbParams, useParameter);
+            var values = GetInsertValues(input.Items, out var innerDbParams, forceParameter);
             valueList.Add(values);
             dbParams.AddRange(innerDbParams);
         }
@@ -68,27 +68,17 @@ public partial class SqlBuilder
         return AppendWhere(sql, where);
     }
 
-    public virtual string Select(string tableName,
-        WhereConditions where = null, OrderByCondition orderBy = null)
-    {
-        if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
-
-        var sql = $"{KeyWordSelect} * FROM {tableName}";
-        sql = AppendWhere(sql, where);
-        return AppendOrderBy(sql, orderBy);
-    }
-
     public virtual string Count(string tableName,
         WhereConditions where = null)
     {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
 
         var column = "*";
-        //if (where != null && !where.IsEmpty())
-        //{
-        //    // 只查询where条件的第一个column，提高性能
-        //    column = where.Items.First().Column;
-        //}
+        if (where != null && !where.IsEmpty())
+        {
+            // 只查询where条件的第一个column，提高性能
+            column = where.Parameters.First().Column;
+        }
 
         var sql = $"{KeyWordSelect} COUNT({column}) FROM {tableName}";
         return AppendWhere(sql, where);
@@ -97,15 +87,18 @@ public partial class SqlBuilder
     public virtual string First(string tableName,
         WhereConditions where = null, OrderByCondition orderBy = null)
     {
-        var selectSql = Select(tableName, where, orderBy);
-        return AppendLimit(selectSql, 1);
+        return Select(tableName, where, orderBy, new PageParam { PageNumber = 1, PageSize = 1 });
     }
 
-    public virtual string Take(string tableName, int offset, int count,
-        WhereConditions where = null, OrderByCondition orderBy = null)
+    public virtual string Select(string tableName, 
+        WhereConditions where = null, OrderByCondition orderBy = null, PageParam pageParam = null)
     {
-        var selectSql = Select(tableName, where, orderBy);
-        return AppendLimit(selectSql, count, offset);
+        if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
+
+        var sql = $"{KeyWordSelect} * FROM {tableName}";
+        sql = AppendWhere(sql, where);
+        sql = AppendOrderBy(sql, orderBy);
+        return AppendLimit(sql, pageParam);
     }
 
     #region Protected virtual
@@ -113,11 +106,7 @@ public partial class SqlBuilder
     protected virtual string AppendWhere(string sql,
         WhereConditions where = null)
     {
-        if (where == null || where.IsEmpty())
-        {
-            return sql;
-        }
-
+        if (where == null || where.IsEmpty()) return sql;
         return $"{sql} {KeyWordWhere} {where.GetWhereString(this)}";
     }
 
@@ -125,17 +114,25 @@ public partial class SqlBuilder
         OrderByCondition orderBy = null)
     {
         if (orderBy == null) return sql;
-
         var sort = orderBy.Descending ? "DESC" : "ASC";
         return $"{sql} ORDER BY {orderBy.Column} {sort}";
     }
 
-    protected virtual string AppendLimit(string sql, int count,
-        int offset = 0)
+    protected virtual string AppendLimit(string sql,
+        PageParam pageParam = null)
     {
-        if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
+        if (pageParam == null) return sql;
+        return $"{sql} LIMIT {pageParam.Offset},{pageParam.PageSize}";
+    }
 
-        return $"{sql} LIMIT {offset},{count}";
+    protected internal virtual string GetCastColumn(string column, DbType dbType)
+    {
+        var typeStr = dbType switch
+        {
+            DbType.DateTime => "DateTime",
+            _ => throw new NotSupportedException(dbType.ToString())
+        };
+        return $"CAST({column} AS {typeStr})";
     }
 
     protected internal virtual string GetParamName(ColumnValueParameter param)
@@ -161,16 +158,6 @@ public partial class SqlBuilder
         {
             return param.Value.ToString();
         }
-    }
-
-    protected internal virtual string GetCastColumn(string column, DbType dbType)
-    {
-        var typeStr = dbType switch
-        {
-            DbType.DateTime => "DateTime",
-            _ => throw new NotSupportedException(dbType.ToString())
-        };
-        return $"CAST({column} AS {typeStr})";
     }
 
     protected virtual string GetInsertColumns(IEnumerable<ColumnValueParameter> parameters)

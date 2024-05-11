@@ -1,4 +1,5 @@
 ﻿using Qz.Infra.Database.Condition;
+using Qz.Infra.Database.Params;
 using Qz.Infra.Database.Sql;
 using Qz.Infra.Database.Table;
 using Qz.Infra.Database.Table.Base;
@@ -21,25 +22,18 @@ public class SqlServerBuilder : SqlBuilder
         return $"{primaryKey.Name} {keySql} PRIMARY KEY NOT NULL";
     }
 
-    protected override string AppendLimit(string sql, int count, int offset = 0)
+    protected override string AppendLimit(string sql, PageParam pageParam = null)
     {
-        if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
-
-        return $"{sql} OFFSET {offset} ROW FETCH NEXT {count} ROW ONLY";
+        if (pageParam == null) return sql;
+        return $"{sql} OFFSET {pageParam.Offset} ROW FETCH NEXT {pageParam.PageSize} ROW ONLY";
     }
 
-    public override string First(string tableName, WhereConditions where = null, OrderByCondition orderBy = null)
+    public override string Select(string tableName, WhereConditions where = null, OrderByCondition orderBy = null, PageParam pageParam = null)
     {
-        var selectSql = Select(tableName, where, orderBy);
-        return selectSql.Replace(KeyWordSelect, "SELECT TOP 1");
-    }
-
-    public override string Take(string tableName, int offset, int count, WhereConditions where = null, OrderByCondition orderBy = null)
-    {
-        if (orderBy == null)
+        if (pageParam != null && orderBy == null)
         {
             throw new ArgumentNullException(nameof(orderBy), "SqlServer can not use 'OFFSET' keyword without order by condition");
         }
-        return base.Take(tableName, offset, count, where, orderBy);
+        return base.Select(tableName, where, orderBy, pageParam);
     }
 }

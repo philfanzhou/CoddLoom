@@ -158,13 +158,13 @@ namespace TestProject.DbTest
         private static void PageSelectTest(TestDbEngine dbEngine, IDbConnection con)
         {
             var orderBy = new OrderByCondition(UserTable.Id);
-            var firstPage = dbEngine.PageSelect<User>(new PageParam { PageSize = 10, PageNumber = 1 },
-                null, orderBy, out var _, out var _, con);
+            var firstPage = dbEngine.PageSelect<User>(
+                null, orderBy, new PageParam { PageSize = 10, PageNumber = 1 }, out var _, out var _, con);
             Assert.IsTrue(firstPage.Count == 10);
             Assert.IsTrue(firstPage[0].Id.Trim() == "0");
 
-            var secondPage = dbEngine.PageSelect<User>(new PageParam { PageSize = 10, PageNumber = 2 },
-                null, orderBy, out var _, out var _, con);
+            var secondPage = dbEngine.PageSelect<User>(
+                null, orderBy, new PageParam { PageSize = 10, PageNumber = 2 }, out var _, out var _, con);
             Assert.IsTrue(secondPage.Count == 10);
             Assert.IsTrue(secondPage[0].Id.Trim() == "10");
         }
