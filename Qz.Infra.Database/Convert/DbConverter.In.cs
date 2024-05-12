@@ -66,7 +66,7 @@ partial class DbConverter
                 continue;
             }
 
-            input.Add(attribute.Name, value);
+            input.Add(attribute.Name, value, true);
         }
     }
 
