@@ -21,16 +21,21 @@ public class InputValues
 
     public IReadOnlyList<ColumnValueParameter> Items => _items.Values.ToList().AsReadOnly();
 
-    public void Add(string column, string value, bool forceEmpty = false, bool forceParameter = false)
+    public void Add(string column, string value, 
+        bool forceEmpty = false, bool forceParameter = false, bool autoTrim = true)
     {
-        if (forceEmpty == false
+        if (null == value)
+        {
+            AddItem(column, DBNull.Value, forceParameter);
+        }
+        else if (forceEmpty == false 
             && (string.IsNullOrEmpty(value) || string.IsNullOrWhiteSpace(value)))
         {
             AddItem(column, DBNull.Value, forceParameter);
         }
         else
         {
-            AddItem(column, value.Trim(), forceParameter);
+            AddItem(column, autoTrim ? value.Trim() : value, forceParameter);
         }
     }
 

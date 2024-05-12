@@ -52,7 +52,7 @@ public class WhereConditions
     {
         if (string.IsNullOrEmpty(column)) throw new ArgumentNullException(nameof(column));
         if (value == null) return; // use AddIsNull condition to instead null value.
-        if (!allowEmptyValue && string.IsNullOrEmpty(value.ToString())) return;
+        if (allowEmptyValue == false && string.IsNullOrEmpty(value.ToString())) return;
 
         var param = new ColumnValueParameter(column, value, _parameterNameGenerator.Get(column));
 
