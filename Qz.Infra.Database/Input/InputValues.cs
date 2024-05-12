@@ -14,21 +14,25 @@ public class InputValues
 
     private readonly string _paramPrefix;
 
-    public InputValues(int paramPrefixIndex = 0)
+    public InputValues() : this(0) { }
+
+    internal InputValues(int paramPrefixIndex = 0)
     {
         _paramPrefix = $"V{paramPrefixIndex}_";
     }
 
     public IReadOnlyList<ColumnValueParameter> Items => _items.Values.ToList().AsReadOnly();
 
+    internal bool IsEmpty => _items.Count < 1;
+
     public void Add(string column, string value, 
-        bool forceEmpty = false, bool forceParameter = false, bool autoTrim = true)
+        bool allowEmpty = false, bool forceParameter = false, bool autoTrim = true)
     {
         if (null == value)
         {
             AddItem(column, DBNull.Value, forceParameter);
         }
-        else if (forceEmpty == false 
+        else if (allowEmpty == false 
             && (string.IsNullOrEmpty(value) || string.IsNullOrWhiteSpace(value)))
         {
             AddItem(column, DBNull.Value, forceParameter);
@@ -74,10 +78,5 @@ public class InputValues
     private void AddItem(string column, object value, bool forceParameter = false)
     {
         _items.Add(column, new ColumnValueParameter(column, value, $"{_paramPrefix}{column}", forceParameter));
-    }
-
-    internal bool IsEmpty()
-    {
-        return _items.Count < 1;
     }
 }

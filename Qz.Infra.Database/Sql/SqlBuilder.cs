@@ -21,7 +21,7 @@ public partial class SqlBuilder
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
         if(inputs == null) throw new ArgumentNullException(nameof(inputs));
         var inputList = inputs.ToList();
-        if(inputList.Count < 1 || inputList.Any(p => p == null || p.IsEmpty())) throw new ArgumentNullException(nameof(inputs));
+        if(inputList.Count < 1 || inputList.Any(p => p == null || p.IsEmpty)) throw new ArgumentNullException(nameof(inputs));
 
         var columnSql = GetInsertColumns(inputList[0].Items);
 
@@ -50,7 +50,7 @@ public partial class SqlBuilder
     public virtual string Update(string tableName, InputValues input, WhereConditions where)
     {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
-        if (input == null || input.IsEmpty()) throw new ArgumentNullException(nameof(input));
+        if (input == null || input.IsEmpty) throw new ArgumentNullException(nameof(input));
         if (where == null || where.IsEmpty()) throw new ArgumentNullException(nameof(where));
 
         var valueBuilder = new StringBuilder();
