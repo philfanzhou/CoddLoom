@@ -55,9 +55,7 @@ partial class DbEngine
         IDbConnection con = null, IDbTransaction tran = null)
         where T : new()
     {
-        var table = GetTableName<T>();
-        return Select(DataRecordExtension.ToEntity<T>, 
-            table, where, orderBy, con, tran);
+        return PageSelect<T>(where, orderBy, null, out _, out _, con, tran);
     }
 
     public List<T> PageSelect<T>(WhereConditions where, OrderByCondition orderBy,

@@ -4,6 +4,7 @@ using Qz.Infra.Database.Sql;
 using Qz.Infra.Database.Table;
 using Qz.Infra.Database.Table.Base;
 using System;
+using System.Linq;
 
 namespace Qz.Infra.Database.SqlServer;
 
@@ -28,12 +29,17 @@ public class SqlServerBuilder : SqlBuilder
         return $"{sql} OFFSET {pageParam.Offset} ROW FETCH NEXT {pageParam.PageSize} ROW ONLY";
     }
 
-    public override string Select(string tableName, WhereConditions where = null, OrderByCondition orderBy = null, PageParam pageParam = null)
+    public override string Select(string tableName, WhereConditions where = null, OrderByCondition orderBy = null, PageParam pageParam = null, SelectParam select = null)
     {
         if (pageParam != null && orderBy == null)
         {
-            throw new ArgumentNullException(nameof(orderBy), "SqlServer can not use 'OFFSET' keyword without order by condition");
+            if (where == null)
+            {
+                throw new ArgumentNullException("", "SqlServer can not use 'OFFSET' keyword without order by condition");
+            }
+
+            orderBy = new OrderByCondition(where.Parameters.FirstOrDefault()?.Column);
         }
-        return base.Select(tableName, where, orderBy, pageParam);
+        return base.Select(tableName, where, orderBy, pageParam, select);
     }
 }

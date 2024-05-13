@@ -12,8 +12,6 @@ namespace Qz.Infra.Database.Sql;
 public partial class SqlBuilder
 {
     protected const string DbParameterPrefix = "@";
-    protected const string KeyWordSelect = "SELECT";
-    protected const string KeyWordWhere = "WHERE";
 
     public virtual string Insert(string tableName, IEnumerable<InputValues> inputs, out List<ColumnValueParameter> dbParams,  
         bool forceParameter = true)
@@ -69,33 +67,37 @@ public partial class SqlBuilder
     }
 
     public virtual string Count(string tableName,
-        WhereConditions where = null)
+        WhereConditions where = null, SelectParam select = null)
     {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
 
         var column = "*";
-        if (where != null && !where.IsEmpty())
+        if(select != null)
+        {
+            column = select.Items.FirstOrDefault()?.Column;
+        }
+        else if (where != null && !where.IsEmpty())
         {
             // 只查询where条件的第一个column，提高性能
             column = where.Parameters.First().Column;
         }
 
-        var sql = $"{KeyWordSelect} COUNT({column}) FROM {tableName}";
+        var sql = $"SELECT COUNT({column}) FROM {tableName}";
         return AppendWhere(sql, where);
     }
 
     public virtual string First(string tableName,
-        WhereConditions where = null, OrderByCondition orderBy = null)
+        WhereConditions where = null, OrderByCondition orderBy = null, SelectParam select = null)
     {
-        return Select(tableName, where, orderBy, new PageParam { PageNumber = 1, PageSize = 1 });
+        return Select(tableName, where, orderBy, new PageParam { PageNumber = 1, PageSize = 1 }, select);
     }
 
     public virtual string Select(string tableName, 
-        WhereConditions where = null, OrderByCondition orderBy = null, PageParam pageParam = null)
+        WhereConditions where = null, OrderByCondition orderBy = null, PageParam pageParam = null, SelectParam select = null)
     {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
 
-        var sql = $"{KeyWordSelect} * FROM {tableName}";
+        var sql = $"SELECT * FROM {tableName}";
         sql = AppendWhere(sql, where);
         sql = AppendOrderBy(sql, orderBy);
         return AppendLimit(sql, pageParam);
@@ -107,7 +109,7 @@ public partial class SqlBuilder
         WhereConditions where = null)
     {
         if (where == null || where.IsEmpty()) return sql;
-        return $"{sql} {KeyWordWhere} {where.GetWhereString(this)}";
+        return $"{sql} WHERE {where.GetWhereString(this)}";
     }
 
     protected virtual string AppendOrderBy(string sql,

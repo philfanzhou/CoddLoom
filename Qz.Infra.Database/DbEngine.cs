@@ -95,8 +95,7 @@ public partial class DbEngine
     public List<T> Select<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var sql = Executor.SqlBuilder.Select(tableName, where, orderBy);
-        return Executor.Select(sql, convertor, where?.Parameters, con, tran);
+        return PageSelect(convertor, tableName, where, orderBy, null, out _, out _, con, tran);
     }
 
     public List<T> PageSelect<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy, 
@@ -104,14 +103,17 @@ public partial class DbEngine
         IDbConnection con = null, IDbTransaction tran = null)
     {
         totalPages = 0;
-
-        totalCount = Count(tableName, where, con, tran);
-        if (totalCount > 0)
+        totalCount = 0;
+        if (pageParam != null)
         {
-            totalPages = totalCount / pageParam.PageSize;
-            if (Math.Abs(totalCount % pageParam.PageSize) > 0)
+            totalCount = Count(tableName, where, con, tran);
+            if (totalCount > 0)
             {
-                totalPages++;
+                totalPages = totalCount / pageParam.PageSize;
+                if (Math.Abs(totalCount % pageParam.PageSize) > 0)
+                {
+                    totalPages++;
+                }
             }
         }
         
