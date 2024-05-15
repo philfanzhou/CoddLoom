@@ -67,16 +67,12 @@ public partial class SqlBuilder
     }
 
     public virtual string Count(string tableName,
-        WhereConditions where = null, SelectParam select = null)
+        WhereConditions where = null)
     {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
 
         var column = "*";
-        if(select != null)
-        {
-            column = select.Items.FirstOrDefault()?.Column;
-        }
-        else if (where != null && !where.IsEmpty())
+        if (where != null && !where.IsEmpty())
         {
             // 只查询where条件的第一个column，提高性能
             column = where.Parameters.First().Column;
@@ -97,8 +93,9 @@ public partial class SqlBuilder
     {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
 
-        var sql = $"SELECT * FROM {tableName}";
+        var sql = $"SELECT {GetColumn(select)} FROM {tableName}";
         sql = AppendWhere(sql, where);
+        sql = AppendGroupBy(sql, select);
         sql = AppendOrderBy(sql, orderBy);
         return AppendLimit(sql, pageParam);
     }
@@ -108,14 +105,36 @@ public partial class SqlBuilder
     protected virtual string AppendWhere(string sql,
         WhereConditions where = null)
     {
-        if (where == null || where.IsEmpty()) return sql;
-        return $"{sql} WHERE {where.GetWhereString(this)}";
+        if (where == null) return sql;
+        var whereSql = where.GetWhereString(this);
+        if(string.IsNullOrEmpty(whereSql)) return sql;
+
+        return $"{sql} WHERE {whereSql}";
+    }
+
+    protected virtual string AppendGroupBy(string sql, 
+        SelectParam groupBy = null)
+    {
+        if (groupBy == null) return sql;
+        var groupBySql = new StringBuilder();
+        var items = groupBy.GroupBy;
+        foreach(var item in items)
+        {
+            if(groupBySql.Length > 0)
+            {
+                groupBySql.Append(",");
+            }
+            groupBySql.Append(item.Column);
+        }
+        if (groupBySql.Length < 1) return sql;
+
+        return $"{sql} GROUP BY {groupBySql}";
     }
 
     protected virtual string AppendOrderBy(string sql,
         OrderByCondition orderBy = null)
     {
-        if (orderBy == null) return sql;
+        if (orderBy == null || string.IsNullOrEmpty(orderBy.Column)) return sql;
         var sort = orderBy.Descending ? "DESC" : "ASC";
         return $"{sql} ORDER BY {orderBy.Column} {sort}";
     }
@@ -125,6 +144,22 @@ public partial class SqlBuilder
     {
         if (pageParam == null) return sql;
         return $"{sql} LIMIT {pageParam.Offset},{pageParam.PageSize}";
+    }
+
+    protected virtual string GetColumn(SelectParam select = null)
+    {
+        if (select == null || select.Items.Count < 1) return "*";
+
+        var column = new StringBuilder();
+        foreach(var item in select.Items)
+        {
+            if(column.Length > 0)
+            {
+                column.Append(",");
+            }
+            column.Append(item.Column);
+        }
+        return column.ToString();
     }
 
     protected internal virtual string GetCastColumn(string column, DbType dbType)

@@ -1,12 +1,15 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Qz.Infra.Database.Params;
 
 public class SelectParam
 {
-    private readonly List<SelectParamItem> _items = new();
+    private readonly List<SelectItem> _items = new();
 
-    internal IReadOnlyCollection<SelectParamItem> Items => _items.AsReadOnly();
+    internal IReadOnlyCollection<SelectItem> Items => _items.AsReadOnly();
+
+    internal IReadOnlyCollection<GroupByItem> GroupBy => _items.Where(p => p.GroupBy).ToList().AsReadOnly();
 
     public void Add(string column, string alias = null)
     {
@@ -15,23 +18,33 @@ public class SelectParam
 
     public void Add(string column, string dbFunction, bool groupBy, string alias = null)
     {
-        _items.Add(new SelectParamItem
-        {
-            Column = column,
-            DbFunction = dbFunction,
-            GroupBy = groupBy,
-            Alias = alias
-        });
+        _items.Add(new SelectItem(column, alias, dbFunction, groupBy));
     }
 }
 
-public class SelectParamItem
+public class SelectItem : GroupByItem
 {
-    public string Column { get; internal set; } 
-    
-    public string Alias { get; internal set; }
+    public SelectItem(string column, string alias, string dbFunction, bool groupBy = false)
+        : base(column, groupBy)
+    {
+        Alias = alias;
+        DbFunction = dbFunction;
+    }
 
-    public string DbFunction { get; internal set; }
+    public string Alias { get; }
 
-    public bool GroupBy { get; internal set; }
+    public string DbFunction { get; }
+}
+
+public class GroupByItem
+{
+    public GroupByItem(string column, bool groupBy = true)
+    {
+        Column = column;
+        GroupBy = groupBy;
+    }
+
+    public string Column { get; }
+
+    public bool GroupBy { get; }
 }

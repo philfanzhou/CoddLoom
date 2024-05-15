@@ -38,7 +38,7 @@ public class SqlServerBuilder : SqlBuilder
                 throw new ArgumentNullException("", "SqlServer can not use 'OFFSET' keyword without order by condition");
             }
 
-            orderBy = new OrderByCondition(where.Parameters.FirstOrDefault()?.Column);
+            orderBy = new OrderByCondition(where.Parameters.First().Column);
         }
         return base.Select(tableName, where, orderBy, pageParam, select);
     }
