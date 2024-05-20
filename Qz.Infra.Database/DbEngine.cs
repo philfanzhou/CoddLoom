@@ -121,6 +121,13 @@ public partial class DbEngine
         return Executor.Select(sql, convertor, where?.Parameters, con, tran);
     }
 
+    public void Produce(string produceName,
+        IEnumerable<ValueParam> dbParams = null, 
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        Executor.Execute($"exec {produceName}", dbParams, null, con, tran);
+    }
+
     private void DoBatchInsert(string tableName, IEnumerable<InputValues> inputs,
         IDbConnection con, IDbTransaction tran)
     {

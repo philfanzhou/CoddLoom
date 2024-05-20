@@ -184,13 +184,6 @@ public abstract class DbExecutor
         }
     }
 
-    public void ExecuteProduce(string produceName,
-        IEnumerable<ValueParam> dbParams = null, Action<IDataReader> readerAction = null,
-        IDbConnection con = null, IDbTransaction tran = null)
-    {
-        Execute($"exec {produceName}", dbParams, readerAction, con, tran);
-    }
-
     #endregion
 
     #region Execute with reader
