@@ -29,7 +29,7 @@ public class SqlServerBuilder : SqlBuilder
         return $"{sql} OFFSET {pageParam.Offset} ROW FETCH NEXT {pageParam.PageSize} ROW ONLY";
     }
 
-    public override string Select(string tableName, WhereConditions where = null, OrderByCondition orderBy = null, PageParam pageParam = null, SelectParam select = null)
+    public override string Select(string tableName, WhereConditions where = null, OrderByCondition orderBy = null, PageParam pageParam = null, ColumnParam select = null)
     {
         if (pageParam != null && orderBy == null)
         {

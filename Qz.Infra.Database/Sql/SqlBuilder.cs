@@ -13,7 +13,7 @@ public partial class SqlBuilder
 {
     protected const string DbParameterPrefix = "@";
 
-    public virtual string Insert(string tableName, IEnumerable<InputValues> inputs, out List<ColumnValueParameter> dbParams,  
+    public virtual string Insert(string tableName, IEnumerable<InputValues> inputs, out List<ValueParam> dbParams,  
         bool forceParameter = true)
     {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
@@ -23,7 +23,7 @@ public partial class SqlBuilder
 
         var columnSql = GetInsertColumns(inputList[0].Items);
 
-        dbParams = new List<ColumnValueParameter>();
+        dbParams = new List<ValueParam>();
         var valueList = new List<string>();
         foreach(var input in inputList)
         {
@@ -67,33 +67,38 @@ public partial class SqlBuilder
     }
 
     public virtual string Count(string tableName,
-        WhereConditions where = null)
+        WhereConditions where = null, ColumnParam select = null)
     {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
 
         var column = "*";
-        if (where != null && !where.IsEmpty())
+        if (where != null)
         {
             // 只查询where条件的第一个column，提高性能
             column = where.Parameters.First().Column;
         }
+        else if (select != null)
+        {
+            column = select.Select.First().Column;
+        }
 
         var sql = $"SELECT COUNT({column}) FROM {tableName}";
-        return AppendWhere(sql, where);
+        sql = AppendWhere(sql, where);
+        return AppendGroupBy(sql, select);
     }
 
     public virtual string First(string tableName,
-        WhereConditions where = null, OrderByCondition orderBy = null, SelectParam select = null)
+        WhereConditions where = null, OrderByCondition orderBy = null, ColumnParam select = null)
     {
         return Select(tableName, where, orderBy, new PageParam { PageNumber = 1, PageSize = 1 }, select);
     }
 
     public virtual string Select(string tableName, 
-        WhereConditions where = null, OrderByCondition orderBy = null, PageParam pageParam = null, SelectParam select = null)
+        WhereConditions where = null, OrderByCondition orderBy = null, PageParam pageParam = null, ColumnParam select = null)
     {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
 
-        var sql = $"SELECT {GetColumn(select)} FROM {tableName}";
+        var sql = $"SELECT {GetSelectColumnSql(select)} FROM {tableName}";
         sql = AppendWhere(sql, where);
         sql = AppendGroupBy(sql, select);
         sql = AppendOrderBy(sql, orderBy);
@@ -113,7 +118,7 @@ public partial class SqlBuilder
     }
 
     protected virtual string AppendGroupBy(string sql, 
-        SelectParam groupBy = null)
+        ColumnParam groupBy = null)
     {
         if (groupBy == null) return sql;
         var groupBySql = new StringBuilder();
@@ -146,12 +151,12 @@ public partial class SqlBuilder
         return $"{sql} LIMIT {pageParam.Offset},{pageParam.PageSize}";
     }
 
-    protected virtual string GetColumn(SelectParam select = null)
+    protected virtual string GetSelectColumnSql(ColumnParam select = null)
     {
-        if (select == null || select.Items.Count < 1) return "*";
+        if (select == null || select.Select.Count < 1) return "*";
 
         var column = new StringBuilder();
-        foreach(var item in select.Items)
+        foreach(var item in select.Select)
         {
             if(column.Length > 0)
             {
@@ -172,12 +177,12 @@ public partial class SqlBuilder
         return $"CAST({column} AS {typeStr})";
     }
 
-    protected internal virtual string GetParamName(ColumnValueParameter param)
+    protected internal virtual string GetParamName(ValueParam param)
     {
         return $"{DbParameterPrefix}{param.ParamName}";
     }
 
-    protected virtual string GetInsertValue(ColumnValueParameter param)
+    protected virtual string GetInsertValue(ValueParam param)
     {
         if(param.Value == DBNull.Value)
         {
@@ -197,16 +202,16 @@ public partial class SqlBuilder
         }
     }
 
-    protected virtual string GetInsertColumns(IEnumerable<ColumnValueParameter> parameters)
+    protected virtual string GetInsertColumns(IEnumerable<ValueParam> parameters)
     {
         var columns = $"({string.Join(",", parameters.Select(p => p.Column))})";
         return columns;
     }
 
-    protected virtual string GetInsertValues(IEnumerable<ColumnValueParameter> parameters,
-        out List<ColumnValueParameter> dbParams, bool useParameter = true)
+    protected virtual string GetInsertValues(IEnumerable<ValueParam> parameters,
+        out List<ValueParam> dbParams, bool useParameter = true)
     {
-        dbParams = new List<ColumnValueParameter>();
+        dbParams = new List<ValueParam>();
         var valuesStrBuilder = new StringBuilder();
         foreach(var item in parameters)
         {

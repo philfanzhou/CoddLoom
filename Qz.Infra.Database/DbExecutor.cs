@@ -50,7 +50,7 @@ public abstract class DbExecutor
     protected abstract Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command);
 
     private IDbCommand BuildCommand(IDbConnection con, string sql,
-        IEnumerable<ColumnValueParameter> dbParams = null)
+        IEnumerable<ValueParam> dbParams = null)
     {
         var command = con.CreateCommand();
         command.CommandText = sql;
@@ -68,7 +68,7 @@ public abstract class DbExecutor
     }
 
     private void Execute(IDbConnection con, string sql,
-        IEnumerable<ColumnValueParameter> dbParams = null, Action<IDataReader> readerAction = null, IDbTransaction tran = null)
+        IEnumerable<ValueParam> dbParams = null, Action<IDataReader> readerAction = null, IDbTransaction tran = null)
     {
         if (con == null) throw new ArgumentNullException(nameof(con));
         if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
@@ -167,7 +167,7 @@ public abstract class DbExecutor
     }
 
     public void Execute(string sql,
-        IEnumerable<ColumnValueParameter> dbParams = null, Action<IDataReader> readerAction = null,
+        IEnumerable<ValueParam> dbParams = null, Action<IDataReader> readerAction = null,
         IDbConnection con = null, IDbTransaction tran = null)
     {
         if (tran != null)
@@ -189,7 +189,7 @@ public abstract class DbExecutor
     #region Execute with reader
 
     public List<T> Select<T>(string sql, Func<IDataRecord, T> convertor,
-        IEnumerable<ColumnValueParameter> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
+        IEnumerable<ValueParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
     {
         var result = new List<T>();
 
@@ -205,7 +205,7 @@ public abstract class DbExecutor
     }
 
     public T First<T>(string sql, Func<IDataRecord, T> convertor,
-        IEnumerable<ColumnValueParameter> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
+        IEnumerable<ValueParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
     {
         T result = default;
 
@@ -219,7 +219,7 @@ public abstract class DbExecutor
     }
 
     public int Count(string sql,
-        IEnumerable<ColumnValueParameter> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
+        IEnumerable<ValueParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
     {
         var count = 0;
 

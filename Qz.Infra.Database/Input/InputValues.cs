@@ -10,7 +10,7 @@ public class InputValues
     /// <summary>
     /// use dictionary to make sure will not add same column one time.
     /// </summary>
-    private readonly Dictionary<string, ColumnValueParameter> _items = new();
+    private readonly Dictionary<string, ValueParam> _items = new();
 
     private readonly string _parameterPrefix;
 
@@ -21,7 +21,7 @@ public class InputValues
         _parameterPrefix = $"V{parameterPrefixIndex}_";
     }
 
-    public IReadOnlyList<ColumnValueParameter> Items => _items.Values.ToList().AsReadOnly();
+    public IReadOnlyList<ValueParam> Items => _items.Values.ToList().AsReadOnly();
 
     internal bool IsEmpty => _items.Count < 1;
 
@@ -88,6 +88,6 @@ public class InputValues
             throw new ArgumentNullException(nameof(column));
         }
 
-        _items.Add(column, new ColumnValueParameter(column, value, $"{_parameterPrefix}{column}", forceParameter));
+        _items.Add(column, new ValueParam(column, value, $"{_parameterPrefix}{column}", forceParameter));
     }
 }

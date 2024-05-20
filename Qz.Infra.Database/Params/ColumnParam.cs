@@ -3,13 +3,13 @@ using System.Linq;
 
 namespace Qz.Infra.Database.Params;
 
-public class SelectParam
+public class ColumnParam
 {
-    private readonly List<SelectItem> _items = new();
+    private readonly List<ColumnItemBase> _items = new();
 
-    internal IReadOnlyCollection<SelectItem> Items => _items.AsReadOnly();
+    internal IReadOnlyCollection<SelectItem> Select => _items.OfType<SelectItem>().ToList().AsReadOnly();
 
-    internal IReadOnlyCollection<GroupByItem> GroupBy => _items.Where(p => p.GroupBy).ToList().AsReadOnly();
+    internal IReadOnlyCollection<GroupByItem> GroupBy => _items.OfType<GroupByItem>().Where(p => p.GroupBy).ToList().AsReadOnly();
 
     public void Add(string column, string alias = null)
     {
@@ -22,7 +22,7 @@ public class SelectParam
     }
 }
 
-public class SelectItem : GroupByItem
+internal class SelectItem : GroupByItem
 {
     public SelectItem(string column, string alias, string dbFunction, bool groupBy = false)
         : base(column, groupBy)
@@ -36,7 +36,7 @@ public class SelectItem : GroupByItem
     public string DbFunction { get; }
 }
 
-public class GroupByItem
+internal class GroupByItem : ColumnItemBase
 {
     public GroupByItem(string column, bool groupBy = true)
     {
@@ -44,7 +44,12 @@ public class GroupByItem
         GroupBy = groupBy;
     }
 
-    public string Column { get; }
+    public override string Column { get; }
 
-    public bool GroupBy { get; }
+    internal bool GroupBy { get; }
+}
+
+internal abstract class ColumnItemBase
+{
+    public abstract string Column { get; }
 }

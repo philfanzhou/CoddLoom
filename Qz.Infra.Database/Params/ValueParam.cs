@@ -1,15 +1,15 @@
 ﻿namespace Qz.Infra.Database.Params;
 
-public class ColumnValueParameter
+public class ValueParam
 {
-    public ColumnValueParameter(string column, object value, string paramName)
+    public ValueParam(string column, object value, string paramName)
     {
         Column = column;
         Value = value;
         ParamName = paramName;
     }
 
-    internal ColumnValueParameter(string column, object value, string paramName, bool forceParameter)
+    internal ValueParam(string column, object value, string paramName, bool forceParameter)
         : this(column, value, paramName)
     {
         ForceParameter = forceParameter;

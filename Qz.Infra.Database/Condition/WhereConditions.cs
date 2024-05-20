@@ -14,16 +14,16 @@ public class WhereConditions
 
     private readonly List<PartialWhereConditions> _partialConditions = new();
 
-    private readonly List<ColumnValueParameter> _valueParamList = new();
+    private readonly List<ValueParam> _valueParamList = new();
     private readonly List<WhereConditionsItemBase> _conditionsItemList = new();
 
     #region Property
 
-    public IEnumerable<ColumnValueParameter> Parameters
+    public IEnumerable<ValueParam> Parameters
     {
         get
         {
-            var paramList = new List<ColumnValueParameter>();
+            var paramList = new List<ValueParam>();
             paramList.AddRange(_valueParamList);
 
             foreach (var condition in _partialConditions)
@@ -54,7 +54,7 @@ public class WhereConditions
         if (value == null) return; // use AddIsNull condition to instead null value.
         if (allowEmptyValue == false && string.IsNullOrEmpty(value.ToString())) return;
 
-        var param = new ColumnValueParameter(column, value, _parameterNameGenerator.Get(column));
+        var param = new ValueParam(column, value, _parameterNameGenerator.Get(column));
 
         _valueParamList.Add(param);
         _conditionsItemList.Add(castType != null

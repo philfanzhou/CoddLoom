@@ -72,7 +72,7 @@ public partial class DbEngine
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var sql = Executor.SqlBuilder.Update(tableName, input, where);
-        var dbParams = new List<ColumnValueParameter>();
+        var dbParams = new List<ValueParam>();
         dbParams.AddRange(input.Items);
         dbParams.AddRange(where.Parameters);
         Executor.Execute(sql, dbParams, null, con, tran);
