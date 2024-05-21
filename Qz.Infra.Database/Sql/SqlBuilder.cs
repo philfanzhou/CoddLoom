@@ -72,12 +72,12 @@ public partial class SqlBuilder
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
 
         var column = "*";
-        if (where != null)
+        if (where?.Parameters.FirstOrDefault() != null)
         {
             // 只查询where条件的第一个column，提高性能
             column = where.Parameters.First().Column;
         }
-        else if (select != null)
+        else if (select?.Select.FirstOrDefault() != null)
         {
             column = select.Select.First().Column;
         }
