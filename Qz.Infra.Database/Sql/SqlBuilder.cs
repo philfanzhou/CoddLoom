@@ -67,7 +67,7 @@ public partial class SqlBuilder
     }
 
     public virtual string Count(string tableName,
-        WhereConditions where = null, ColumnParam select = null)
+        WhereConditions where = null, ColumnParam columns = null)
     {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
 
@@ -77,30 +77,30 @@ public partial class SqlBuilder
             // 只查询where条件的第一个column，提高性能
             column = where.Parameters.First().Column;
         }
-        else if (select?.Select.FirstOrDefault() != null)
+        else if (columns?.Select.FirstOrDefault() != null)
         {
-            column = select.Select.First().Column;
+            column = columns.Select.First().Column;
         }
 
         var sql = $"SELECT COUNT({column}) FROM {tableName}";
         sql = AppendWhere(sql, where);
-        return AppendGroupBy(sql, select);
+        return AppendGroupBy(sql, columns);
     }
 
     public virtual string First(string tableName,
-        WhereConditions where = null, OrderByCondition orderBy = null, ColumnParam select = null)
+        WhereConditions where = null, OrderByCondition orderBy = null, ColumnParam columns = null)
     {
-        return Select(tableName, where, orderBy, new PageParam { PageNumber = 1, PageSize = 1 }, select);
+        return Select(tableName, where, orderBy, new PageParam { PageNumber = 1, PageSize = 1 }, columns);
     }
 
     public virtual string Select(string tableName, 
-        WhereConditions where = null, OrderByCondition orderBy = null, PageParam pageParam = null, ColumnParam select = null)
+        WhereConditions where = null, OrderByCondition orderBy = null, PageParam pageParam = null, ColumnParam columns = null)
     {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
 
-        var sql = $"SELECT {GetSelectColumnSql(select)} FROM {tableName}";
+        var sql = $"SELECT {GetSelectColumnSql(columns)} FROM {tableName}";
         sql = AppendWhere(sql, where);
-        sql = AppendGroupBy(sql, select);
+        sql = AppendGroupBy(sql, columns);
         sql = AppendOrderBy(sql, orderBy);
         return AppendLimit(sql, pageParam);
     }
@@ -110,30 +110,15 @@ public partial class SqlBuilder
     protected virtual string AppendWhere(string sql,
         WhereConditions where = null)
     {
-        if (where == null) return sql;
-        var whereSql = where.GetWhereString(this);
-        if(string.IsNullOrEmpty(whereSql)) return sql;
-
-        return $"{sql} WHERE {whereSql}";
+        if (where == null || !where.Parameters.Any()) return sql;
+        return $"{sql} WHERE {where.GetWhereString(this)}";
     }
 
     protected virtual string AppendGroupBy(string sql, 
-        ColumnParam groupBy = null)
+        ColumnParam columns = null)
     {
-        if (groupBy == null) return sql;
-        var groupBySql = new StringBuilder();
-        var items = groupBy.GroupBy;
-        foreach(var item in items)
-        {
-            if(groupBySql.Length > 0)
-            {
-                groupBySql.Append(",");
-            }
-            groupBySql.Append(item.Column);
-        }
-        if (groupBySql.Length < 1) return sql;
-
-        return $"{sql} GROUP BY {groupBySql}";
+        if (columns == null || columns.GroupBy.Count < 1) return sql;
+        return $"{sql} GROUP BY {string.Join(",", columns.GroupBy.Select(p => p.Column))}";
     }
 
     protected virtual string AppendOrderBy(string sql,
@@ -151,20 +136,10 @@ public partial class SqlBuilder
         return $"{sql} LIMIT {pageParam.Offset},{pageParam.PageSize}";
     }
 
-    protected virtual string GetSelectColumnSql(ColumnParam select = null)
+    protected virtual string GetSelectColumnSql(ColumnParam columns = null)
     {
-        if (select == null || select.Select.Count < 1) return "*";
-
-        var column = new StringBuilder();
-        foreach(var item in select.Select)
-        {
-            if(column.Length > 0)
-            {
-                column.Append(",");
-            }
-            column.Append(item.Column);
-        }
-        return column.ToString();
+        if (columns == null || columns.Select.Count < 1) return "*";
+        return string.Join(",", columns.Select.Select(p => GetSelectColumn(p.Column, p.Cast, p.Alias)));
     }
 
     protected internal virtual string GetCastColumn(string column, DbType dbType)
@@ -231,6 +206,11 @@ public partial class SqlBuilder
         }
 
         return $"({valuesStrBuilder})";
+    }
+
+    protected virtual string GetSelectColumn(string column, DbType? cast, string alias)
+    {
+        return column;
     }
 
     #endregion

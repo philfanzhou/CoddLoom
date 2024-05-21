@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 
 namespace Qz.Infra.Database.Params;
@@ -11,29 +12,29 @@ public class ColumnParam
 
     internal IReadOnlyCollection<GroupByItem> GroupBy => _items.OfType<GroupByItem>().Where(p => p.GroupBy).ToList().AsReadOnly();
 
-    public void Add(string column, string alias = null)
+    public void AddSelect(string column)
     {
-        Add(column, null, false, alias);
+        _items.Add(new SelectItem(column));
     }
 
-    public void Add(string column, string dbFunction, bool groupBy, string alias = null)
+    public void AddGroupBy(string column)
     {
-        _items.Add(new SelectItem(column, alias, dbFunction, groupBy));
+        _items.Add(new GroupByItem(column));
     }
 }
 
 internal class SelectItem : GroupByItem
 {
-    public SelectItem(string column, string alias, string dbFunction, bool groupBy = false)
+    public SelectItem(string column, DbType? cast = null, string alias = null, bool groupBy = false)
         : base(column, groupBy)
     {
         Alias = alias;
-        DbFunction = dbFunction;
+        Cast = cast;
     }
 
     public string Alias { get; }
 
-    public string DbFunction { get; }
+    public DbType? Cast { get; }
 }
 
 internal class GroupByItem : ColumnItemBase
