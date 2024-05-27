@@ -10,7 +10,7 @@ internal class EntityMap
     {
         Name = name;
 
-        Table = type.GetCustomAttribute<MapTableAttribute>();
+        Table = GetTableAttribute(type);
         if (Table == null)
         {
             throw new ArgumentOutOfRangeException(nameof(type));
@@ -50,4 +50,15 @@ internal class EntityMap
     internal IReadOnlyList<Tuple<MemberInfo, MapColumnAttribute>> Members { get; }
 
     #endregion
+
+    internal static bool IsEntity(Type type)
+    {
+        var table = GetTableAttribute(type);
+        return table != null;
+    }
+
+    private static MapTableAttribute GetTableAttribute(MemberInfo type)
+    {
+        return type.GetCustomAttribute<MapTableAttribute>();
+    }
 }

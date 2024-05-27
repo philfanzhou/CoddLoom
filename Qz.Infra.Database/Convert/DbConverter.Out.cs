@@ -19,6 +19,28 @@ internal static partial class DbConverter
         return entity;
     }
 
+    internal static T ToEntity<T>(this IDataRecord record, Type type)
+        where T : new()
+    {
+        var entity = new T();
+        for (var i = 0; i < record.FieldCount; i++)
+        {
+            var fieldName = record.GetName(i);
+            var property = type.GetProperty(fieldName);
+            if (property != null && property.CanWrite)
+            {
+                var value = System.Convert.ChangeType(record.GetValue(i), property.PropertyType);
+                property.SetValue(entity, value);
+            }
+            else
+            {
+                Console.WriteLine($"Warning: No matching property or not writable - {fieldName}");
+            }
+        }
+
+        return entity;
+    }
+
     private static void SetEntityValue<T>(T entity, MemberInfo member, MapColumnAttribute attribute, IDataRecord record)
     {
         var objValue = record[attribute.Name];

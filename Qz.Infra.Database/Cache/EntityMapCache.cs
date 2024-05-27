@@ -1,17 +1,15 @@
 ﻿using Qz.Infra.Database.Entity;
+using System;
 using System.Collections.Generic;
 
 namespace Qz.Infra.Database.Cache;
 
 internal static class EntityMapCache
 {
-    #region Internal cache
-
     private static readonly Dictionary<string, EntityMap> MapCache = new();
 
-    internal static EntityMap Get<T>()
+    internal static EntityMap Get(Type type)
     {
-        var type = typeof(T);
         var name = type.Name;
         if (!MapCache.ContainsKey(name))
         {
@@ -21,5 +19,15 @@ internal static class EntityMapCache
         return MapCache[name];
     }
 
-    #endregion
+    internal static EntityMap Get<T>()
+    {
+        var type = typeof(T);
+        return Get(type);
+    }
+
+
+    internal static string GetTableName<T>()
+    {
+        return Get<T>().Table.Name;
+    }
 }

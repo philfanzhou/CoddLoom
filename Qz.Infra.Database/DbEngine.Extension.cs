@@ -65,8 +65,8 @@ partial class DbEngine
         IDbConnection con = null, IDbTransaction tran = null)
         where T : new()
     {
-        var table = GetTableName<T>();
-        return First(DataRecordExtension.ToEntity<T>, table, where, orderBy, con, tran);
+        var table = EntityMapCache.GetTableName<T>();
+        return First(RecordHelper.ToEntity<T>, table, where, orderBy, con, tran);
     }
 
     public List<T> Select<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy,
@@ -80,8 +80,8 @@ partial class DbEngine
         IDbConnection con = null, IDbTransaction tran = null)
         where T : new()
     {
-        var table = GetTableName<T>();
-        return Select(DataRecordExtension.ToEntity<T>, 
+        var table = EntityMapCache.GetTableName<T>();
+        return Select(RecordHelper.ToEntity<T>, 
             table, where, orderBy, columns, con, tran);
     }
 
@@ -105,8 +105,8 @@ partial class DbEngine
         IDbConnection con = null, IDbTransaction tran = null)
         where T : new()
     {
-        var table = GetTableName<T>();
-        return PageSelect(DataRecordExtension.ToEntity<T>,
+        var table = EntityMapCache.GetTableName<T>();
+        return PageSelect(RecordHelper.ToEntity<T>,
             table, where, orderBy, columns, pageParam, out totalPages, out totalCount, con, tran);
     }
 
@@ -162,11 +162,5 @@ partial class DbEngine
         var max = First(record => int.Parse(record[columnName].ToString()),
             tableName, null, orderBy, con, tran);
         return checked(max + 1);
-    }
-
-    private static string GetTableName<T>()
-    {
-        var entityMap = EntityMapCache.Get<T>();
-        return entityMap.Table.Name;
     }
 }
