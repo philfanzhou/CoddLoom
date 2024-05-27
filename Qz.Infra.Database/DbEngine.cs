@@ -78,27 +78,27 @@ public partial class DbEngine
         Executor.Execute(sql, dbParams, null, con, tran);
     }
 
-    public int Count(string tableName, WhereConditions where,
+    public int Count(string tableName, WhereConditions where, ColumnParam columns,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var sql = Executor.SqlBuilder.Count(tableName, where);
+        var sql = Executor.SqlBuilder.Count(tableName, where, columns);
         return Executor.Count(sql, where?.Parameters, con, tran);
     }
 
-    public T First<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy,
+    public T First<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy, ColumnParam columns,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var sql = Executor.SqlBuilder.First(tableName, where, orderBy);
+        var sql = Executor.SqlBuilder.First(tableName, where, orderBy, columns);
         return Executor.First(sql, convertor, where?.Parameters, con, tran);
     }
 
-    public List<T> Select<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy,
+    public List<T> Select<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy, ColumnParam columns,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        return PageSelect(convertor, tableName, where, orderBy, null, out _, out _, con, tran);
+        return PageSelect(convertor, tableName, where, orderBy, columns, null, out _, out _, con, tran);
     }
 
-    public List<T> PageSelect<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy, 
+    public List<T> PageSelect<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy, ColumnParam columns,
         PageParam pageParam, out int totalPages, out int totalCount,
         IDbConnection con = null, IDbTransaction tran = null)
     {
@@ -116,8 +116,8 @@ public partial class DbEngine
                 }
             }
         }
-        
-        var sql = Executor.SqlBuilder.Select(tableName, where, orderBy, pageParam);
+
+        var sql = Executor.SqlBuilder.Select(tableName, where, orderBy, pageParam, columns);
         return Executor.Select(sql, convertor, where?.Parameters, con, tran);
     }
 

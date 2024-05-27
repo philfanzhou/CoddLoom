@@ -37,10 +37,28 @@ partial class DbEngine
         Update(table, input, where, con, tran);
     }
 
+    public int Count(string tableName, WhereConditions where,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        return Count(tableName, where, null, con, tran);
+    }
+
+    public bool Exist(string tableName, WhereConditions where, ColumnParam columns, 
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        return Count(tableName, where, columns, con, tran) > 0;
+    }
+
     public bool Exist(string tableName, WhereConditions where,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        return Count(tableName, where, con, tran) > 0;
+        return Exist(tableName, where, null, con, tran);
+    }
+
+    public T First<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        return First(convertor, tableName, where, orderBy, null, con, tran);
     }
 
     public T First<T>(WhereConditions where, OrderByCondition orderBy,
@@ -51,11 +69,45 @@ partial class DbEngine
         return First(DataRecordExtension.ToEntity<T>, table, where, orderBy, con, tran);
     }
 
+    public List<T> Select<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        return Select(convertor, 
+            tableName, where, orderBy, null, con, tran);
+    }
+
+    public List<T> Select<T>(WhereConditions where, OrderByCondition orderBy, ColumnParam columns, 
+        IDbConnection con = null, IDbTransaction tran = null)
+        where T : new()
+    {
+        var table = GetTableName<T>();
+        return Select(DataRecordExtension.ToEntity<T>, 
+            table, where, orderBy, columns, con, tran);
+    }
+
     public List<T> Select<T>(WhereConditions where, OrderByCondition orderBy,
         IDbConnection con = null, IDbTransaction tran = null)
         where T : new()
     {
-        return PageSelect<T>(where, orderBy, null, out _, out _, con, tran);
+        return Select<T>(where, orderBy, null, con, tran);
+    }
+
+    public List<T> PageSelect<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy,
+        PageParam pageParam, out int totalPages, out int totalCount,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        return PageSelect(convertor, 
+            tableName, where, orderBy, null, pageParam, out totalPages, out totalCount, con, tran);
+    }
+
+    public List<T> PageSelect<T>(WhereConditions where, OrderByCondition orderBy, ColumnParam columns,
+        PageParam pageParam, out int totalPages, out int totalCount,
+        IDbConnection con = null, IDbTransaction tran = null)
+        where T : new()
+    {
+        var table = GetTableName<T>();
+        return PageSelect(DataRecordExtension.ToEntity<T>,
+            table, where, orderBy, columns, pageParam, out totalPages, out totalCount, con, tran);
     }
 
     public List<T> PageSelect<T>(WhereConditions where, OrderByCondition orderBy,
@@ -63,9 +115,7 @@ partial class DbEngine
         IDbConnection con = null, IDbTransaction tran = null)
         where T : new()
     {
-        var table = GetTableName<T>();
-        return PageSelect(DataRecordExtension.ToEntity<T>, 
-            table, where, orderBy, pageParam, out totalPages, out totalCount, con, tran);
+        return PageSelect<T>(where, orderBy, null, pageParam, out totalPages, out totalCount, con, tran);
     }
 
     public string GenerateUtcTimeStampId(string tableName, string columnName,
