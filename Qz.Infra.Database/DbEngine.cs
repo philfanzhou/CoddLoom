@@ -106,7 +106,7 @@ public partial class DbEngine
         totalCount = 0;
         if (pageParam != null)
         {
-            totalCount = Count(tableName, where, con, tran);
+            totalCount = Count(tableName, where, columns, con, tran);
             if (totalCount > 0)
             {
                 totalPages = totalCount / pageParam.PageSize;
