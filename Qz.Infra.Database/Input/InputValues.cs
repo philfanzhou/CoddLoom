@@ -33,7 +33,7 @@ public class InputValues
         }
         else if (value is string str)
         {
-            AddString(column, str, false, forceParameter, autoTrim: true);
+            AddString(column, str, true, forceParameter, autoTrim: false);
         }
         else if (value is DateTime time)
         {
@@ -46,7 +46,7 @@ public class InputValues
     }
 
     public void AddString(string column, string value,
-        bool allowEmpty = false, bool forceParameter = false, bool autoTrim = true)
+        bool allowEmpty = true, bool forceParameter = false, bool autoTrim = false)
     {
         if (null == value)
         {
