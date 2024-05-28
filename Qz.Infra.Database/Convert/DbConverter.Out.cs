@@ -1,36 +1,120 @@
-﻿using Qz.Infra.Database.Entity;
+﻿using Qz.Infra.Database.Cache;
+using Qz.Infra.Database.Entity;
 using System;
 using System.Data;
 using System.Reflection;
 
 namespace Qz.Infra.Database.Convert;
 
-internal static partial class DbConverter
+public static partial class DbConverter
 {
-    internal static T ToEntity<T>(this IDataRecord record, EntityMap entityMap)
+    public static bool GetBoolean(this IDataRecord record, string key)
+    {
+        if (record?[key] == null)
+        {
+            return false;
+        }
+
+        var strValue = record[key].ToString();
+        if (string.IsNullOrEmpty(strValue))
+        {
+            return false;
+        }
+
+        if (int.TryParse(strValue, out var intValue))
+        {
+            return intValue != 0;
+        }
+
+        return bool.Parse(strValue);
+    }
+
+    public static DateTime GetDateTime(this IDataRecord record, string key)
+    {
+        if (record?[key] == null)
+        {
+            return DateTime.MinValue;
+        }
+
+        var strValue = record[key].ToString();
+        return DateTime.TryParse(strValue, out var result) ? result : DateTime.MinValue;
+    }
+
+    public static T ToEntity<T>(this IDataRecord record)
+        where T : new()
+    {
+        var type = typeof(T);
+        if (EntityMap.HasMap(type))
+        {
+            var entityMap = EntityMapCache.Get(type);
+            return record.ToEntity<T>(entityMap);
+        }
+        else
+        {
+            return record.ToEntity<T>(type);
+        }
+    }
+
+    private static Type GetDataType(Type type)
+    {
+        if(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+        {
+            return Nullable.GetUnderlyingType(type);
+        }
+        return type;
+    }
+
+    private static T ToEntity<T>(this IDataRecord record, EntityMap entityMap)
         where T : new()
     {
         var entity = new T();
         foreach (var (memberInfo, attribute) in entityMap.Members)
         {
-            SetEntityValue(entity, memberInfo, attribute, record);
+            var value = record[attribute.Name];
+            if (value is null or DBNull)
+            {
+                continue;
+            }
+
+            if (memberInfo is FieldInfo field)
+            {
+                var setValue = System.Convert.ChangeType(value, GetDataType(field.FieldType));
+                if (setValue != null)
+                {
+                    field.SetValue(entity, setValue);
+                }
+            }
+            else if (memberInfo is PropertyInfo property)
+            {
+                var setValue = System.Convert.ChangeType(value, GetDataType(property.PropertyType));
+                if (setValue != null)
+                {
+                    property.SetValue(entity, setValue);
+                }
+            }
         }
 
         return entity;
     }
 
-    internal static T ToEntity<T>(this IDataRecord record, Type type)
+    private static T ToEntity<T>(this IDataRecord record, Type type)
         where T : new()
     {
-        var entity = new T();
+        var entity = new T(); 
         for (var i = 0; i < record.FieldCount; i++)
         {
+            var value = record.GetValue(i);
+            if (value is null or DBNull)
+            {
+                continue;
+            }
+
             var fieldName = record.GetName(i);
             var property = type.GetProperty(fieldName);
             if (property != null && property.CanWrite)
             {
-                var value = System.Convert.ChangeType(record.GetValue(i), property.PropertyType);
-                property.SetValue(entity, value);
+                var setValue = System.Convert.ChangeType(value, GetDataType(property.PropertyType));
+                property.SetValue(entity, setValue);
             }
             else
             {
@@ -39,42 +123,5 @@ internal static partial class DbConverter
         }
 
         return entity;
-    }
-
-    private static void SetEntityValue<T>(T entity, MemberInfo member, MapColumnAttribute attribute, IDataRecord record)
-    {
-        var objValue = record[attribute.Name];
-        if (objValue is null or DBNull)
-        {
-            return;
-        }
-
-        if (member is FieldInfo field)
-        {
-            var setValue = ToEntityValue(field.FieldType, objValue);
-            if (setValue != null)
-            {
-                field.SetValue(entity, setValue);
-            }
-        }
-        else if (member is PropertyInfo property)
-        {
-            var setValue = ToEntityValue(property.PropertyType, objValue);
-            if (setValue != null)
-            {
-                property.SetValue(entity, setValue);
-            }
-        }
-    }
-
-    private static object ToEntityValue(Type type, object value)
-    {
-        var typeName = type.FullName;
-        return typeName switch
-        {
-            "System.String" => value.ToString().Trim(),
-            "System.Int32" => int.TryParse(value.ToString(), out var ret) ? ret : null,
-            _ => value
-        };
     }
 }

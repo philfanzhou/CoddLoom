@@ -51,7 +51,7 @@ internal class EntityMap
 
     #endregion
 
-    internal static bool IsEntity(Type type)
+    internal static bool HasMap(Type type)
     {
         var table = GetTableAttribute(type);
         return table != null;

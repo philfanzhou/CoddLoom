@@ -66,7 +66,7 @@ partial class DbEngine
         where T : new()
     {
         var table = EntityMapCache.GetTableName<T>();
-        return First(RecordHelper.ToEntity<T>, table, where, orderBy, con, tran);
+        return First(DbConverter.ToEntity<T>, table, where, orderBy, con, tran);
     }
 
     public List<T> Select<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy,
@@ -81,7 +81,7 @@ partial class DbEngine
         where T : new()
     {
         var table = EntityMapCache.GetTableName<T>();
-        return Select(RecordHelper.ToEntity<T>, 
+        return Select(DbConverter.ToEntity<T>, 
             table, where, orderBy, columns, con, tran);
     }
 
@@ -106,7 +106,7 @@ partial class DbEngine
         where T : new()
     {
         var table = EntityMapCache.GetTableName<T>();
-        return PageSelect(RecordHelper.ToEntity<T>,
+        return PageSelect(DbConverter.ToEntity<T>,
             table, where, orderBy, columns, pageParam, out totalPages, out totalCount, con, tran);
     }
 
