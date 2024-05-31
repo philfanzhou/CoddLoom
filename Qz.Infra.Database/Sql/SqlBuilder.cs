@@ -110,7 +110,7 @@ public partial class SqlBuilder
     protected virtual string AppendWhere(string sql,
         WhereConditions where = null)
     {
-        if (where == null || !where.Parameters.Any()) return sql;
+        if (where == null || where.IsEmpty()) return sql; // 必须检查是不是Empty，因为有查询条件只有IsNull的查询条件
         return $"{sql} WHERE {where.GetWhereString(this)}";
     }
 
