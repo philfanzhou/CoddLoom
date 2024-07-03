@@ -8,38 +8,6 @@ namespace Qz.Infra.Database.Convert;
 
 public static partial class DbConverter
 {
-    public static bool GetBoolean(this IDataRecord record, string key)
-    {
-        if (record?[key] == null)
-        {
-            return false;
-        }
-
-        var strValue = record[key].ToString();
-        if (string.IsNullOrEmpty(strValue))
-        {
-            return false;
-        }
-
-        if (int.TryParse(strValue, out var intValue))
-        {
-            return intValue != 0;
-        }
-
-        return bool.Parse(strValue);
-    }
-
-    public static DateTime GetDateTime(this IDataRecord record, string key)
-    {
-        if (record?[key] == null)
-        {
-            return DateTime.MinValue;
-        }
-
-        var strValue = record[key].ToString();
-        return DateTime.TryParse(strValue, out var result) ? result : DateTime.MinValue;
-    }
-
     public static T ToEntity<T>(this IDataRecord record)
         where T : new()
     {
@@ -47,24 +15,15 @@ public static partial class DbConverter
         if (EntityMap.HasMap(type))
         {
             var entityMap = EntityMapCache.Get(type);
-            return record.ToEntity<T>(entityMap);
+            return record.ToEntityFromMap<T>(entityMap);
         }
         else
         {
-            return record.ToEntity<T>(type);
+            return record.ToEntityFromType<T>(type);
         }
     }
 
-    private static Type GetDataType(Type type)
-    {
-        if(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
-        {
-            return Nullable.GetUnderlyingType(type);
-        }
-        return type;
-    }
-
-    private static T ToEntity<T>(this IDataRecord record, EntityMap entityMap)
+    private static T ToEntityFromMap<T>(this IDataRecord record, EntityMap entityMap)
         where T : new()
     {
         var entity = new T();
@@ -97,7 +56,7 @@ public static partial class DbConverter
         return entity;
     }
 
-    private static T ToEntity<T>(this IDataRecord record, Type type)
+    private static T ToEntityFromType<T>(this IDataRecord record, Type type)
         where T : new()
     {
         var entity = new T(); 
@@ -123,5 +82,14 @@ public static partial class DbConverter
         }
 
         return entity;
+    }
+
+    private static Type GetDataType(Type type)
+    {
+        if(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+        {
+            return Nullable.GetUnderlyingType(type);
+        }
+        return type;
     }
 }
