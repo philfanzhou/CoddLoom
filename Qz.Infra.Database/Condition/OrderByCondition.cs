@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Qz.Infra.Database.Common;
+using System;
 using System.Reflection;
 
 namespace Qz.Infra.Database.Condition;
@@ -12,7 +13,7 @@ public class OrderByCondition
         Descending = descending;
     }
 
-    public OrderByCondition(IReflect tableType, string orderBy,
+    public OrderByCondition(Type tableType, string orderBy,
         string defaultOrderBy = "", bool descending = false)
         : this(GetColumn(tableType, orderBy, defaultOrderBy), descending)
     {
@@ -22,7 +23,7 @@ public class OrderByCondition
 
     public bool Descending { get; }
 
-    private static string GetColumn(IReflect tableType, string orderBy, string defaultOrderBy)
+    private static string GetColumn(Type tableType, string orderBy, string defaultOrderBy)
     {
         if(string.IsNullOrEmpty(orderBy) && string.IsNullOrEmpty(defaultOrderBy))
         {
@@ -34,14 +35,20 @@ public class OrderByCondition
             return defaultOrderBy;
         }
 
-        var fields = tableType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-        if (fields == null || fields.Length == 0)
+        var members = tableType.GetAllMembers();
+        if (members == null || members.Length == 0)
         {
             throw new ArgumentNullException(nameof(tableType));
         }
 
-        foreach (var field in fields)
+        foreach (var item in members)
         {
+            var field = item as FieldInfo;
+            if (field == null)
+            {
+                continue;
+            }
+
             if (field.IsLiteral && !field.IsInitOnly)
             {
                 var valueObj = field.GetValue(null);
@@ -50,11 +57,11 @@ public class OrderByCondition
                     continue;
                 }
 
-                var column = valueObj.ToString();
+                var value = valueObj.ToString();
                 if (string.Equals(orderBy, field.Name, StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(orderBy, column, StringComparison.CurrentCultureIgnoreCase))
+                    || string.Equals(orderBy, value, StringComparison.OrdinalIgnoreCase))
                 {
-                    return column;
+                    return value;
                 }
             }
         }

@@ -9,18 +9,13 @@ namespace Qz.Infra.Database.Table;
 
 public class TableDefine
 {
-    private const BindingFlags MemberFlags = BindingFlags.Public
-                                             | BindingFlags.NonPublic
-                                             | BindingFlags.Instance
-                                             | BindingFlags.Static;
-
     public string Name { get; protected set; }
 
     public IReadOnlyList<DbColumnBaseAttribute> Columns { get; protected set; }
 
     public DbPrimaryKeyBaseAttribute PrimaryKey { get; protected set; }
 
-    public TableDefine(IReflect tableType)
+    public TableDefine(Type tableType)
     {
         GetTableMembers(tableType, out var tableNameInfo, out var columnInfo, out var primaryKeyInfo);
 
@@ -34,14 +29,14 @@ public class TableDefine
 
     #region Private method
 
-    private static void GetTableMembers(IReflect tableType,
+    private static void GetTableMembers(Type tableType,
         out List<MemberInfo> tableName, out List<MemberInfo> columns, out List<MemberInfo> primaryKey)
     {
         tableName = new List<MemberInfo>();
         columns = new List<MemberInfo>();
         primaryKey = new List<MemberInfo>();
 
-        var members = tableType.GetMembers(MemberFlags);
+        var members = tableType.GetAllMembers();
         foreach (var member in members)
         {
             var attributes = member.GetCustomAttributes(true);
