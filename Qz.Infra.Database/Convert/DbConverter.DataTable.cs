@@ -43,7 +43,7 @@ public static partial class DbConverter
         var table = new DataTable(objType.Name);
         foreach (var p in properties)
         {
-            table.Columns.Add(new DataColumn(p.Name, GetDataType(p.PropertyType)));
+            table.Columns.Add(new DataColumn(p.Name, GetRealDataType(p.PropertyType)));
         }
         return table;
     }

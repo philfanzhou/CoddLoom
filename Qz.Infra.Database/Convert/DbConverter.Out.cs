@@ -1,4 +1,5 @@
 ﻿using Qz.Infra.Database.Cache;
+using Qz.Infra.Database.Common;
 using Qz.Infra.Database.Entity;
 using System;
 using System.Data;
@@ -37,7 +38,7 @@ public static partial class DbConverter
 
             if (memberInfo is FieldInfo field)
             {
-                var setValue = System.Convert.ChangeType(value, GetDataType(field.FieldType));
+                var setValue = System.Convert.ChangeType(value, GetRealDataType(field.FieldType));
                 if (setValue != null)
                 {
                     field.SetValue(entity, setValue);
@@ -45,7 +46,7 @@ public static partial class DbConverter
             }
             else if (memberInfo is PropertyInfo property)
             {
-                var setValue = System.Convert.ChangeType(value, GetDataType(property.PropertyType));
+                var setValue = System.Convert.ChangeType(value, GetRealDataType(property.PropertyType));
                 if (setValue != null)
                 {
                     property.SetValue(entity, setValue);
@@ -59,32 +60,36 @@ public static partial class DbConverter
     private static T ToEntityFromType<T>(this IDataRecord record, Type type)
         where T : new()
     {
-        var entity = new T(); 
-        for (var i = 0; i < record.FieldCount; i++)
+        var columnNames = new string[record.FieldCount];
+        for(var i = 0; i < record.FieldCount; i++)
         {
-            var value = record.GetValue(i);
+            columnNames[i] = record.GetName(i);
+        }
+
+        var properties = type.GetAllProperties();
+        var entity = new T();
+        foreach(var property in  properties)
+        {
+            var index = Array.IndexOf(columnNames, property.Name);
+            if (index == -1)
+            {
+                continue;
+            }
+
+            var value = record.GetValue(index);
             if (value is null or DBNull)
             {
                 continue;
             }
 
-            var fieldName = record.GetName(i);
-            var property = type.GetProperty(fieldName);
-            if (property != null && property.CanWrite)
-            {
-                var setValue = System.Convert.ChangeType(value, GetDataType(property.PropertyType));
-                property.SetValue(entity, setValue);
-            }
-            else
-            {
-                Console.WriteLine($"Warning: No matching property or not writable - {fieldName}");
-            }
+            var setValue = System.Convert.ChangeType(value, GetRealDataType(property.PropertyType));
+            property.SetValue(entity, setValue);
         }
 
         return entity;
     }
 
-    private static Type GetDataType(Type type)
+    private static Type GetRealDataType(Type type)
     {
         if(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
         {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Qz.Infra.Database.Common;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -17,7 +18,7 @@ internal class EntityMap
         }
 
         var memberList = new List<Tuple<MemberInfo, MapColumnAttribute>>();
-        var members = type.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+        var members = type.GetAllMembers();
         foreach (var member in members)
         {
             var attribute = member.GetCustomAttribute<MapColumnAttribute>(true);

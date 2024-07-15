@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace Qz.Infra.Database.Common;
@@ -22,5 +23,10 @@ internal static class TypeExt
         }
 
         return members.ToArray();
+    }
+
+    internal static PropertyInfo[] GetAllProperties(this Type self) 
+    {
+        return self.GetAllMembers().Select(p => p as PropertyInfo).Where(p => p != null).ToArray();
     }
 }
