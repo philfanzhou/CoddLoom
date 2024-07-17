@@ -1,10 +1,10 @@
 ﻿using Qz.Infra.Database.Cache;
 using Qz.Infra.Database.Common;
 using Qz.Infra.Database.Condition;
+using Qz.Infra.Database.Entity;
 using Qz.Infra.Database.Input;
 using System;
 using System.Collections.Generic;
-using Qz.Infra.Database.Entity;
 
 namespace Qz.Infra.Database.Convert;
 

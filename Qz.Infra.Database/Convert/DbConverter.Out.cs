@@ -3,7 +3,6 @@ using Qz.Infra.Database.Common;
 using Qz.Infra.Database.Entity;
 using System;
 using System.Data;
-using System.Reflection;
 
 namespace Qz.Infra.Database.Convert;
 
@@ -28,30 +27,11 @@ public static partial class DbConverter
         where T : new()
     {
         var entity = new T();
+        var columns = record.GetColumns();
         foreach (var (memberInfo, attribute) in entityMap.Members)
         {
-            var value = record[attribute.Name];
-            if (value is null or DBNull)
-            {
-                continue;
-            }
-
-            if (memberInfo is FieldInfo field)
-            {
-                var setValue = System.Convert.ChangeType(value, GetRealDataType(field.FieldType));
-                if (setValue != null)
-                {
-                    field.SetValue(entity, setValue);
-                }
-            }
-            else if (memberInfo is PropertyInfo property)
-            {
-                var setValue = System.Convert.ChangeType(value, GetRealDataType(property.PropertyType));
-                if (setValue != null)
-                {
-                    property.SetValue(entity, setValue);
-                }
-            }
+            var value = record.GetValue(columns, attribute.Name);
+            memberInfo.SetValue(entity, value);
         }
 
         return entity;
@@ -60,41 +40,15 @@ public static partial class DbConverter
     private static T ToEntityFromType<T>(this IDataRecord record, Type type)
         where T : new()
     {
-        var columnNames = new string[record.FieldCount];
-        for(var i = 0; i < record.FieldCount; i++)
-        {
-            columnNames[i] = record.GetName(i);
-        }
-
-        var properties = type.GetAllProperties();
         var entity = new T();
-        foreach(var property in  properties)
+        var columns = record.GetColumns();
+        var members = type.GetAllMembers();
+        foreach (var member in members)
         {
-            var index = Array.IndexOf(columnNames, property.Name);
-            if (index == -1)
-            {
-                continue;
-            }
-
-            var value = record.GetValue(index);
-            if (value is null or DBNull)
-            {
-                continue;
-            }
-
-            var setValue = System.Convert.ChangeType(value, GetRealDataType(property.PropertyType));
-            property.SetValue(entity, setValue);
+            var value = record.GetValue(columns, member.Name);
+            member.SetValue(entity, value);
         }
 
         return entity;
-    }
-
-    private static Type GetRealDataType(Type type)
-    {
-        if(type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
-        {
-            return Nullable.GetUnderlyingType(type);
-        }
-        return type;
     }
 }

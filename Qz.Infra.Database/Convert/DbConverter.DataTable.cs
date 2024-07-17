@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Qz.Infra.Database.Common;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -18,18 +19,18 @@ public static partial class DbConverter
             columns.Add(column.ColumnName);
         }
 
-        foreach (var data in dataList)
+        foreach (var item in dataList)
         {
             var row = table.Rows.Add();
-            foreach (var p in properties)
+            foreach (var property in properties)
             {
-                if (!columns.Contains(p.Name))
+                if (!columns.Contains(property.Name))
                 {
                     continue;
                 }
 
-                var value = p.GetValue(data, null);
-                row[p.Name] = value ?? DBNull.Value;
+                var value = property.GetValue(item, null);
+                row[property.Name] = value ?? DBNull.Value;
             }
         }
 
@@ -39,11 +40,11 @@ public static partial class DbConverter
     private static DataTable CreateTable<T>(out List<PropertyInfo> properties)
     {
         var objType = typeof(T);
-        properties = objType.GetProperties().ToList();
+        properties = objType.GetAllProperties().ToList();
         var table = new DataTable(objType.Name);
         foreach (var p in properties)
         {
-            table.Columns.Add(new DataColumn(p.Name, GetRealDataType(p.PropertyType)));
+            table.Columns.Add(new DataColumn(p.Name, p.PropertyType.GetRealDataType()));
         }
         return table;
     }

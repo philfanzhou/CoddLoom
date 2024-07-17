@@ -16,13 +16,13 @@ internal class EntityMap
         {
             throw new ArgumentOutOfRangeException(nameof(type));
         }
-        var names = new HashSet<string>();
+
         var memberList = new List<Tuple<MemberInfo, MapColumnAttribute>>();
         var members = type.GetAllMembers();
         foreach (var member in members)
         {
             var attribute = member.GetCustomAttribute<MapColumnAttribute>(true);
-            if (attribute != null && names.Add(member.Name))
+            if (attribute != null)
             {
                 memberList.Add(new Tuple<MemberInfo, MapColumnAttribute>(member, attribute));
                 if (attribute.PrimaryKey)

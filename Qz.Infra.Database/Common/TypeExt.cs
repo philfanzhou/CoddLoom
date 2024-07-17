@@ -14,19 +14,89 @@ internal static class TypeExt
 
     internal static MemberInfo[] GetAllMembers(this Type self)
     {
-        var members = new List<MemberInfo>();
-        members.AddRange(self.GetMembers(AllMemberFlags));
+        var membersDic = new Dictionary<string, MemberInfo>();
+        var members = self.GetMembers(AllMemberFlags);
+        foreach(var member in members)
+        {
+            if(!membersDic.ContainsKey(member.Name))
+            {
+                membersDic.Add(member.Name, member);
+            }
+        }
 
         if(self.BaseType != null)
         {
-            members.AddRange(self.BaseType.GetAllMembers());
+            var baseMembers = self.BaseType.GetAllMembers();
+            foreach (var member in baseMembers)
+            {
+                if (!membersDic.ContainsKey(member.Name))
+                {
+                    membersDic.Add(member.Name, member);
+                }
+            }
         }
 
-        return members.ToArray();
+        return membersDic.Values.ToArray();
     }
 
     internal static PropertyInfo[] GetAllProperties(this Type self) 
     {
-        return self.GetAllMembers().Select(p => p as PropertyInfo).Where(p => p != null).ToArray();
+        return self.GetAllMembers().Select(p => p as PropertyInfo)
+            .Where(p => p != null).ToArray();
+    }
+
+    internal static FieldInfo[] GetAllConstField(this Type self)
+    {
+        return self.GetAllMembers().Select(p => p as FieldInfo)
+            .Where(p => p != null && p.IsLiteral && !p.IsInitOnly).ToArray();
+    }
+
+    internal static object GetMemberValue(this MemberInfo member, object obj)
+    {
+        object value = null;
+        if (member is FieldInfo field)
+        {
+            value = field.GetValue(obj);
+        }
+        else if (member is PropertyInfo property)
+        {
+            value = property.GetValue(obj);
+        }
+
+        return value;
+    }
+
+    internal static Type GetRealDataType(this Type type)
+    {
+        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+        {
+            return Nullable.GetUnderlyingType(type);
+        }
+        return type;
+    }
+
+    internal static void SetValue<T>(this MemberInfo memberInfo, T obj, object value)
+    {
+        if (value is null or DBNull)
+        {
+            return;
+        }
+
+        if (memberInfo is FieldInfo field)
+        {
+            var setValue = System.Convert.ChangeType(value, field.FieldType.GetRealDataType());
+            if (setValue != null)
+            {
+                field.SetValue(obj, setValue);
+            }
+        }
+        else if (memberInfo is PropertyInfo property)
+        {
+            var setValue = System.Convert.ChangeType(value, property.PropertyType.GetRealDataType());
+            if (setValue != null)
+            {
+                property.SetValue(obj, setValue);
+            }
+        }
     }
 }

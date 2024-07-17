@@ -1,6 +1,5 @@
 ﻿using Qz.Infra.Database.Common;
 using System;
-using System.Reflection;
 
 namespace Qz.Infra.Database.Condition;
 
@@ -35,38 +34,29 @@ public class OrderByCondition
             return defaultOrderBy;
         }
 
-        var members = tableType.GetAllMembers();
-        if (members == null || members.Length == 0)
+        var constFields = tableType.GetAllConstField();
+        if (constFields == null || constFields.Length == 0)
         {
             throw new ArgumentNullException(nameof(tableType));
         }
 
-        foreach (var item in members)
+        foreach (var field in constFields)
         {
-            var field = item as FieldInfo;
-            if (field == null)
+            var valueObj = field.GetValue(null);
+            if (valueObj == null)
             {
                 continue;
             }
 
-            if (field.IsLiteral && !field.IsInitOnly)
+            var value = valueObj.ToString();
+            if (string.Equals(orderBy, field.Name, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(orderBy, value, StringComparison.OrdinalIgnoreCase))
             {
-                var valueObj = field.GetValue(null);
-                if (valueObj == null)
-                {
-                    continue;
-                }
-
-                var value = valueObj.ToString();
-                if (string.Equals(orderBy, field.Name, StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(orderBy, value, StringComparison.OrdinalIgnoreCase))
-                {
-                    return value;
-                }
+                return value;
             }
         }
 
-        return string.Empty;
+        throw new Exception($"Can not get column named {orderBy} in table {tableType.Name}");
     }
 }
 
