@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Qz.Infra.Database.Cache;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -12,21 +13,21 @@ internal static class TypeExt
                                              | BindingFlags.Instance
                                              | BindingFlags.Static;
 
-    internal static MemberInfo[] GetAllMembers(this Type self)
+    internal static MemberInfo[] DoGetAllMembers(Type type)
     {
         var membersDic = new Dictionary<string, MemberInfo>();
-        var members = self.GetMembers(AllMemberFlags);
-        foreach(var member in members)
+        var members = type.GetMembers(AllMemberFlags);
+        foreach (var member in members)
         {
-            if(!membersDic.ContainsKey(member.Name))
+            if (!membersDic.ContainsKey(member.Name))
             {
                 membersDic.Add(member.Name, member);
             }
         }
 
-        if(self.BaseType != null)
+        if (type.BaseType != null)
         {
-            var baseMembers = self.BaseType.GetAllMembers();
+            var baseMembers = DoGetAllMembers(type.BaseType);
             foreach (var member in baseMembers)
             {
                 if (!membersDic.ContainsKey(member.Name))
@@ -37,6 +38,11 @@ internal static class TypeExt
         }
 
         return membersDic.Values.ToArray();
+    }
+
+    internal static MemberInfo[] GetAllMembers(this Type self)
+    {
+        return TypeMembersCache.Get(self);
     }
 
     internal static PropertyInfo[] GetAllProperties(this Type self) 

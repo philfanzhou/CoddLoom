@@ -138,6 +138,31 @@ public abstract class DbExecutor
         }
     }
 
+    public T Transaction<T>(Func<IDbTransaction, T> func)
+    {
+        using var conn = GetConnection();
+        try
+        {
+            conn.Open();
+            using var tran = conn.BeginTransaction();
+            try
+            {
+                var result = func(tran);
+                tran.Commit();
+                return result;
+            }
+            catch
+            {
+                tran.Rollback();
+                throw;
+            }
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
     public void Execute(Action<IDbConnection> action)
     {
         using var con = GetConnection();
