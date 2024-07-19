@@ -142,3 +142,20 @@ public class WhereConditions
         }
     }
 }
+
+public enum WhereConnector
+{
+    And,
+    Or
+}
+
+public enum WhereOperator
+{
+    Equal,
+    NotEqual,
+    GreaterThan,
+    GreaterEqual,
+    LessThan,
+    LessEqual,
+    Like
+}

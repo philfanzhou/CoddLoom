@@ -3,7 +3,7 @@ using System.Data;
 
 namespace Qz.Infra.Database.Convert;
 
-public static partial class DbConverter
+partial class DbConverter
 {
     public static bool GetBoolean(this IDataRecord record, string key)
     {
@@ -36,5 +36,4 @@ public static partial class DbConverter
         var strValue = record[key].ToString();
         return DateTime.TryParse(strValue, out var result) ? result : DateTime.MinValue;
     }
-
 }

@@ -29,3 +29,10 @@ public class JoinConditions
         _columns.Add(new JoinConditionsItem(column1, column2));
     }
 }
+
+public enum JoinType
+{
+    Inner,
+    Left,
+    Right
+}
