@@ -18,7 +18,13 @@ partial class DbConverter
             throw new ArgumentNullException(nameof(entities));
         }
 
-        var entityMap = GetEntityInfo<T>(out tableName, out var insertColumns);
+        var entityMap = EntityMapCache.Get<T>();
+        tableName = entityMap.Table.Name;
+        var insertColumns = TableColumnsCache.GetInsertColumns(tableName);
+        if (insertColumns == null)
+        {
+            throw new InvalidOperationException("Can't get insert columns");
+        }
 
         inputs = new List<InputValues>();
         var index = 0;
@@ -37,18 +43,14 @@ partial class DbConverter
             throw new ArgumentNullException(nameof(entity));
         }
 
-        tableName = null;
-        input = null;
-        where = null;
-
         var entityMap = EntityMapCache.Get<T>();
+        tableName = entityMap.Table.Name;
         var updateColumns = TableColumnsCache.GetUpdateColumns(entityMap.Table.Name);
         if (updateColumns == null)
         {
-            return;
+            throw new InvalidOperationException("Can't get update columns");
         }
 
-        tableName = entityMap.Table.Name;
         input = new InputValues();
         where = new WhereConditions();
         foreach (var (memberInfo, attribute) in entityMap.Members)
@@ -58,15 +60,11 @@ partial class DbConverter
             if (attribute.PrimaryKey)
             {
                 where.Add(attribute.Name, value);
-                continue;
             }
-
-            if (!updateColumns.Contains(attribute.Name))
+            else if (updateColumns.Contains(attribute.Name))
             {
-                continue;
+                input.Add(attribute.Name, value, true);
             }
-
-            input.Add(attribute.Name, value, true);
         }
     }
 
@@ -78,36 +76,19 @@ partial class DbConverter
             throw new ArgumentNullException(nameof(id));
         }
 
-        tableName = null;
-        where = null;
-
         var entityMap = EntityMapCache.Get<T>();
         if (string.IsNullOrEmpty(entityMap.PrimaryKey))
         {
             throw new ArgumentException($"{nameof(T)} does not have a primary key");
         }
-
         tableName = entityMap.Table.Name;
         where = new WhereConditions();
+
         where.Add(entityMap.PrimaryKey, id);
     }
 
-    private static EntityMap GetEntityInfo<T>(out string tableName, out List<string> insertColumns)
-    {
-        var entityMap = EntityMapCache.Get<T>();
-        tableName = entityMap.Table.Name;
-
-        insertColumns = TableColumnsCache.GetInsertColumns(tableName);
-        if (insertColumns == null)
-        {
-            throw new InvalidOperationException("Can't get insert columns");
-        }
-
-        return entityMap;
-    }
-
-    private static InputValues GetInputValues<T>(T entity, EntityMap entityMap, List<string> insertColumns, 
-        int inputIndex = 0)
+    private static InputValues GetInputValues<T>(T entity, EntityMap entityMap, 
+        ICollection<string> insertColumns, int inputIndex = 0)
     {
         if (entity == null)
         {
