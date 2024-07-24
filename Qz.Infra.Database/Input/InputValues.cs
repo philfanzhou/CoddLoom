@@ -7,18 +7,22 @@ namespace Qz.Infra.Database.Input;
 
 public class InputValues
 {
+    #region Field
+
     /// <summary>
     /// use dictionary to make sure will not add same column one time.
     /// </summary>
     private readonly Dictionary<string, ValueParam> _items = new();
 
-    private readonly string _parameterPrefix;
+    private readonly string _paramPrefix;
+
+    #endregion
 
     public InputValues() : this(0) { }
 
-    internal InputValues(int parameterPrefixIndex = 0)
+    internal InputValues(int paramPrefixIndex = 0)
     {
-        _parameterPrefix = $"V{parameterPrefixIndex}_";
+        _paramPrefix = $"V{paramPrefixIndex}_";
     }
 
     public IReadOnlyList<ValueParam> Items => _items.Values.ToList().AsReadOnly();
@@ -33,11 +37,11 @@ public class InputValues
         }
         else if (value is string str)
         {
-            AddString(column, str, true, forceParameter, autoTrim: false);
+            AddString(column, str, allowEmpty: true, forceParameter, autoTrim: false);
         }
         else if (value is DateTime time)
         {
-            AddDateTime(column, time, false, forceParameter);
+            AddDateTime(column, time, allowMinValue: true, forceParameter);
         }
         else
         {
@@ -63,16 +67,21 @@ public class InputValues
         }
     }
 
-    public void AddDateTime(string column, DateTime? value, 
-        bool allowMinValue = false, bool forceParameter = false)
+    public void AddDateTime(string column, DateTime? time, 
+        bool allowMinValue = true, bool forceParameter = false)
     {
-        if (value == null || (value.Value == DateTime.MinValue && allowMinValue == false))
+        if (null == time)
+        {
+            AddItem(column, DBNull.Value, forceParameter);
+        }
+        else if (allowMinValue == false 
+            && time.Value <= DateTime.MinValue)
         {
             AddItem(column, DBNull.Value, forceParameter);
         }
         else
         {
-            AddItem(column, value.Value, forceParameter);
+            AddItem(column, time.Value, forceParameter);
         }
     }
 
@@ -81,6 +90,8 @@ public class InputValues
         AddItem(column, DBNull.Value, forceParameter);
     }
 
+    #region Private Method
+
     private void AddItem<T>(string column, T value, bool forceParameter = false)
     {
         if(string.IsNullOrEmpty(column) || string.IsNullOrWhiteSpace(column))
@@ -88,6 +99,10 @@ public class InputValues
             throw new ArgumentNullException(nameof(column));
         }
 
-        _items.Add(column, new ValueParam(column, value, $"{_parameterPrefix}{column}", forceParameter));
+        var paramName = $"{_paramPrefix}{column}";
+        var valueParam = new ValueParam(column, value, paramName, forceParameter);
+        _items.Add(column, valueParam);
     }
+
+    #endregion
 }
