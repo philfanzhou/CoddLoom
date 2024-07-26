@@ -29,21 +29,23 @@ internal class WhereConditionsItem : WhereConditionsItemBase
 
     public DbType? CastType { get; }
 
-    public override string GetWhereString(SqlBuilder builder)
+    protected internal override string ToSql(SqlBuilder builder)
     {
         // update like condition value
         if (WhereOperator == WhereOperator.Like)
         {
+            // refresh for set db parameter value later.
             var value = builder.GetLikeParamValue(Parameter.Value.ToString());
-            Parameter.Value = value; // refresh for set db parameter value later.
+            Parameter.Value = value; 
         }
 
-        var whereColumn = Parameter.Column; // do not update column name in parameter, just update in sql.
+        // do not update column name in parameter, just update in sql.
+        var whereColumn = Parameter.Column; 
         if (CastType.HasValue)
         {
             whereColumn = builder.GetCastColumn(Parameter.Column, CastType.Value);
         }
 
-        return $"{whereColumn}{builder.GetOperator(WhereOperator)}{builder.GetParamName(Parameter)}";
+        return builder.GetNormalCondition(whereColumn, WhereOperator, Parameter);
     }
 }

@@ -10,12 +10,16 @@ namespace Qz.Infra.Database.Condition;
 
 public class WhereConditions
 {
+    #region Field
+
     private readonly ParameterNameGenerator _parameterNameGenerator = new();
 
     private readonly List<PartialWhereConditions> _partialConditions = new();
 
     private readonly List<ValueParam> _valueParamList = new();
     private readonly List<WhereConditionsItemBase> _conditionsItemList = new();
+
+    #endregion
 
     #region Property
 
@@ -103,7 +107,7 @@ public class WhereConditions
             {
                 whereBuilder.Append(builder.GetConnector(item.WhereConnector));
             }
-            whereBuilder.Append(item.GetWhereString(builder));
+            whereBuilder.Append(item.ToSql(builder));
         }
 
         foreach (var partialItem in _partialConditions)
@@ -112,7 +116,7 @@ public class WhereConditions
             {
                 whereBuilder.Append(builder.GetConnector(partialItem.WhereConnector));
             }
-            whereBuilder.Append(builder.GetNestedWhere(partialItem.WhereConditions.GetWhereString(builder)));
+            whereBuilder.Append(builder.GetPartialCondition(partialItem.WhereConditions));
         }
 
         return whereBuilder.ToString();

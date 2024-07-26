@@ -8,5 +8,5 @@ internal abstract class WhereConditionsItemBase
 
     public WhereConnector WhereConnector { get; protected set; }
 
-    public abstract string GetWhereString(SqlBuilder builder);
+    protected internal abstract string ToSql(SqlBuilder builder);
 }

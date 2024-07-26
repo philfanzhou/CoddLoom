@@ -16,7 +16,7 @@ internal class WhereConditionsNullItem : WhereConditionsItemBase
 
     public override string Column { get; }
 
-    public override string GetWhereString(SqlBuilder builder)
+    protected internal override string ToSql(SqlBuilder builder)
     {
         return builder.GetIsNullCondition(Column, IsNull);
     }

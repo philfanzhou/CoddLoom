@@ -1,4 +1,5 @@
 ﻿using Qz.Infra.Database.Condition;
+using Qz.Infra.Database.Params;
 using System;
 
 namespace Qz.Infra.Database.Sql;
@@ -25,11 +26,6 @@ partial class SqlBuilder
         };
     }
 
-    protected internal virtual string GetIsNullCondition(string column, bool isNull)
-    {
-        return $"{column} IS {(isNull ? "NULL" : "NOT NULL")}";
-    }
-
     protected internal virtual string GetLikeParamValue(string value)
     {
         if (value.StartsWith("%") || value.EndsWith("%"))
@@ -40,8 +36,18 @@ partial class SqlBuilder
         return $"%{value}%";
     }
 
-    protected internal virtual string GetNestedWhere(string whereSql)
+    protected internal virtual string GetNormalCondition(string column, WhereOperator whereOperator, ValueParam valueParam)
     {
-        return $"({whereSql})";
+        return $"{column}{GetOperator(whereOperator)}{GetParamName(valueParam)}";
+    }
+
+    protected internal virtual string GetIsNullCondition(string column, bool isNull)
+    {
+        return $"{column} IS {(isNull ? "NULL" : "NOT NULL")}";
+    }
+
+    protected internal virtual string GetPartialCondition(WhereConditions conditions)
+    {
+        return $"({conditions.GetWhereString(this)})";
     }
 }

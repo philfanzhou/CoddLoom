@@ -27,8 +27,6 @@ public class InputValues
 
     public IReadOnlyList<ValueParam> Items => _items.Values.ToList().AsReadOnly();
 
-    internal bool IsEmpty => _items.Count < 1;
-
     public void Add<T>(string column, T value, bool forceParameter = false)
     {
         if (null == value)
@@ -88,6 +86,11 @@ public class InputValues
     public void AddNull(string column, bool forceParameter = false)
     {
         AddItem(column, DBNull.Value, forceParameter);
+    }
+
+    internal bool IsEmpty()
+    {
+        return _items.Count < 1;
     }
 
     #region Private Method
