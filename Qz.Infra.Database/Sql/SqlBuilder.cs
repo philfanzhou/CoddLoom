@@ -124,9 +124,10 @@ public partial class SqlBuilder
     protected virtual string AppendOrderBy(string sql,
         OrderByCondition orderBy = null)
     {
-        if (orderBy == null || string.IsNullOrEmpty(orderBy.Column)) return sql;
-        var sort = orderBy.Descending ? "DESC" : "ASC";
-        return $"{sql} ORDER BY {orderBy.Column} {sort}";
+        if (orderBy == null || orderBy.IsEmpty()) return sql;
+        var condition = string.Join(",", orderBy.Items.Select(p =>
+        $"{p.Column} {(p.Descending ? "DESC" : "ASC")}"));
+        return $"{sql} ORDER BY {condition}";
     }
 
     protected virtual string AppendLimit(string sql,

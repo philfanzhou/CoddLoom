@@ -1,15 +1,16 @@
 ﻿using Qz.Infra.Database.Common;
 using System;
+using System.Collections.Generic;
 
 namespace Qz.Infra.Database.Condition;
 
 public class OrderByCondition
 {
+    private readonly List<OrderByItem> _conditions = new ();
+
     public OrderByCondition(string column, bool descending = false)
     {
-        if (string.IsNullOrEmpty(column)) throw new ArgumentNullException(nameof(column));
-        Column = column;
-        Descending = descending;
+        Add(column, descending);
     }
 
     public OrderByCondition(Type tableType, string orderBy,
@@ -18,9 +19,18 @@ public class OrderByCondition
     {
     }
 
-    public string Column { get; }
+    public void Add(string column, bool descending = false)
+    {
+        if (string.IsNullOrEmpty(column)) throw new ArgumentNullException(nameof(column));
+        _conditions.Add(new OrderByItem(column, descending));
+    }
 
-    public bool Descending { get; }
+    internal IEnumerable<OrderByItem> Items => _conditions.AsReadOnly();
+
+    internal bool IsEmpty()
+    {
+        return _conditions.Count == 0;
+    }
 
     private static string GetColumn(Type tableType, string orderBy, string defaultOrderBy)
     {
@@ -66,4 +76,17 @@ public class OrderByCondition<TTable> : OrderByCondition where TTable : class
         : base(typeof(TTable), orderBy, defaultOrderBy, descending)
     {
     }
+}
+
+public class OrderByItem
+{
+    public OrderByItem(string column, bool descending)
+    {
+        Column = column;
+        Descending = descending;
+    }
+
+    public string Column { get; }
+
+    public bool Descending { get; }
 }
