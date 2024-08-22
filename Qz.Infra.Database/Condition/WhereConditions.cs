@@ -75,20 +75,13 @@ public class WhereConditions
         _conditionsItemList.Add(conditionItem);
     }
 
-    public void Add(WhereConditions partialCondition,
+    public void Add(WhereConditions where,
         WhereConnector connector = WhereConnector.And)
     {
-        foreach (var item in partialCondition._conditionsItemList)
-        {
-            if (item is WhereConditionsItem condition)
-            {
-                condition.Parameter.ParamName = _parameterNameGenerator.Get(condition.Parameter.ParamName);
-            }
-        }
-
+        RefreshParamName(where);
         _partialConditions.Add(new PartialWhereConditions
         {
-            WhereConditions = partialCondition,
+            WhereConditions = where,
             WhereConnector = connector
         });
     }
@@ -120,6 +113,22 @@ public class WhereConditions
         }
 
         return whereBuilder.ToString();
+    }
+
+    private void RefreshParamName(WhereConditions where)
+    {
+        foreach (var item in where._conditionsItemList)
+        {
+            if (item is WhereConditionsItem condition)
+            {
+                condition.Parameter.ParamName = _parameterNameGenerator.Get(condition.Column);
+            }
+        }
+
+        foreach(var item in where._partialConditions)
+        {
+            RefreshParamName(item.WhereConditions);
+        }
     }
 
     private class ParameterNameGenerator
