@@ -5,6 +5,7 @@ using Qz.Infra.Database.Params;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 
 namespace Qz.Infra.Database;
 
@@ -170,5 +171,10 @@ partial class DbEngine
         var utcNow = DateTime.UtcNow;
         var span = utcNow - UnixEpoch;
         return span.TotalMilliseconds;
+    }
+
+    public string GetUtcTimeStampString()
+    {
+        return GetUtcTimeStamp().ToString(CultureInfo.InvariantCulture);
     }
 }
