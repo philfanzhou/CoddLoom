@@ -118,13 +118,13 @@ partial class DbEngine
         return PageSelect<T>(where, orderBy, null, pageParam, out totalPages, out totalCount, con, tran);
     }
 
-    public string GenerateUtcTimeStampId(string tableName, string columnName,
+    public string GenerateUtcTimeId(string tableName, string columnName,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        return GenerateTimeStampId(tableName, columnName, () => DateTime.UtcNow, con, tran);
+        return GenerateTimeId(tableName, columnName, () => DateTime.UtcNow, con, tran);
     }
 
-    public string GenerateTimeStampId(string tableName, string columnName, Func<DateTime> getTime,
+    public string GenerateTimeId(string tableName, string columnName, Func<DateTime> getTime,
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var format = "yyMMddHHmmss";
@@ -162,5 +162,13 @@ partial class DbEngine
         var max = First(record => int.Parse(record[columnName].ToString()),
             tableName, null, orderBy, con, tran);
         return checked(max + 1);
+    }
+
+    private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+    public double GetUtcTimeStamp()
+    {
+        var utcNow = DateTime.UtcNow;
+        var span = utcNow - UnixEpoch;
+        return span.TotalMilliseconds;
     }
 }
