@@ -1,5 +1,6 @@
 ﻿using Qz.Infra.Database.Table;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Qz.Infra.Database.Cache;
 
@@ -10,12 +11,16 @@ internal static class TableColumnsCache
 
     internal static void Initialize(IEnumerable<TableDefine> tables)
     {
-        foreach (var table in tables)
+        var tableList = tables.ToList();
+        foreach (var table in tableList)
         {
-            InsertColumnCache.Add(table.Name, new List<string>());
-            UpdateColumnCache.Add(table.Name, new List<string>());
+            if (InsertColumnCache.ContainsKey(table.Name))
+            {
+                continue;
+            }
 
-            if (table.PrimaryKey != null 
+            InsertColumnCache.Add(table.Name, new List<string>());
+            if (table.PrimaryKey != null
                 && table.PrimaryKey is not DbPrimaryKeyIdentityAttribute)
             {
                 InsertColumnCache[table.Name].Add(table.PrimaryKey.Name);
@@ -24,6 +29,19 @@ internal static class TableColumnsCache
             foreach (var column in table.Columns)
             {
                 InsertColumnCache[table.Name].Add(column.Name);
+            }
+        }
+
+        foreach(var table in tableList)
+        {
+            if(UpdateColumnCache.ContainsKey(table.Name))
+            {
+                continue;
+            }
+
+            UpdateColumnCache.Add(table.Name, new List<string>());
+            foreach (var column in table.Columns)
+            {
                 UpdateColumnCache[table.Name].Add(column.Name);
             }
         }
