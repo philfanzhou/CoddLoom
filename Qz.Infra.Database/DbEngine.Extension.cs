@@ -27,7 +27,7 @@ partial class DbEngine
     public void Delete<T>(string primaryKeyValue,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        DbConverter.ToDelete<T>(primaryKeyValue, out var table, out var where);
+        DbConverter.ToPrimaryKey<T>(primaryKeyValue, out var table, out var where);
         Delete(table, where, con, tran);
     }
 
@@ -68,6 +68,14 @@ partial class DbEngine
     {
         var table = EntityMapCache.GetTableName<T>();
         return First(DbConverter.ToEntity<T>, table, where, orderBy, con, tran);
+    }
+
+    public T Select<T>(string primaryKeyValue,
+        IDbConnection con = null, IDbTransaction tran = null)
+        where T : new()
+    {
+        DbConverter.ToPrimaryKey<T>(primaryKeyValue, out var table, out var where);
+        return First(DbConverter.ToEntity<T>, table, where, null, con, tran);
     }
 
     public List<T> Select<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy,

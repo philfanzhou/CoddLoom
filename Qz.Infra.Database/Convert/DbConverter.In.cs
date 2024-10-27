@@ -68,7 +68,7 @@ partial class DbConverter
         }
     }
 
-    internal static void ToDelete<T>(string id,
+    internal static void ToPrimaryKey<T>(string id,
         out string tableName, out WhereConditions where)
     {
         if (string.IsNullOrEmpty(id))
