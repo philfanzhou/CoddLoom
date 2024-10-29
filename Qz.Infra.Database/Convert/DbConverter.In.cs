@@ -68,7 +68,7 @@ partial class DbConverter
         }
     }
 
-    internal static void ToPrimaryKey<T>(string id,
+    public static void ToPrimaryKey<T>(string id,
         out string tableName, out WhereConditions where)
     {
         if (string.IsNullOrEmpty(id))
