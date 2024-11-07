@@ -1,13 +1,13 @@
 ﻿using Qz.Infra.Database.Common;
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Reflection;
 
 namespace Qz.Infra.Database.Cache;
 
 internal static class TypeMembersCache
 {
-    private static readonly Dictionary<string, MemberInfo[]> MapCache = new();
+    private static readonly ConcurrentDictionary<string, MemberInfo[]> MemberInfoCache = new();
 
     internal static MemberInfo[] Get(Type type)
     {
@@ -16,13 +16,12 @@ internal static class TypeMembersCache
             return null;
         }
 
-        if (MapCache.TryGetValue(type.FullName, out var value))
+        if (!MemberInfoCache.TryGetValue(type.FullName, out var memberInfo))
         {
-            return value;
+            memberInfo = TypeExt.DoGetAllMembers(type);
+            MemberInfoCache.TryAdd(type.FullName, memberInfo);
         }
 
-        value = TypeExt.DoGetAllMembers(type);
-        MapCache.Add(type.FullName, value);
-        return value;
+        return memberInfo;
     }
 }

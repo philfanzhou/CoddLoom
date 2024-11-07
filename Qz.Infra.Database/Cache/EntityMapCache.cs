@@ -1,22 +1,24 @@
-﻿using Qz.Infra.Database.Entity;
+﻿using Qz.Infra.Database.Common;
+using Qz.Infra.Database.Entity;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Qz.Infra.Database.Cache;
 
 internal static class EntityMapCache
 {
-    private static readonly Dictionary<string, EntityMap> MapCache = new();
+    private static readonly ConcurrentDictionary<string, EntityMap> MapCache = new();
 
     internal static EntityMap Get(Type type)
     {
         var name = type.Name;
-        if (!MapCache.ContainsKey(name))
+        if (!MapCache.TryGetValue(name, out var entityMap))
         {
-            MapCache[name] = new EntityMap(name, type);
+            entityMap = new EntityMap(name, type);
+            MapCache.TryAdd(name, entityMap);
         }
-
-        return MapCache[name];
+        return entityMap;
     }
 
     internal static EntityMap Get<T>()
