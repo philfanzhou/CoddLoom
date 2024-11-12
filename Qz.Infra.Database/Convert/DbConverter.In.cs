@@ -68,25 +68,6 @@ partial class DbConverter
         }
     }
 
-    public static void ToPrimaryKey<T>(string id,
-        out string tableName, out WhereConditions where)
-    {
-        if (string.IsNullOrEmpty(id))
-        {
-            throw new ArgumentNullException(nameof(id));
-        }
-
-        var entityMap = EntityMapCache.Get<T>();
-        if (string.IsNullOrEmpty(entityMap.PrimaryKey))
-        {
-            throw new ArgumentException($"{nameof(T)} does not have a primary key");
-        }
-        tableName = entityMap.Table.Name;
-        where = new WhereConditions();
-
-        where.Add(entityMap.PrimaryKey, id);
-    }
-
     private static InputValues GetInputValues<T>(T entity, EntityMap entityMap, 
         ICollection<string> insertColumns, int inputIndex = 0)
     {

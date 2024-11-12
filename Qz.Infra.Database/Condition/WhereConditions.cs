@@ -1,4 +1,5 @@
-﻿using Qz.Infra.Database.Condition.Internal;
+﻿using Qz.Infra.Database.Cache;
+using Qz.Infra.Database.Condition.Internal;
 using Qz.Infra.Database.Params;
 using Qz.Infra.Database.Sql;
 using System;
@@ -40,6 +41,27 @@ public class WhereConditions
     }
 
     #endregion
+
+    public static WhereConditions Create<TEntity>(object id, 
+        out string tableName)
+    {
+        if (id is null 
+            || (id is string strId && string.IsNullOrEmpty(strId)))
+        {
+            throw new ArgumentNullException(nameof(id));
+        }
+
+        var entityMap = EntityMapCache.Get<TEntity>();
+        if (string.IsNullOrEmpty(entityMap.PrimaryKey))
+        {
+            throw new ArgumentException($"{nameof(TEntity)} does not have a primary key");
+        }
+        tableName = entityMap.Table.Name;
+        var where = new WhereConditions();
+
+        where.Add(entityMap.PrimaryKey, id);
+        return where;
+    }
 
     public void Add(string column, object value,
         WhereOperator whereOperator = WhereOperator.Equal, 
