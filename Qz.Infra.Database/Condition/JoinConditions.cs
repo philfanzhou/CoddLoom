@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Qz.Infra.Database.Condition.Internal;
+using Qz.Infra.Database.Sql;
 
 namespace Qz.Infra.Database.Condition;
 
@@ -27,6 +28,11 @@ public class JoinConditions
     public void Add(string column1, string column2)
     {
         _columns.Add(new JoinConditionsItem(column1, column2));
+    }
+
+    public string GetTableName(SqlBuilder sqlBuilder)
+    {
+        return sqlBuilder.GetJoinTable(this);
     }
 }
 

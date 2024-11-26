@@ -10,11 +10,28 @@ namespace Qz.Infra.Database;
 
 partial class DbEngine
 {
-    public List<T> Select<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy,
+    public List<T> Select<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, 
+        OrderByCondition orderBy,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        return Select(convertor,
-            tableName, where, orderBy, null, con, tran);
+        return Select(convertor, tableName, 
+            where, orderBy, null, con, tran);
+    }
+
+    public List<T> Select<T>(Func<IDataRecord, T> convertor, JoinConditions join, WhereConditions where,
+        OrderByCondition orderBy, ColumnParam columns,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        return Select(convertor, join.GetTableName(Executor.SqlBuilder),
+            where, orderBy, columns, con, tran);
+    }
+
+    public List<T> Select<T>(Func<IDataRecord, T> convertor, JoinConditions join, WhereConditions where, 
+        OrderByCondition orderBy,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        return Select(convertor, join, 
+            where, orderBy, null, con, tran);
     }
 
     public List<T> Select<T>(WhereConditions where, OrderByCondition orderBy, ColumnParam columns,

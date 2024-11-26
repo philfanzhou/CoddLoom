@@ -85,20 +85,23 @@ public partial class DbEngine
         return Executor.Count(sql, where?.Parameters, con, tran);
     }
 
-    public T First<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy, ColumnParam columns,
+    public T First<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, 
+        OrderByCondition orderBy, ColumnParam columns,
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var sql = Executor.SqlBuilder.First(tableName, where, orderBy, columns);
         return Executor.First(sql, convertor, where?.Parameters, con, tran);
     }
 
-    public List<T> Select<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy, ColumnParam columns,
+    public List<T> Select<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, 
+        OrderByCondition orderBy, ColumnParam columns,
         IDbConnection con = null, IDbTransaction tran = null)
     {
         return PageSelect(convertor, tableName, where, orderBy, columns, null, out _, out _, con, tran);
     }
 
-    public List<T> PageSelect<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy, ColumnParam columns,
+    public List<T> PageSelect<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, 
+        OrderByCondition orderBy, ColumnParam columns,
         PageParam pageParam, out int totalPages, out int totalCount,
         IDbConnection con = null, IDbTransaction tran = null)
     {
