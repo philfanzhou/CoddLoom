@@ -62,19 +62,6 @@ partial class DbEngine
         return First(DbConverter.ToEntity<T>, table, where, orderBy, con, tran);
     }
 
-    public long GenerateMaxId(string tableName, string columnName,
-        IDbConnection con = null, IDbTransaction tran = null)
-    {
-        var orderBy = new OrderByCondition(columnName, true);
-        var maxInTable = First(record => long.Parse(record[columnName].ToString()),
-            tableName, null, orderBy, con, tran);
-        if (maxInTable == long.MaxValue)
-        {
-            throw new Exception($"Generate new {tableName}.{columnName} ID failed.");
-        }
-        return maxInTable + 1;
-    }
-
     public T GenerateId<T>(string tableName, string columnName, Func<T, T> generateId, 
         IDbConnection con = null, IDbTransaction tran = null, int tryCount = 10)
     {
@@ -94,6 +81,18 @@ partial class DbEngine
         throw new Exception($"Generate new {tableName}.{columnName} ID failed.");
     }
 
+    public long GenerateMaxId(string tableName, string columnName,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        return GenerateId<long>(tableName, columnName, _ =>
+        {
+            var orderBy = new OrderByCondition(columnName, true);
+            var maxInTable = First(record => long.Parse(record[columnName].ToString()),
+                tableName, null, orderBy, con, tran);
+            return checked(maxInTable + 1);
+        }, con, tran, 1);
+    }
+
     public string GenerateTimeId(string tableName, string columnName, Func<DateTime> getTime,
         IDbConnection con = null, IDbTransaction tran = null)
     {
@@ -110,7 +109,7 @@ partial class DbEngine
         return GenerateTimeId(tableName, columnName, () => DateTime.UtcNow, con, tran);
     }
 
-    private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime UnixEpoch = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
     public double GetUtcTimeStamp()
     {
         var utcNow = DateTime.UtcNow;
