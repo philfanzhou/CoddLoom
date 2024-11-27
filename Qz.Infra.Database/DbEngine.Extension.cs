@@ -4,7 +4,6 @@ using Qz.Infra.Database.Convert;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Globalization;
 
 namespace Qz.Infra.Database;
 
@@ -63,50 +62,52 @@ partial class DbEngine
         return First(DbConverter.ToEntity<T>, table, where, orderBy, con, tran);
     }
 
-    public string GenerateUtcTimeId(string tableName, string columnName,
+    public long GenerateMaxId(string tableName, string columnName,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        return GenerateTimeId(tableName, columnName, () => DateTime.UtcNow, con, tran);
+        var orderBy = new OrderByCondition(columnName, true);
+        var maxInTable = First(record => long.Parse(record[columnName].ToString()),
+            tableName, null, orderBy, con, tran);
+        if (maxInTable == long.MaxValue)
+        {
+            throw new Exception($"Generate new {tableName}.{columnName} ID failed.");
+        }
+        return maxInTable + 1;
+    }
+
+    public T GenerateId<T>(string tableName, string columnName, Func<T, T> generateId, 
+        IDbConnection con = null, IDbTransaction tran = null, int tryCount = 10)
+    {
+        var currentId = default(T);
+        for(var i = 0; i < tryCount; i++)
+        {
+            currentId = generateId(currentId);
+
+            var where = new WhereConditions();
+            where.Add(columnName, currentId);
+            if(Exist(tableName, where, con, tran) == false)
+            {
+                return currentId;
+            }
+        }
+
+        throw new Exception($"Generate new {tableName}.{columnName} ID failed.");
     }
 
     public string GenerateTimeId(string tableName, string columnName, Func<DateTime> getTime,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var format = "yyMMddHHmmss";
-        var getNewId = new Func<string>(() =>
+        return GenerateId<string>(tableName, columnName, _ =>
         {
             var time = getTime();
-            return time.ToString(format) + new Random().Next(100, 999).ToString().PadRight(3, '0');
-        });
-
-        var newId = getNewId();
-        var where = new WhereConditions();
-        where.Add(columnName, newId);
-
-        var tryCount = 0;
-        while (Exist(tableName, where, con, tran))
-        {
-            if (tryCount > 10)
-            {
-                throw new Exception($"Generate new {tableName}.{columnName} ID failed.");
-            }
-
-            newId = getNewId();
-            where = new WhereConditions();
-            where.Add(columnName, newId);
-            tryCount++;
-        }
-
-        return newId;
+            return time.ToString("yyMMddHHmmss") + new Random().Next(100, 999).ToString().PadRight(3, '0');
+        }, con, tran);
     }
 
-    public int GenerateMaxId(string tableName, string columnName,
+    public string GenerateUtcTimeId(string tableName, string columnName,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var orderBy = new OrderByCondition(columnName, true);
-        var max = First(record => int.Parse(record[columnName].ToString()),
-            tableName, null, orderBy, con, tran);
-        return checked(max + 1);
+        return GenerateTimeId(tableName, columnName, () => DateTime.UtcNow, con, tran);
     }
 
     private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -115,10 +116,5 @@ partial class DbEngine
         var utcNow = DateTime.UtcNow;
         var span = utcNow - UnixEpoch;
         return span.TotalMilliseconds;
-    }
-
-    public string GetUtcTimeStampString()
-    {
-        return GetUtcTimeStamp().ToString(CultureInfo.InvariantCulture);
     }
 }
