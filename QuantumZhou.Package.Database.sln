@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qz.Infra.Database.MySql", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qz.Infra.Database.SqlServer", "Qz.Infra.Database.SqlServer\Qz.Infra.Database.SqlServer.csproj", "{53977139-2262-4AA8-B4A2-1450468FD1BC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Qz.Infra.Database.Oracle", "Qz.Infra.Database.Oracle\Qz.Infra.Database.Oracle.csproj", "{D9051FDC-4122-4354-B604-61CECBDD3ECF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{53977139-2262-4AA8-B4A2-1450468FD1BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{53977139-2262-4AA8-B4A2-1450468FD1BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{53977139-2262-4AA8-B4A2-1450468FD1BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D9051FDC-4122-4354-B604-61CECBDD3ECF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9051FDC-4122-4354-B604-61CECBDD3ECF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9051FDC-4122-4354-B604-61CECBDD3ECF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9051FDC-4122-4354-B604-61CECBDD3ECF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
