@@ -3,7 +3,6 @@ using Qz.Infra.Database.Input;
 using Qz.Infra.Database.Params;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Text;
 
@@ -107,13 +106,6 @@ public partial class SqlBuilder
 
     #region Protected virtual
 
-    protected virtual string AppendWhere(string sql,
-        WhereConditions where = null)
-    {
-        if (where == null || where.IsEmpty()) return sql; // 必须检查是不是Empty，因为有查询条件只有IsNull的查询条件
-        return $"{sql} WHERE {where.GetWhereString(this)}";
-    }
-
     protected virtual string AppendGroupBy(string sql, 
         ColumnParam columns = null)
     {
@@ -137,51 +129,9 @@ public partial class SqlBuilder
         return $"{sql} LIMIT {pageParam.Offset},{pageParam.PageSize}";
     }
 
-    protected virtual string GetSelectColumnSql(ColumnParam columns = null)
-    {
-        if (columns == null || columns.Select.Count < 1) return "*";
-        return string.Join(",", columns.Select.Select(p => GetSelectColumn(p.Column, p.DbFunc, p.Cast, p.Alias)));
-    }
-
-    protected internal virtual string GetCastColumn(string column, DbType dbType)
-    {
-        var typeStr = dbType switch
-        {
-            DbType.DateTime => "DateTime",
-            _ => throw new NotSupportedException(dbType.ToString())
-        };
-        return $"CAST({column} AS {typeStr})";
-    }
-
     protected internal virtual string GetParamName(ValueParam param)
     {
         return $"{DbParameterPrefix}{param.ParamName}";
-    }
-
-    protected virtual string GetInsertValue(ValueParam param)
-    {
-        if(param.Value == DBNull.Value)
-        {
-            return "NULL";
-        }
-        else if(param.Value is string)
-        {
-            return $"'{param.Value.ToString().Replace("'", "''")}'";
-        }
-        else if(param.Value is DateTime)
-        {
-            return $"'{param.Value:yyyy-MM-dd HH:mm:ss}'";
-        }
-        else
-        {
-            return param.Value.ToString();
-        }
-    }
-
-    protected virtual string GetInsertColumns(IEnumerable<ValueParam> parameters)
-    {
-        var columns = $"({string.Join(",", parameters.Select(p => p.Column))})";
-        return columns;
     }
 
     protected virtual string GetInsertValues(IEnumerable<ValueParam> parameters,
@@ -209,22 +159,24 @@ public partial class SqlBuilder
         return $"({valuesStrBuilder})";
     }
 
-    protected virtual string GetSelectColumn(string column, string dbFunc, DbType? cast, string alias)
+    protected virtual string GetInsertValue(ValueParam param)
     {
-        var columnSql = column;
-        if(cast != null)
+        if (param.Value == DBNull.Value)
         {
-            columnSql = GetCastColumn(column, cast.Value);
+            return "NULL";
         }
-        if(string.IsNullOrEmpty(dbFunc) == false)
+        else if (param.Value is string)
         {
-            columnSql = $"{dbFunc}({columnSql})";
+            return $"'{param.Value.ToString().Replace("'", "''")}'";
         }
-        if(string.IsNullOrEmpty(alias) == false)
+        else if (param.Value is DateTime)
         {
-            columnSql = $"{columnSql} AS {alias}";
+            return $"'{param.Value:yyyy-MM-dd HH:mm:ss}'";
         }
-        return columnSql;
+        else
+        {
+            return param.Value.ToString();
+        }
     }
 
     #endregion

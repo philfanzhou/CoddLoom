@@ -6,7 +6,7 @@ namespace Qz.Infra.Database.Params;
 
 public class ColumnParam
 {
-    private readonly List<ColumnItemBase> _items = new();
+    private readonly List<IDbColumn> _items = new();
 
     internal IReadOnlyCollection<SelectItem> Select => _items.OfType<SelectItem>().ToList().AsReadOnly();
 
@@ -41,7 +41,7 @@ internal class SelectItem : GroupByItem
     public string Alias { get; }
 }
 
-internal class GroupByItem : ColumnItemBase
+internal class GroupByItem : IDbColumn
 {
     public GroupByItem(string column, bool groupBy)
     {
@@ -49,12 +49,12 @@ internal class GroupByItem : ColumnItemBase
         GroupBy = groupBy;
     }
 
-    public override string Column { get; }
+    public string Column { get; }
 
     internal bool GroupBy { get; }
 }
 
-internal abstract class ColumnItemBase
+internal interface IDbColumn
 {
-    public abstract string Column { get; }
+    string Column { get; }
 }

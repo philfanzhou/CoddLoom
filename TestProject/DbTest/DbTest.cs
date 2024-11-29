@@ -48,9 +48,7 @@ namespace TestProject.DbTest
 
             var pwsUserJoin = new JoinConditions(UserTable.TableName, UserTable.UnionId,
                 PasswordUserTable.TableName, PasswordUserTable.UnionId);
-            var joinTable = dbEngine.Executor.SqlBuilder.GetJoinTable(pwsUserJoin);
-
-            var allPwdUser = dbEngine.Select(rec => rec.ToEntity<PasswordUser>(), joinTable, null, null, con).ToList();
+            var allPwdUser = dbEngine.Select(rec => rec.ToEntity<PasswordUser>(), pwsUserJoin, null, null, con).ToList();
             Assert.IsTrue(allPwdUser.Count == count);
 
             foreach (var user in allPwdUser)
@@ -60,7 +58,7 @@ namespace TestProject.DbTest
             }
 
             Assert.IsTrue(!dbEngine.Select<User>(null, null, con).Any());
-            Assert.IsTrue(!dbEngine.Select(rec => rec.ToEntity<PasswordUser>(), joinTable, null, null, con).Any());
+            Assert.IsTrue(!dbEngine.Select(rec => rec.ToEntity<PasswordUser>(), pwsUserJoin, null, null, con).Any());
 
             con.Close();
         }
