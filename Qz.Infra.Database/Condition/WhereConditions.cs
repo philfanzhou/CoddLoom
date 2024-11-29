@@ -97,6 +97,12 @@ public class WhereConditions
         _conditionsItemList.Add(conditionItem);
     }
 
+    public void AddIsNotNull(string column, 
+        WhereConnector connector = WhereConnector.And)
+    {
+        AddIsNull(column, false, connector);
+    }
+
     public void Add(WhereConditions where,
         WhereConnector connector = WhereConnector.And)
     {
