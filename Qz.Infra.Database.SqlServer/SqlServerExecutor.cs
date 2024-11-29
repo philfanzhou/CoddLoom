@@ -1,24 +1,38 @@
-﻿using Qz.Infra.Database.Condition;
+﻿using Microsoft.Data.SqlClient;
+using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Sql;
 using Qz.Infra.Database.Table;
 using System;
 using System.Data;
-using System.Data.SqlClient;
 
 namespace Qz.Infra.Database.SqlServer;
 
 public class SqlServerExecutor : DbExecutor
 {
-    public SqlServerExecutor(string connectionString)
-        : base(connectionString, new SqlConnection(connectionString))
+    private const string TrustServerConfig = "TrustServerCertificate";
+    private readonly bool _trustServerCertificate;
+
+    public SqlServerExecutor(string connectionString, bool trustServer = true)
+        : base(connectionString, CreateConnection(connectionString, trustServer))
     {
+        _trustServerCertificate = trustServer;
     }
 
     public override SqlBuilder SqlBuilder { get; } = new SqlServerBuilder();
 
     public override IDbConnection GetConnection()
     {
-        return new SqlConnection(ConnectionString);
+        return CreateConnection(ConnectionString, _trustServerCertificate);
+    }
+
+    private static IDbConnection CreateConnection(string connectionString, bool trustServer)
+    {
+        if (trustServer && !connectionString.ToLower().Contains(TrustServerConfig.ToLower()))
+        {
+            connectionString = $"{connectionString};{TrustServerConfig}=true";
+        }
+        var conn = new SqlConnection(connectionString);
+        return conn;
     }
 
     protected override Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command)
@@ -30,7 +44,7 @@ public class SqlServerExecutor : DbExecutor
 
         return cmd.Parameters.AddWithValue;
     }
-    
+
     protected override void GetExistTableParam(TableDefine table, out string checkTable, out WhereConditions where)
     {
         where = new WhereConditions();
