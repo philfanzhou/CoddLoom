@@ -1,18 +1,21 @@
 ﻿using Qz.Infra.Database.Cache;
 using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Convert;
+using Qz.Infra.Database.Input;
+using Qz.Infra.Database.Params;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 
 namespace Qz.Infra.Database;
 
 partial class DbEngine
 {
-    public void Insert<T>(T entity,
+    public void Insert(string tableName, InputValues input,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        Insert(new[] { entity }, 10, con, tran);
+        Insert(tableName, new[] { input }, 10, con, tran);
     }
 
     public void Insert<T>(IEnumerable<T> entities, int batchSize,
@@ -20,6 +23,12 @@ partial class DbEngine
     {
         DbConverter.ToInsert(entities, out var table, out var inputs);
         Insert(table, inputs, batchSize, con, tran);
+    }
+
+    public void Insert<T>(T entity,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        Insert(new[] { entity }, 10, con, tran);
     }
 
     public void Delete<T>(object id, 
@@ -48,13 +57,24 @@ partial class DbEngine
         return Count(tableName, where, null, con, tran) > 0;
     }
 
-    public T First<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy,
+    public T First<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where,
+        OrderByCondition orderBy, ColumnParam columns,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        var pageParam = new PageParam { PageSize = 1, PageNumber = 1 };
+        return PageSelect(convertor, tableName, where, orderBy, pageParam, out var _, out var _, con, tran)
+            .FirstOrDefault();
+    }
+
+    public T First<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, 
+        OrderByCondition orderBy,
         IDbConnection con = null, IDbTransaction tran = null)
     {
         return First(convertor, tableName, where, orderBy, null, con, tran);
     }
 
-    public T First<T>(WhereConditions where, OrderByCondition orderBy,
+    public T First<T>(WhereConditions where, 
+        OrderByCondition orderBy,
         IDbConnection con = null, IDbTransaction tran = null)
         where T : new()
     {

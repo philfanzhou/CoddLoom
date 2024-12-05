@@ -1,9 +1,9 @@
 ﻿using MySql.Data.MySqlClient;
+using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Sql;
 using Qz.Infra.Database.Table;
 using System;
 using System.Data;
-using Qz.Infra.Database.Condition;
 
 namespace Qz.Infra.Database.MySql;
 

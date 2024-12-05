@@ -30,12 +30,6 @@ public partial class DbEngine
 
     public DbExecutor Executor { get; }
 
-    public void Insert(string tableName, InputValues input,
-        IDbConnection con = null, IDbTransaction tran = null)
-    {
-        Insert(tableName, new[] { input }, 10, con, tran);
-    }
-
     public void Insert(string tableName, IEnumerable<InputValues> inputs, int batchSize, 
         IDbConnection con = null, IDbTransaction tran = null)
     {
@@ -85,22 +79,15 @@ public partial class DbEngine
         return Executor.Count(sql, where?.Parameters, con, tran);
     }
 
-    public T First<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, 
+    public List<T> Select<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where,
         OrderByCondition orderBy, ColumnParam columns,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var sql = Executor.SqlBuilder.First(tableName, where, orderBy, columns);
-        return Executor.First(sql, convertor, where?.Parameters, con, tran);
+        var sql = Executor.SqlBuilder.Select(tableName, where, orderBy, null, columns);
+        return Executor.Select(sql, convertor, where?.Parameters, con, tran);
     }
 
-    public List<T> Select<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, 
-        OrderByCondition orderBy, ColumnParam columns,
-        IDbConnection con = null, IDbTransaction tran = null)
-    {
-        return PageSelect(convertor, tableName, where, orderBy, columns, null, out _, out _, con, tran);
-    }
-
-    public List<T> PageSelect<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, 
+    public List<T> PageSelect<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where,
         OrderByCondition orderBy, ColumnParam columns,
         PageParam pageParam, out int totalPages, out int totalCount,
         IDbConnection con = null, IDbTransaction tran = null)

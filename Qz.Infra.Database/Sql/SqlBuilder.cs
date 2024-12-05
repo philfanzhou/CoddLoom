@@ -12,21 +12,25 @@ public partial class SqlBuilder
 {
     protected const string DbParameterPrefix = "@";
 
-    public virtual string Insert(string tableName, IEnumerable<InputValues> inputs, out List<ValueParam> dbParams,  
-        bool forceParameter = true)
+    public virtual string Insert(string tableName, IEnumerable<InputValues> inputs, out List<ValueParam> dbParams,
+        bool useParameter = true)
     {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
-        if(inputs == null) throw new ArgumentNullException(nameof(inputs));
+        if (inputs == null) throw new ArgumentNullException(nameof(inputs));
+
         var inputList = inputs.ToList();
-        if(inputList.Count < 1 || inputList.Any(p => p == null || p.IsEmpty())) throw new ArgumentNullException(nameof(inputs));
+        if (inputList.Count < 1 || inputList.Any(p => p == null || p.IsEmpty()))
+        {
+            throw new ArgumentNullException(nameof(inputs));
+        }
 
         var columnSql = GetInsertColumns(inputList[0].Items);
 
         dbParams = new List<ValueParam>();
         var valueList = new List<string>();
-        foreach(var input in inputList)
+        foreach (var input in inputList)
         {
-            var values = GetInsertValues(input.Items, out var innerDbParams, forceParameter);
+            var values = GetInsertValues(input.Items, out var innerDbParams, useParameter);
             valueList.Add(values);
             dbParams.AddRange(innerDbParams);
         }
@@ -86,12 +90,6 @@ public partial class SqlBuilder
         return AppendGroupBy(sql, columns);
     }
 
-    public virtual string First(string tableName,
-        WhereConditions where = null, OrderByCondition orderBy = null, ColumnParam columns = null)
-    {
-        return Select(tableName, where, orderBy, new PageParam { PageNumber = 1, PageSize = 1 }, columns);
-    }
-
     public virtual string Select(string tableName, 
         WhereConditions where = null, OrderByCondition orderBy = null, PageParam pageParam = null, ColumnParam columns = null)
     {
@@ -102,6 +100,11 @@ public partial class SqlBuilder
         sql = AppendGroupBy(sql, columns);
         sql = AppendOrderBy(sql, orderBy);
         return AppendLimit(sql, pageParam);
+    }
+
+    public virtual string Produce(string produceName)
+    {
+        return $"exec {produceName}";
     }
 
     #region Protected virtual
@@ -129,11 +132,6 @@ public partial class SqlBuilder
         return $"{sql} LIMIT {pageParam.Offset},{pageParam.PageSize}";
     }
 
-    protected internal virtual string GetParamName(ValueParam param)
-    {
-        return $"{DbParameterPrefix}{param.ParamName}";
-    }
-
     protected virtual string GetInsertValues(IEnumerable<ValueParam> parameters,
         out List<ValueParam> dbParams, bool useParameter = true)
     {
@@ -152,14 +150,14 @@ public partial class SqlBuilder
             }
             else
             {
-                valuesStrBuilder.Append(GetInsertValue(item));
+                valuesStrBuilder.Append(GetInsertValueString(item));
             }
         }
 
         return $"({valuesStrBuilder})";
     }
 
-    protected virtual string GetInsertValue(ValueParam param)
+    protected virtual string GetInsertValueString(ValueParam param)
     {
         if (param.Value == DBNull.Value)
         {
@@ -177,6 +175,11 @@ public partial class SqlBuilder
         {
             return param.Value.ToString();
         }
+    }
+
+    protected internal virtual string GetParamName(ValueParam param)
+    {
+        return $"{DbParameterPrefix}{param.ParamName}";
     }
 
     #endregion

@@ -14,8 +14,32 @@ partial class DbEngine
         OrderByCondition orderBy,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        return Select(convertor, tableName, 
-            where, orderBy, null, con, tran);
+        return Select(convertor, tableName, where, orderBy, null, con, tran);
+    }
+
+    public List<T> Select<T>(WhereConditions where,
+        OrderByCondition orderBy, ColumnParam columns,
+        IDbConnection con = null, IDbTransaction tran = null)
+        where T : new()
+    {
+        var tableName = EntityMapCache.GetTableName<T>();
+        return Select(DbConverter.ToEntity<T>, tableName, where, orderBy, columns, con, tran);
+    }
+
+    public List<T> Select<T>(WhereConditions where,
+        OrderByCondition orderBy,
+        IDbConnection con = null, IDbTransaction tran = null)
+        where T : new()
+    {
+        return Select<T>(where, orderBy, null, con, tran);
+    }
+
+    public List<T> Select<T>(object id,
+        IDbConnection con = null, IDbTransaction tran = null)
+        where T : new()
+    {
+        var where = WhereConditions.Create<T>(id, out var tableName);
+        return Select(DbConverter.ToEntity<T>, tableName, where, null, null, con, tran);
     }
 
     public List<T> Select<T>(Func<IDataRecord, T> convertor, JoinConditions join, WhereConditions where,
@@ -32,29 +56,6 @@ partial class DbEngine
     {
         return Select(convertor, join, 
             where, orderBy, null, con, tran);
-    }
-
-    public List<T> Select<T>(WhereConditions where, OrderByCondition orderBy, ColumnParam columns,
-        IDbConnection con = null, IDbTransaction tran = null)
-        where T : new()
-    {
-        var tableName = EntityMapCache.GetTableName<T>();
-        return Select(DbConverter.ToEntity<T>,tableName, where, orderBy, columns, con, tran);
-    }
-
-    public List<T> Select<T>(WhereConditions where, OrderByCondition orderBy,
-        IDbConnection con = null, IDbTransaction tran = null)
-        where T : new()
-    {
-        return Select<T>(where, orderBy, null, con, tran);
-    }
-
-    public List<T> Select<T>(object id, 
-        IDbConnection con = null, IDbTransaction tran = null)
-        where T : new()
-    {
-        var where = WhereConditions.Create<T>(id, out var tableName);
-        return Select(DbConverter.ToEntity<T>, tableName, where, null, null, con, tran);
     }
 
     public List<T> PageSelect<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy,

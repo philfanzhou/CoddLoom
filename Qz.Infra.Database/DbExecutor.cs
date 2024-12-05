@@ -229,20 +229,6 @@ public abstract class DbExecutor
         return result;
     }
 
-    public T First<T>(string sql, Func<IDataRecord, T> convertor,
-        IEnumerable<ValueParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
-    {
-        T result = default;
-
-        Execute(sql, dbParams, reader =>
-        {
-            reader.Read();
-            result = convertor(reader);
-        }, con, tran);
-
-        return result;
-    }
-
     public int Count(string sql,
         IEnumerable<ValueParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
     {

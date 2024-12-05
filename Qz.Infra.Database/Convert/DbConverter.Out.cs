@@ -14,8 +14,7 @@ public static partial class DbConverter
         var type = typeof(T);
         if (EntityMap.HasMap(type))
         {
-            var entityMap = EntityMapCache.Get(type);
-            return record.ToEntityFromMap<T>(entityMap);
+            return record.ToEntityFromMap<T>(type);
         }
         else
         {
@@ -23,9 +22,10 @@ public static partial class DbConverter
         }
     }
 
-    private static T ToEntityFromMap<T>(this IDataRecord record, EntityMap entityMap)
+    private static T ToEntityFromMap<T>(this IDataRecord record, Type type)
         where T : new()
     {
+        var entityMap = EntityMapCache.Get(type);
         var entity = new T();
         var columns = record.GetColumns();
         foreach (var (memberInfo, attribute) in entityMap.Members)

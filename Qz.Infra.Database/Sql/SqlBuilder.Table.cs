@@ -41,53 +41,34 @@ partial class SqlBuilder
     {
         var isIdentity = primaryKey is DbPrimaryKeyIdentityAttribute;
         var endSql = isIdentity ? "AUTOINCREMENT" : "NOT NULL";
-        return $"{primaryKey.Name} {GetPrimaryKeyTypeSql(primaryKey)} PRIMARY KEY {endSql}";
+        return $"{primaryKey.Name} {GetColumnTypeSql(primaryKey)} PRIMARY KEY {endSql}";
     }
 
     protected virtual string GetColumnSql(DbColumnBaseAttribute column)
     {
         var sql = $"{column.Name} {GetColumnTypeSql(column)}";
-        if (column.AllowEmpty)
+        if (!column.AllowEmpty)
         {
-            return sql;
+            sql += $" NOT NULL";
         }
-
-        return $"{sql} NOT NULL";
+        return sql;
     }
 
-    protected virtual string GetPrimaryKeyTypeSql(DbPrimaryKeyBaseAttribute primaryKey)
+    protected virtual string GetColumnTypeSql(DbBaseAttribute column)
     {
-        if (primaryKey is DbPrimaryKeyIdentityAttribute)
+        if (column is DbPrimaryKeyIdentityAttribute identityColumn)
         {
-            return "INTEGER";
+            return GetColumnIdentitySql(identityColumn);
         }
 
-        if (primaryKey is DbPrimaryKeyStringAttribute stringPrimaryKey)
-        {
-            return GetColumnCharType(stringPrimaryKey);
-        }
-
-        if (primaryKey is DbPrimaryKeyAttribute normalPrimaryKey)
-        {
-            return normalPrimaryKey.Type switch
-            {
-                DbType.Int16 => "SMALLINT",
-                DbType.Int32 => "INTEGER",
-                DbType.Int64 => "BIGINT",
-                DbType.DateTime => "DATETIME",
-                _ => throw new NotSupportedException($"{normalPrimaryKey.Type} not support for PrimaryKey.")
-            };
-        }
-
-
-        throw new NotSupportedException(primaryKey.GetType().Name);
-    }
-
-    protected virtual string GetColumnTypeSql(DbColumnBaseAttribute column)
-    {
-        if (column is DbColumnStringAttribute stringColumn)
+        if (column is IStringColumn stringColumn)
         {
             return GetColumnCharType(stringColumn);
+        }
+
+        if (column is INormalColumn normalColumn)
+        {
+            return GetColumnTypeSql(normalColumn);
         }
 
         if (column is DbColumnDecimalAttribute decimalColumn)
@@ -100,21 +81,26 @@ partial class SqlBuilder
             return GetColumnBinaryType(binaryColumn);
         }
 
-        if (column is DbColumnAttribute normalColumn)
-        {
-            return normalColumn.Type switch
-            {
-                DbType.Int16 => "SMALLINT",
-                DbType.Int32 => "INTEGER",
-                DbType.Int64 => "BIGINT",
-                DbType.Double => "FLOAT",
-                DbType.Boolean => "BIT",
-                DbType.DateTime => "DATETIME",
-                _ => throw new NotSupportedException($"{normalColumn.Type} not support for column.")
-            };
-        }
-
         throw new NotSupportedException(column.GetType().Name);
+    }
+
+    protected virtual string GetColumnIdentitySql(DbPrimaryKeyIdentityAttribute column)
+    {
+        return "INTEGER";
+    }
+
+    protected virtual string GetColumnTypeSql(INormalColumn column)
+    {
+        return column.Type switch
+        {
+            DbType.Int16 => "SMALLINT",
+            DbType.Int32 => "INTEGER",
+            DbType.Int64 => "BIGINT",
+            DbType.Double => "FLOAT",
+            DbType.Boolean => "BIT",
+            DbType.DateTime => "DATETIME",
+            _ => throw new NotSupportedException($"{column.Type} not support for column.")
+        };
     }
 
     protected virtual string GetColumnCharType(IStringColumn column)
