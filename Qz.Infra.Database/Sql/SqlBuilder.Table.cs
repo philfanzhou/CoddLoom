@@ -54,79 +54,99 @@ partial class SqlBuilder
         return sql;
     }
 
+    #region ColumnType
+
     protected virtual string GetColumnTypeSql(DbBaseAttribute column)
     {
         if (column is DbPrimaryKeyIdentityAttribute identityColumn)
         {
-            return GetColumnIdentitySql(identityColumn);
+            return GetIdentityColumnType(identityColumn);
         }
 
         if (column is IStringColumn stringColumn)
         {
-            return GetColumnCharType(stringColumn);
+            return GetStringColumnType(stringColumn);
         }
 
         if (column is INormalColumn normalColumn)
         {
-            return GetColumnTypeSql(normalColumn);
+            return GetColumnType(normalColumn.Type);
         }
 
         if (column is DbColumnDecimalAttribute decimalColumn)
         {
-            return GetColumnDecimalType(decimalColumn);
+            return GetDecimalColumnType(decimalColumn);
         }
 
         if (column is DbColumnBinaryAttribute binaryColumn)
         {
-            return GetColumnBinaryType(binaryColumn);
+            return GetBinaryColumnType(binaryColumn);
         }
 
         throw new NotSupportedException(column.GetType().Name);
     }
 
-    protected virtual string GetColumnIdentitySql(DbPrimaryKeyIdentityAttribute column)
+    protected virtual string GetColumnType(DbType type)
+    {
+        switch (type)
+        {
+            case DbType.AnsiString:
+            case DbType.String:
+            case DbType.StringFixedLength:
+            case DbType.AnsiStringFixedLength:
+            case DbType.Xml:
+            case DbType.Guid:
+                return "TEXT";
+            case DbType.Binary:
+            case DbType.Object:
+                return "BLOB";
+            case DbType.Boolean:
+                return "INTEGER";
+            case DbType.Byte:
+            case DbType.Int16:
+            case DbType.Int32:
+            case DbType.Int64:
+            case DbType.SByte:
+            case DbType.UInt16:
+            case DbType.UInt32:
+            case DbType.UInt64:
+                return "INTEGER";
+            case DbType.Currency:
+            case DbType.Decimal:
+            case DbType.Double:
+            case DbType.Single:
+            case DbType.VarNumeric:
+                return "REAL";
+            case DbType.Date:
+            case DbType.DateTime:
+            case DbType.DateTime2:
+            case DbType.DateTimeOffset:
+            case DbType.Time:
+                return "TEXT";
+            default:
+                throw new NotSupportedException($"{type} not support for column.");
+        }
+    }
+
+    protected virtual string GetIdentityColumnType(DbPrimaryKeyIdentityAttribute column)
     {
         return "INTEGER";
     }
 
-    protected virtual string GetColumnTypeSql(INormalColumn column)
+    protected virtual string GetStringColumnType(IStringColumn column)
     {
-        return column.Type switch
-        {
-            DbType.Int16 => "SMALLINT",
-            DbType.Int32 => "INTEGER",
-            DbType.Int64 => "BIGINT",
-            DbType.Double => "FLOAT",
-            DbType.Boolean => "BIT",
-            DbType.DateTime => "DATETIME",
-            _ => throw new NotSupportedException($"{column.Type} not support for column.")
-        };
+        return "TEXT";
     }
 
-    protected virtual string GetColumnCharType(IStringColumn column)
+    protected virtual string GetDecimalColumnType(DbColumnDecimalAttribute decimalColumn)
     {
-        var sql = "CHAR";
-        if (column.FixedLength == false)
-        {
-            sql = "VAR" + sql;
-        }
-        sql += $"({column.Length})";
-
-        if (column.AllowUnicode)
-        {
-            sql = "N" + sql;
-        }
-
-        return sql;
+        return "REAL";
     }
 
-    protected virtual string GetColumnDecimalType(DbColumnDecimalAttribute decimalColumn)
-    {
-        return $"DECIMAL({decimalColumn.Length},{decimalColumn.PointLength})";
-    }
-
-    protected virtual string GetColumnBinaryType(DbColumnBinaryAttribute binaryColumn)
+    protected virtual string GetBinaryColumnType(DbColumnBinaryAttribute binaryColumn)
     {
         return "BLOB";
     }
+
+    #endregion
 }
