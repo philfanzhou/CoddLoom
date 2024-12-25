@@ -28,6 +28,18 @@ public class OracleExecutor : DbExecutor
         return cmd.Parameters.Add;
     }
 
+    protected override IDataAdapter GetAdapter(IDbCommand command)
+    {
+        if (command is not OracleCommand cmd)
+        {
+            throw new ArgumentOutOfRangeException(nameof(command));
+        }
+
+        var adapter = new OracleDataAdapter();
+        adapter.SelectCommand = cmd;
+        return adapter;
+    }
+
     protected override void GetExistTableParam(TableDefine table, out string checkTable, out WhereConditions where)
     {
         throw new NotImplementedException();

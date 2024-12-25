@@ -49,6 +49,8 @@ public abstract class DbExecutor
 
     protected abstract Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command);
 
+    protected abstract IDataAdapter GetAdapter(IDbCommand command);
+
     private IDbCommand BuildCommand(IDbConnection con, string sql,
         IEnumerable<ValueParam> dbParams = null)
     {
@@ -67,8 +69,8 @@ public abstract class DbExecutor
         return command;
     }
 
-    private void Execute(IDbConnection con, string sql,
-        IEnumerable<ValueParam> dbParams = null, Action<IDataReader> readerAction = null, IDbTransaction tran = null)
+    private void Execute(IDbConnection con, string sql, Action<IDbCommand> action, 
+        IEnumerable<ValueParam> dbParams = null, IDbTransaction tran = null)
     {
         if (con == null) throw new ArgumentNullException(nameof(con));
         if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
@@ -82,12 +84,26 @@ public abstract class DbExecutor
             }
 
             using var command = BuildCommand(con, sql, dbParams);
-
             if (tran != null)
             {
                 command.Transaction = tran;
             }
+            action(command);
+        }
+        finally
+        {
+            if (doOpenCon)
+            {
+                con.Close();
+            }
+        }
+    }
 
+    private void Execute(IDbConnection con, string sql,
+        Action<IDataReader> readerAction = null, IEnumerable<ValueParam> dbParams = null, IDbTransaction tran = null)
+    {
+        Execute(con, sql, command =>
+        {
             if (readerAction == null)
             {
                 command.ExecuteNonQuery();
@@ -102,14 +118,19 @@ public abstract class DbExecutor
 
                 readerAction(reader);
             }
-        }
-        finally
+        }, dbParams, tran);
+    }
+
+    private DataSet Execute(IDbConnection con, string sql,
+        IEnumerable<ValueParam> dbParams = null, IDbTransaction tran = null)
+    {
+        var ds = new DataSet();
+        Execute(con, sql, command =>
         {
-            if (doOpenCon)
-            {
-                con.Close();
-            }
-        }
+            var adapter = GetAdapter(command);
+            adapter.Fill(ds);
+        }, dbParams, tran);
+        return ds;
     }
 
     #region Execute
@@ -197,15 +218,33 @@ public abstract class DbExecutor
     {
         if (tran != null)
         {
-            Execute(tran.Connection, sql, dbParams, readerAction, tran);
+            Execute(tran.Connection, sql, readerAction, dbParams, tran);
         }
         else if (con != null)
         {
-            Execute(con, sql, dbParams, readerAction);
+            Execute(con, sql, readerAction, dbParams);
         }
         else
         {
-            Execute(p => { Execute(p, sql, dbParams, readerAction); });
+            Execute(newCon => { Execute(newCon, sql, readerAction, dbParams); });
+        }
+    }
+
+    public DataSet Execute(string sql,
+        IEnumerable<ValueParam> dbParams = null, 
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        if (tran != null)
+        {
+            return Execute(tran.Connection, sql, dbParams, tran);
+        }
+        else if (con != null)
+        {
+            return Execute(con, sql, dbParams);
+        }
+        else
+        {
+            return Execute(newCon => Execute(newCon, sql, dbParams));
         }
     }
 

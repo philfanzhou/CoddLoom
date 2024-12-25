@@ -43,6 +43,18 @@ public class MySqlExecutor : DbExecutor
         return cmd.Parameters.AddWithValue;
     }
 
+    protected override IDataAdapter GetAdapter(IDbCommand command)
+    {
+        if (command is not MySqlCommand cmd)
+        {
+            throw new ArgumentOutOfRangeException(nameof(command));
+        }
+
+        var adapter = new MySqlDataAdapter();
+        adapter.SelectCommand = cmd;
+        return adapter;
+    }
+
     private static string BuildConnectionString(string server, string database,
         string user, string password, uint port)
     {

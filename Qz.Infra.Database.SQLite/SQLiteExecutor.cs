@@ -43,6 +43,18 @@ public class SQLiteExecutor : DbExecutor
         return cmd.Parameters.AddWithValue;
     }
 
+    protected override IDataAdapter GetAdapter(IDbCommand command)
+    {
+        if (command is not SQLiteCommand cmd)
+        {
+            throw new ArgumentOutOfRangeException(nameof(command));
+        }
+
+        var adapter = new SQLiteDataAdapter();
+        adapter.SelectCommand = cmd;
+        return adapter;
+    }
+
     private static string BuildConnectionString(string directory, string dbFileName)
     {
         CreateFilePath(directory, dbFileName);

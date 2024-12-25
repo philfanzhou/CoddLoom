@@ -45,6 +45,18 @@ public class SqlServerExecutor : DbExecutor
         return cmd.Parameters.AddWithValue;
     }
 
+    protected override IDataAdapter GetAdapter(IDbCommand command)
+    {
+        if (command is not SqlCommand cmd)
+        {
+            throw new ArgumentOutOfRangeException(nameof(command));
+        }
+
+        var adapter = new SqlDataAdapter();
+        adapter.SelectCommand = cmd;
+        return adapter;
+    }
+
     protected override void GetExistTableParam(TableDefine table, out string checkTable, out WhereConditions where)
     {
         where = new WhereConditions();
