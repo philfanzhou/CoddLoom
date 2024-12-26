@@ -121,7 +121,7 @@ public abstract class DbExecutor
         }, dbParams, tran);
     }
 
-    private DataSet Execute(IDbConnection con, string sql,
+    private DataSet ExecuteAdapter(IDbConnection con, string sql,
         IEnumerable<ValueParam> dbParams = null, IDbTransaction tran = null)
     {
         var ds = new DataSet();
@@ -230,21 +230,21 @@ public abstract class DbExecutor
         }
     }
 
-    public DataSet Execute(string sql,
+    public DataSet ExecuteAdapter(string sql,
         IEnumerable<ValueParam> dbParams = null, 
         IDbConnection con = null, IDbTransaction tran = null)
     {
         if (tran != null)
         {
-            return Execute(tran.Connection, sql, dbParams, tran);
+            return ExecuteAdapter(tran.Connection, sql, dbParams, tran);
         }
         else if (con != null)
         {
-            return Execute(con, sql, dbParams);
+            return ExecuteAdapter(con, sql, dbParams);
         }
         else
         {
-            return Execute(newCon => Execute(newCon, sql, dbParams));
+            return Execute(newCon => ExecuteAdapter(newCon, sql, dbParams));
         }
     }
 
