@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Qz.Infra.Database;
 
@@ -15,10 +14,6 @@ public static class DbContainer
 
     public static void Add(string engineName, DbEngine engine)
     {
-        if (Engines.ContainsKey(engineName))
-        {
-            throw new InvalidOperationException($"{engineName} exists");
-        }
         Engines[engineName] = engine;
     }
 
@@ -30,11 +25,6 @@ public static class DbContainer
 
     public static DbEngine Get(string engineName)
     {
-        if (Engines.ContainsKey(engineName))
-        {
-            return Engines[engineName];
-        }
-
-        return null;
+        return Engines.TryGetValue(engineName, out var engine) ? engine : null;
     }
 }
