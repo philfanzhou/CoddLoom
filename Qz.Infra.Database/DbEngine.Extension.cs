@@ -31,7 +31,7 @@ partial class DbEngine
         Insert(new[] { entity }, 10, con, tran);
     }
 
-    public void Delete<T>(object id, 
+    public void Delete<T>(object id,
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var where = WhereConditions.Create<T>(id, out var tableName);
@@ -62,18 +62,18 @@ partial class DbEngine
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var pageParam = new PageParam { PageSize = 1, PageNumber = 1 };
-        return PageSelect(convertor, tableName, where, orderBy, pageParam, out var _, out var _, con, tran)
+        return PageSelect(convertor, tableName, where, orderBy, columns, pageParam, out var _, out var _, con, tran)
             .FirstOrDefault();
     }
 
-    public T First<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, 
+    public T First<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where,
         OrderByCondition orderBy,
         IDbConnection con = null, IDbTransaction tran = null)
     {
         return First(convertor, tableName, where, orderBy, null, con, tran);
     }
 
-    public T First<T>(WhereConditions where, 
+    public T First<T>(WhereConditions where,
         OrderByCondition orderBy,
         IDbConnection con = null, IDbTransaction tran = null)
         where T : new()
@@ -82,17 +82,17 @@ partial class DbEngine
         return First(DbConverter.ToEntity<T>, table, where, orderBy, con, tran);
     }
 
-    public T GenerateId<T>(string tableName, string columnName, Func<T, T> generateId, 
+    public T GenerateId<T>(string tableName, string columnName, Func<T, T> generateId,
         IDbConnection con = null, IDbTransaction tran = null, int tryCount = 10)
     {
         var currentId = default(T);
-        for(var i = 0; i < tryCount; i++)
+        for (var i = 0; i < tryCount; i++)
         {
             currentId = generateId(currentId);
 
             var where = new WhereConditions();
             where.Add(columnName, currentId);
-            if(Exist(tableName, where, con, tran) == false)
+            if (Exist(tableName, where, con, tran) == false)
             {
                 return currentId;
             }
