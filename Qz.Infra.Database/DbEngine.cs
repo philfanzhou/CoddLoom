@@ -84,7 +84,7 @@ public partial class DbEngine
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var sql = Executor.SqlBuilder.Select(tableName, where, orderBy, null, columns);
-        return Executor.Select(sql, convertor, where?.Parameters, con, tran);
+        return Executor.Execute(sql, convertor, where?.Parameters, con, tran);
     }
 
     public List<T> PageSelect<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where,
@@ -108,14 +108,23 @@ public partial class DbEngine
         }
 
         var sql = Executor.SqlBuilder.Select(tableName, where, orderBy, pageParam, columns);
-        return Executor.Select(sql, convertor, where?.Parameters, con, tran);
+        return Executor.Execute(sql, convertor, where?.Parameters, con, tran);
     }
 
-    public void Produce(string produceName,
+    public void Procedure(string name,
         IEnumerable<ValueParam> dbParams = null, 
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        Executor.Execute($"exec {produceName}", dbParams, null, con, tran);
+        var sql = Executor.SqlBuilder.Procedure(name);
+        Executor.Execute(sql, dbParams, null, con, tran);
+    }
+
+    public List<T> Procedure<T>(Func<IDataRecord, T> convertor, string name, 
+        IEnumerable<ValueParam> dbParams = null,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        var sql = Executor.SqlBuilder.Procedure(name);
+        return Executor.Execute(sql, convertor, dbParams, con, tran);
     }
 
     private void DoBatchInsert(string tableName, IEnumerable<InputValues> inputs,

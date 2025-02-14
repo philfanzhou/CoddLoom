@@ -67,4 +67,9 @@ public class MySqlBuilder : SqlBuilder
                 throw new NotSupportedException($"{type} not support for column.");
         }
     }
+
+    public override string Procedure(string name)
+    {
+        return $"CALL {name}";
+    }
 }

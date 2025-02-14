@@ -38,6 +38,11 @@ public class SqlServerBuilder : SqlBuilder
         return base.Select(tableName, where, orderBy, pageParam, select);
     }
 
+    public override string Procedure(string name)
+    {
+        return $"EXECUTE {name}";
+    }
+
     #region ColumnType
 
     protected override string GetColumnType(DbType type)

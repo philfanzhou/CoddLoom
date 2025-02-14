@@ -230,6 +230,22 @@ public abstract class DbExecutor
         }
     }
 
+    public List<T> Execute<T>(string sql, Func<IDataRecord, T> convertor,
+        IEnumerable<ValueParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
+    {
+        var result = new List<T>();
+
+        Execute(sql, dbParams, reader =>
+        {
+            while (reader.Read())
+            {
+                result.Add(convertor(reader));
+            }
+        }, con, tran);
+
+        return result;
+    }
+
     public DataSet ExecuteAdapter(string sql,
         IEnumerable<ValueParam> dbParams = null, 
         IDbConnection con = null, IDbTransaction tran = null)
@@ -246,26 +262,6 @@ public abstract class DbExecutor
         {
             return Execute(newCon => ExecuteAdapter(newCon, sql, dbParams));
         }
-    }
-
-    #endregion
-
-    #region Execute with reader
-
-    public List<T> Select<T>(string sql, Func<IDataRecord, T> convertor,
-        IEnumerable<ValueParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
-    {
-        var result = new List<T>();
-
-        Execute(sql, dbParams, reader =>
-        {
-            while (reader.Read())
-            {
-                result.Add(convertor(reader));
-            }
-        }, con, tran);
-
-        return result;
     }
 
     public int Count(string sql,

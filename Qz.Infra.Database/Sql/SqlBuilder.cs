@@ -102,9 +102,9 @@ public partial class SqlBuilder
         return AppendLimit(sql, pageParam);
     }
 
-    public virtual string Produce(string produceName)
+    public virtual string Procedure(string name)
     {
-        return $"exec {produceName}";
+        throw new NotSupportedException();
     }
 
     #region Protected virtual
