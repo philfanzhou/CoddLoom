@@ -4,7 +4,6 @@ using Qz.Infra.Database.Table;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using TestProject.DbCode.Entity;
 using TestProject.DbCode.Tables;
 
 namespace TestProject.DbCode
@@ -28,7 +27,7 @@ namespace TestProject.DbCode
         public IEnumerable<string> GetAllTenant(IDbConnection conn)
         {
             var sql = Executor.SqlBuilder.Select(TenantTable.TableName);
-            var tenants = Executor.Select(
+            var tenants = Executor.Execute(
                 sql, record => record[TenantTable.Id].ToString(), null, conn);
             return tenants.ToList();
         }

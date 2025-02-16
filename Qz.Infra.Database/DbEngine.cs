@@ -111,22 +111,6 @@ public partial class DbEngine
         return Executor.Execute(sql, convertor, where?.Parameters, con, tran);
     }
 
-    public void Procedure(string name,
-        IEnumerable<ValueParam> dbParams = null, 
-        IDbConnection con = null, IDbTransaction tran = null)
-    {
-        var sql = Executor.SqlBuilder.Procedure(name);
-        Executor.Execute(sql, dbParams, null, con, tran);
-    }
-
-    public List<T> Procedure<T>(Func<IDataRecord, T> convertor, string name, 
-        IEnumerable<ValueParam> dbParams = null,
-        IDbConnection con = null, IDbTransaction tran = null)
-    {
-        var sql = Executor.SqlBuilder.Procedure(name);
-        return Executor.Execute(sql, convertor, dbParams, con, tran);
-    }
-
     private void DoBatchInsert(string tableName, IEnumerable<InputValues> inputs,
         IDbConnection con, IDbTransaction tran)
     {
