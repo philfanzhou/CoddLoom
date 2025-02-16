@@ -31,110 +31,6 @@ public abstract class DbExecutor
 
     public abstract IDbConnection GetConnection();
 
-    internal bool ExistTable(TableDefine table, IDbConnection con)
-    {
-        GetExistTableParam(table, out var checkTable, out var where);
-        if (string.IsNullOrEmpty(checkTable) || where == null)
-        {
-            return false;
-        }
-
-        var sql = SqlBuilder.Count(checkTable, where);
-        var count = Count(sql, where.Parameters, con);
-        return count > 0;
-    }
-
-    protected abstract void GetExistTableParam(TableDefine table, 
-        out string checkTable, out WhereConditions where);
-
-    protected abstract Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command);
-
-    protected abstract IDataAdapter GetAdapter(IDbCommand command);
-
-    private IDbCommand BuildCommand(IDbConnection con, string sql,
-        IEnumerable<ValueParam> dbParams = null)
-    {
-        var command = con.CreateCommand();
-        command.CommandText = sql;
-
-        if (dbParams != null)
-        {
-            var func = GetAddParameterFunc(command);
-            foreach (var item in dbParams)
-            {
-                func(SqlBuilder.GetParamName(item), item.Value);
-            }
-        }
-
-        return command;
-    }
-
-    private void Execute(IDbConnection con, string sql, Action<IDbCommand> action, 
-        IEnumerable<ValueParam> dbParams = null, IDbTransaction tran = null)
-    {
-        if (con == null) throw new ArgumentNullException(nameof(con));
-        if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
-
-        var doOpenCon = con.State != ConnectionState.Open;
-        try
-        {
-            if (doOpenCon)
-            {
-                con.Open();
-            }
-
-            using var command = BuildCommand(con, sql, dbParams);
-            if (tran != null)
-            {
-                command.Transaction = tran;
-            }
-            action(command);
-        }
-        finally
-        {
-            if (doOpenCon)
-            {
-                con.Close();
-            }
-        }
-    }
-
-    private void Execute(IDbConnection con, string sql,
-        Action<IDataReader> readerAction = null, IEnumerable<ValueParam> dbParams = null, IDbTransaction tran = null)
-    {
-        Execute(con, sql, command =>
-        {
-            if (readerAction == null)
-            {
-                command.ExecuteNonQuery();
-            }
-            else
-            {
-                using var reader = command.ExecuteReader();
-                if (reader is not DbDataReader { HasRows: true })
-                {
-                    return;
-                }
-
-                readerAction(reader);
-            }
-        }, dbParams, tran);
-    }
-
-    private DataSet ExecuteAdapter(IDbConnection con, string sql,
-        IEnumerable<ValueParam> dbParams = null, IDbTransaction tran = null)
-    {
-        var ds = new DataSet();
-        Execute(con, sql, command =>
-        {
-            var adapter = GetAdapter(command);
-            adapter.Fill(ds);
-        }, dbParams, tran);
-        return ds;
-    }
-
-    #region Execute
-
     public void Transaction(Action<IDbTransaction> action)
     {
         using var conn = GetConnection();
@@ -211,6 +107,114 @@ public abstract class DbExecutor
             con.Close();
         }
     }
+
+    internal bool ExistTable(TableDefine table, IDbConnection con)
+    {
+        GetExistTableParam(table, out var checkTable, out var where);
+        if (string.IsNullOrEmpty(checkTable) || where == null)
+        {
+            return false;
+        }
+
+        var sql = SqlBuilder.Count(checkTable, where);
+        var count = Count(sql, where.Parameters, con);
+        return count > 0;
+    }
+
+    protected abstract void GetExistTableParam(TableDefine table, 
+        out string checkTable, out WhereConditions where);
+
+    protected abstract Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command);
+
+    protected abstract IDataAdapter GetAdapter(IDbCommand command);
+
+    private IDbCommand BuildCommand(IDbConnection con, string sql,
+        IEnumerable<ValueParam> dbParams = null, IDbTransaction tran = null)
+    {
+        if (con == null) throw new ArgumentNullException(nameof(con));
+        if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
+
+        var command = con.CreateCommand();
+        command.CommandText = sql;
+
+        if (dbParams != null)
+        {
+            var func = GetAddParameterFunc(command);
+            foreach (var item in dbParams)
+            {
+                func(SqlBuilder.GetParamName(item), item.Value);
+            }
+        }
+
+        if (tran != null)
+        {
+            command.Transaction = tran;
+        }
+
+        return command;
+    }
+
+    private void Execute(IDbConnection con, string sql, Action<IDbCommand> action, 
+        IEnumerable<ValueParam> dbParams = null, IDbTransaction tran = null)
+    {
+        if (con == null) throw new ArgumentNullException(nameof(con));
+        if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
+
+        var doOpenCon = con.State != ConnectionState.Open;
+        try
+        {
+            if (doOpenCon)
+            {
+                con.Open();
+            }
+
+            using var command = BuildCommand(con, sql, dbParams, tran);
+            action(command);
+        }
+        finally
+        {
+            if (doOpenCon)
+            {
+                con.Close();
+            }
+        }
+    }
+
+    private void Execute(IDbConnection con, string sql,
+        Action<IDataReader> readerAction = null, IEnumerable<ValueParam> dbParams = null, IDbTransaction tran = null)
+    {
+        Execute(con, sql, command =>
+        {
+            if (readerAction == null)
+            {
+                command.ExecuteNonQuery();
+            }
+            else
+            {
+                using var reader = command.ExecuteReader();
+                if (reader is not DbDataReader { HasRows: true })
+                {
+                    return;
+                }
+
+                readerAction(reader);
+            }
+        }, dbParams, tran);
+    }
+
+    private DataSet ExecuteAdapter(IDbConnection con, string sql,
+        IEnumerable<ValueParam> dbParams = null, IDbTransaction tran = null)
+    {
+        var ds = new DataSet();
+        Execute(con, sql, command =>
+        {
+            var adapter = GetAdapter(command);
+            adapter.Fill(ds);
+        }, dbParams, tran);
+        return ds;
+    }
+
+    #region Execute
 
     public void Execute(string sql,
         IEnumerable<ValueParam> dbParams = null, Action<IDataReader> readerAction = null,
