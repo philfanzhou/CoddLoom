@@ -42,7 +42,7 @@ namespace TestProject.DbCode
             var where = new WhereConditions();
             where.Add(TenantTable.Id, tenant);
             var sql = Executor.SqlBuilder.Delete(TenantTable.TableName, where);
-            Executor.Execute(sql, where.Parameters, null, conn);
+            Executor.Execute(sql, where.Parameters, conn);
         }
 
         public void DeleteUser(string unionId)

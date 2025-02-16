@@ -23,7 +23,7 @@ public partial class DbEngine
             foreach (var table in tableList.Where(table => !Executor.ExistTable(table, con)))
             {
                 var sql = Executor.SqlBuilder.GetCreateTableSql(table);
-                Executor.Execute(sql, null, null, con);
+                Executor.Execute(sql, null, con);
             }
         });
     }
@@ -59,7 +59,7 @@ public partial class DbEngine
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var sql = Executor.SqlBuilder.Delete(tableName, where);
-        Executor.Execute(sql, where.Parameters, null, con, tran);
+        Executor.Execute(sql, where.Parameters, con, tran);
     }
 
     public void Update(string tableName, InputValues input, WhereConditions where, 
@@ -69,7 +69,7 @@ public partial class DbEngine
         var dbParams = new List<ValueParam>();
         dbParams.AddRange(input.Items);
         dbParams.AddRange(where.Parameters);
-        Executor.Execute(sql, dbParams, null, con, tran);
+        Executor.Execute(sql, dbParams, con, tran);
     }
 
     public int Count(string tableName, WhereConditions where, ColumnParam columns,
@@ -120,6 +120,6 @@ public partial class DbEngine
         var forceUseParameter = valuesCount < 2100; // sqlserver default parameter count limit.
 
         var sql = Executor.SqlBuilder.Insert(tableName, inputList, out var dbParams, forceUseParameter);
-        Executor.Execute(sql, dbParams, null, con, tran);
+        Executor.Execute(sql, dbParams, con, tran);
     }
 }

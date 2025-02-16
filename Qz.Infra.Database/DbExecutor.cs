@@ -154,132 +154,83 @@ public abstract class DbExecutor
         return command;
     }
 
-    private void Execute(IDbConnection con, string sql, Action<IDbCommand> action, 
-        IEnumerable<ValueParam> dbParams = null, IDbTransaction tran = null)
-    {
-        if (con == null) throw new ArgumentNullException(nameof(con));
-        if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
-
-        var doOpenCon = con.State != ConnectionState.Open;
-        try
-        {
-            if (doOpenCon)
-            {
-                con.Open();
-            }
-
-            using var command = BuildCommand(con, sql, dbParams, tran);
-            action(command);
-        }
-        finally
-        {
-            if (doOpenCon)
-            {
-                con.Close();
-            }
-        }
-    }
-
-    private void Execute(IDbConnection con, string sql,
-        Action<IDataReader> readerAction = null, IEnumerable<ValueParam> dbParams = null, IDbTransaction tran = null)
-    {
-        Execute(con, sql, command =>
-        {
-            if (readerAction == null)
-            {
-                command.ExecuteNonQuery();
-            }
-            else
-            {
-                using var reader = command.ExecuteReader();
-                if (reader is not DbDataReader { HasRows: true })
-                {
-                    return;
-                }
-
-                readerAction(reader);
-            }
-        }, dbParams, tran);
-    }
-
-    private DataSet ExecuteAdapter(IDbConnection con, string sql,
-        IEnumerable<ValueParam> dbParams = null, IDbTransaction tran = null)
-    {
-        var ds = new DataSet();
-        Execute(con, sql, command =>
-        {
-            var adapter = GetAdapter(command);
-            adapter.Fill(ds);
-        }, dbParams, tran);
-        return ds;
-    }
-
-    #region Execute
-
-    public void Execute(string sql,
-        IEnumerable<ValueParam> dbParams = null, Action<IDataReader> readerAction = null,
-        IDbConnection con = null, IDbTransaction tran = null)
+    private T Execute<T>(string sql, Func<IDbCommand, T> func, 
+        IEnumerable<ValueParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
     {
         if (tran != null)
         {
-            Execute(tran.Connection, sql, readerAction, dbParams, tran);
+            using var command = BuildCommand(tran.Connection, sql, dbParams, tran);
+            return func(command);
         }
         else if (con != null)
         {
-            Execute(con, sql, readerAction, dbParams);
+            using var command = BuildCommand(con, sql, dbParams);
+            return func(command);
         }
         else
         {
-            Execute(newCon => { Execute(newCon, sql, readerAction, dbParams); });
+            return Execute(newCon =>
+            {
+                using var command = BuildCommand(newCon, sql, dbParams);
+                return func(command);
+            });
         }
+    }
+
+    private T Execute<T>(string sql, Func<IDataReader, T> func,
+        IEnumerable<ValueParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
+    {
+        return Execute(sql, command =>
+        {
+            using var reader = command.ExecuteReader();
+            return reader is DbDataReader { HasRows: true } ? func(reader) : default(T);
+        }, dbParams, con, tran);
+    }
+
+    #region Public Execute
+
+    public int Execute(string sql,
+        IEnumerable<ValueParam> dbParams = null,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        return Execute(sql, command => command.ExecuteNonQuery(), dbParams, con, tran);
     }
 
     public List<T> Execute<T>(string sql, Func<IDataRecord, T> convertor,
         IEnumerable<ValueParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
     {
-        var result = new List<T>();
-
-        Execute(sql, dbParams, reader =>
+        return Execute(sql, reader =>
         {
+            var result = new List<T>();
             while (reader.Read())
             {
                 result.Add(convertor(reader));
             }
-        }, con, tran);
-
-        return result;
+            return result;
+        }, dbParams, con, tran);
     }
 
     public DataSet ExecuteAdapter(string sql,
         IEnumerable<ValueParam> dbParams = null, 
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        if (tran != null)
+        return Execute(sql, command =>
         {
-            return ExecuteAdapter(tran.Connection, sql, dbParams, tran);
-        }
-        else if (con != null)
-        {
-            return ExecuteAdapter(con, sql, dbParams);
-        }
-        else
-        {
-            return Execute(newCon => ExecuteAdapter(newCon, sql, dbParams));
-        }
+            var adapter = GetAdapter(command);
+            var ds = new DataSet();
+            adapter.Fill(ds);
+            return ds;
+        }, dbParams, con, tran);
     }
 
     public int Count(string sql,
         IEnumerable<ValueParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
     {
-        var count = 0;
-
-        Execute(sql, dbParams, reader =>
+        return Execute(sql, reader =>
         {
             reader.Read();
-            count = reader.GetInt32(0);
-        }, con, tran);
-
-        return count;
+            return reader.GetInt32(0);
+        }, dbParams, con, tran);
     }
 
     #endregion
