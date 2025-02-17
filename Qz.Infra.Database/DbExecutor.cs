@@ -57,27 +57,12 @@ public abstract class DbExecutor
 
     public T Transaction<T>(Func<IDbTransaction, T> func)
     {
-        using var conn = GetConnection();
-        try
+        var result = default(T);
+        Transaction(tran =>
         {
-            conn.Open();
-            using var tran = conn.BeginTransaction();
-            try
-            {
-                var result = func(tran);
-                tran.Commit();
-                return result;
-            }
-            catch
-            {
-                tran.Rollback();
-                throw;
-            }
-        }
-        finally
-        {
-            conn.Close();
-        }
+            result = func(tran);
+        });
+        return result;
     }
 
     public void Execute(Action<IDbConnection> action)
@@ -96,16 +81,12 @@ public abstract class DbExecutor
 
     public T Execute<T>(Func<IDbConnection, T> func)
     {
-        using var con = GetConnection();
-        try
+        var result = default(T);
+        Execute(con =>
         {
-            con.Open();
-            return func(con);
-        }
-        finally
-        {
-            con.Close();
-        }
+            result = func(con);
+        });
+        return result;
     }
 
     protected internal abstract void GetExistTableParam(TableDefine table, 
