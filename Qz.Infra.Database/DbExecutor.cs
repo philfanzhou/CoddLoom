@@ -108,20 +108,7 @@ public abstract class DbExecutor
         }
     }
 
-    internal bool ExistTable(TableDefine table, IDbConnection con)
-    {
-        GetExistTableParam(table, out var checkTable, out var where);
-        if (string.IsNullOrEmpty(checkTable) || where == null)
-        {
-            return false;
-        }
-
-        var sql = SqlBuilder.Count(checkTable, where);
-        var count = Count(sql, where.Parameters, con);
-        return count > 0;
-    }
-
-    protected abstract void GetExistTableParam(TableDefine table, 
+    protected internal abstract void GetExistTableParam(TableDefine table, 
         out string checkTable, out WhereConditions where);
 
     protected abstract Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command);
@@ -162,22 +149,21 @@ public abstract class DbExecutor
             using var command = BuildCommand(tran.Connection, sql, dbParams, tran);
             return func(command);
         }
-        else if (con != null)
+
+        if (con != null)
         {
             using var command = BuildCommand(con, sql, dbParams);
             return func(command);
         }
-        else
+
+        return Execute(newCon =>
         {
-            return Execute(newCon =>
-            {
-                using var command = BuildCommand(newCon, sql, dbParams);
-                return func(command);
-            });
-        }
+            using var command = BuildCommand(newCon, sql, dbParams);
+            return func(command);
+        });
     }
 
-    private T Execute<T>(string sql, Func<IDataReader, T> func,
+    internal T Execute<T>(string sql, Func<IDataReader, T> func,
         IEnumerable<ValueParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
     {
         return Execute(sql, command =>
@@ -220,16 +206,6 @@ public abstract class DbExecutor
             var ds = new DataSet();
             adapter.Fill(ds);
             return ds;
-        }, dbParams, con, tran);
-    }
-
-    public int Count(string sql,
-        IEnumerable<ValueParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
-    {
-        return Execute(sql, reader =>
-        {
-            reader.Read();
-            return reader.GetInt32(0);
         }, dbParams, con, tran);
     }
 

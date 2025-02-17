@@ -20,7 +20,7 @@ public partial class DbEngine
         TableColumnsCache.Initialize(tableList);
         Executor.Execute(con =>
         {
-            foreach (var table in tableList.Where(table => !Executor.ExistTable(table, con)))
+            foreach (var table in tableList.Where(table => !ExistTable(table, con)))
             {
                 var sql = Executor.SqlBuilder.GetCreateTableSql(table);
                 Executor.Execute(sql, null, con);
@@ -76,7 +76,7 @@ public partial class DbEngine
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var sql = Executor.SqlBuilder.Count(tableName, where, columns);
-        return Executor.Count(sql, where?.Parameters, con, tran);
+        return ReadToInt(sql, where?.Parameters, con, tran);
     }
 
     public List<T> Select<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where,
@@ -109,6 +109,29 @@ public partial class DbEngine
 
         var sql = Executor.SqlBuilder.Select(tableName, where, orderBy, pageParam, columns);
         return Executor.Execute(sql, convertor, where?.Parameters, con, tran);
+    }
+
+    private bool ExistTable(TableDefine table, IDbConnection con)
+    {
+        Executor.GetExistTableParam(table, out var checkTable, out var where);
+        if (string.IsNullOrEmpty(checkTable) || where == null)
+        {
+            return false;
+        }
+
+        var sql = Executor.SqlBuilder.Count(checkTable, where);
+        var count = ReadToInt(sql, where.Parameters, con);
+        return count > 0;
+    }
+
+    private int ReadToInt(string sql,
+        IEnumerable<ValueParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
+    {
+        return Executor.Execute(sql, reader =>
+        {
+            reader.Read();
+            return reader.GetInt32(0);
+        }, dbParams, con, tran);
     }
 
     private void DoBatchInsert(string tableName, IEnumerable<InputValues> inputs,
