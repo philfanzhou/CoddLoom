@@ -163,16 +163,6 @@ public abstract class DbExecutor
         });
     }
 
-    internal T Execute<T>(string sql, Func<IDataReader, T> func,
-        IEnumerable<ValueParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
-    {
-        return Execute(sql, command =>
-        {
-            using var reader = command.ExecuteReader();
-            return reader is DbDataReader { HasRows: true } ? func(reader) : default(T);
-        }, dbParams, con, tran);
-    }
-
     #region Public Execute
 
     public int Execute(string sql,
@@ -183,14 +173,19 @@ public abstract class DbExecutor
     }
 
     public List<T> Execute<T>(string sql, Func<IDataRecord, T> convertor,
-        IEnumerable<ValueParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
+        IEnumerable<ValueParam> dbParams = null, 
+        IDbConnection con = null, IDbTransaction tran = null)
     {
-        return Execute(sql, reader =>
+        return Execute(sql, command =>
         {
+            using var reader = command.ExecuteReader();
             var result = new List<T>();
-            while (reader.Read())
+            if (reader is DbDataReader { HasRows: true })
             {
-                result.Add(convertor(reader));
+                while (reader.Read())
+                {
+                    result.Add(convertor(reader));
+                }
             }
             return result;
         }, dbParams, con, tran);
@@ -206,6 +201,17 @@ public abstract class DbExecutor
             var ds = new DataSet();
             adapter.Fill(ds);
             return ds;
+        }, dbParams, con, tran);
+    }
+
+    public T ExecuteScalar<T>(string sql, Func<object, T> convertor, 
+        IEnumerable<ValueParam> dbParams = null,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        return Execute(sql, command =>
+        {
+            var result = command.ExecuteScalar();
+            return result == null ? default(T) : convertor(result);
         }, dbParams, con, tran);
     }
 

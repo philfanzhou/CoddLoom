@@ -76,7 +76,7 @@ public partial class DbEngine
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var sql = Executor.SqlBuilder.Count(tableName, where, columns);
-        return ReadToInt(sql, where?.Parameters, con, tran);
+        return Executor.ExecuteScalar(sql, System.Convert.ToInt32, where?.Parameters, con, tran);
     }
 
     public List<T> Select<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where,
@@ -111,27 +111,14 @@ public partial class DbEngine
         return Executor.Execute(sql, convertor, where?.Parameters, con, tran);
     }
 
-    private bool ExistTable(TableDefine table, IDbConnection con)
+    private bool ExistTable(TableDefine tableDefine, IDbConnection con)
     {
-        Executor.GetExistTableParam(table, out var checkTable, out var where);
-        if (string.IsNullOrEmpty(checkTable) || where == null)
+        Executor.GetExistTableParam(tableDefine, out var table, out var where);
+        if (string.IsNullOrEmpty(table) || where == null)
         {
             return false;
         }
-
-        var sql = Executor.SqlBuilder.Count(checkTable, where);
-        var count = ReadToInt(sql, where.Parameters, con);
-        return count > 0;
-    }
-
-    private int ReadToInt(string sql,
-        IEnumerable<ValueParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
-    {
-        return Executor.Execute(sql, reader =>
-        {
-            reader.Read();
-            return reader.GetInt32(0);
-        }, dbParams, con, tran);
+        return Count(table, where, con) > 0;
     }
 
     private void DoBatchInsert(string tableName, IEnumerable<InputValues> inputs,
