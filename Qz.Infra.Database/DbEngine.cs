@@ -62,14 +62,14 @@ public partial class DbEngine
         Executor.Execute(sql, where.Parameters, con, tran);
     }
 
-    public void Update(string tableName, InputValues input, WhereConditions where, 
+    public int Update(string tableName, InputValues input, WhereConditions where, 
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var sql = Executor.SqlBuilder.Update(tableName, input, where);
         var dbParams = new List<ValueParam>();
         dbParams.AddRange(input.Items);
         dbParams.AddRange(where.Parameters);
-        Executor.Execute(sql, dbParams, con, tran);
+        return Executor.Execute(sql, dbParams, con, tran);
     }
 
     public int Count(string tableName, WhereConditions where, ColumnParam columns,

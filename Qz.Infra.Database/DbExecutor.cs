@@ -65,6 +65,18 @@ public abstract class DbExecutor
         return result;
     }
 
+    public T TryTransaction<T>(Func<IDbTransaction, T> func)
+    {
+        try
+        {
+            return Transaction(func);
+        }
+        catch
+        {
+            return default(T);
+        }
+    }
+
     public void Execute(Action<IDbConnection> action)
     {
         using var con = GetConnection();
@@ -87,6 +99,18 @@ public abstract class DbExecutor
             result = func(con);
         });
         return result;
+    }
+
+    public T TryExecute<T>(Func<IDbConnection, T> func)
+    {
+        try
+        {
+            return Execute(func);
+        }
+        catch
+        {
+            return default(T);
+        }
     }
 
     protected internal abstract void GetExistTableParam(TableDefine table, 
