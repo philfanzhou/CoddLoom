@@ -55,11 +55,11 @@ public partial class DbEngine
         }
     }
 
-    public void Delete(string tableName, WhereConditions where, 
+    public int Delete(string tableName, WhereConditions where, 
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var sql = Executor.SqlBuilder.Delete(tableName, where);
-        Executor.Execute(sql, where.Parameters, con, tran);
+        return Executor.Execute(sql, where.Parameters, con, tran);
     }
 
     public int Update(string tableName, InputValues input, WhereConditions where, 

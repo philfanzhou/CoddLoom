@@ -31,18 +31,18 @@ partial class DbEngine
         Insert(new[] { entity }, 10, con, tran);
     }
 
-    public void Delete<T>(object id,
+    public int Delete<T>(object id,
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var where = WhereConditions.Create<T>(id, out var tableName);
-        Delete(tableName, where, con, tran);
+        return Delete(tableName, where, con, tran);
     }
 
-    public void Update<T>(T entity,
+    public int Update<T>(T entity,
         IDbConnection con = null, IDbTransaction tran = null)
     {
         DbConverter.ToUpdate(entity, out var table, out var input, out var where);
-        Update(table, input, where, con, tran);
+        return Update(table, input, where, con, tran);
     }
 
     public int Count(string tableName, WhereConditions where,
