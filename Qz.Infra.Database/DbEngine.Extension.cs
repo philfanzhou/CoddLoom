@@ -12,23 +12,23 @@ namespace Qz.Infra.Database;
 
 partial class DbEngine
 {
-    public void Insert(string tableName, InputValues input,
+    public int Insert(string tableName, InputValues input,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        Insert(tableName, new[] { input }, 10, con, tran);
+        return Insert(tableName, new[] { input }, 10, con, tran);
     }
 
-    public void Insert<T>(IEnumerable<T> entities, int batchSize,
+    public int Insert<T>(IEnumerable<T> entities, int batchSize,
         IDbConnection con = null, IDbTransaction tran = null)
     {
         DbConverter.ToInsert(entities, out var table, out var inputs);
-        Insert(table, inputs, batchSize, con, tran);
+        return Insert(table, inputs, batchSize, con, tran);
     }
 
-    public void Insert<T>(T entity,
+    public int Insert<T>(T entity,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        Insert(new[] { entity }, 10, con, tran);
+        return Insert(new[] { entity }, 10, con, tran);
     }
 
     public int Delete<T>(object id,

@@ -5,6 +5,7 @@ using Qz.Infra.Database.Params;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 
 namespace Qz.Infra.Database;
 
@@ -34,12 +35,19 @@ partial class DbEngine
         return Select<T>(where, orderBy, null, con, tran);
     }
 
-    public List<T> Select<T>(object id,
+    public T Select<T>(object id,
         IDbConnection con = null, IDbTransaction tran = null)
         where T : new()
     {
         var where = WhereConditions.Create<T>(id, out var tableName);
-        return Select(DbConverter.ToEntity<T>, tableName, where, null, null, con, tran);
+        var ret = Select(DbConverter.ToEntity<T>, tableName, where, null, null, con, tran);
+        
+        if(ret == null || ret.Count == 0)
+        {
+            return default(T);
+        }
+
+        return ret.Single();
     }
 
     public List<T> Select<T>(Func<IDataRecord, T> convertor, JoinConditions join, WhereConditions where,

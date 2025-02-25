@@ -30,7 +30,7 @@ public partial class DbEngine
 
     public DbExecutor Executor { get; }
 
-    public void Insert(string tableName, IEnumerable<InputValues> inputs, int batchSize, 
+    public int Insert(string tableName, IEnumerable<InputValues> inputs, int batchSize, 
         IDbConnection con = null, IDbTransaction tran = null)
     {
         if (batchSize < 2)
@@ -38,21 +38,24 @@ public partial class DbEngine
             batchSize = 10;
         }
 
+        var affected = 0;
         var tmpList = new List<InputValues>();
         foreach (var input in inputs)
         {
             tmpList.Add(input);
             if (tmpList.Count >= batchSize)
             {
-                DoBatchInsert(tableName, tmpList, con, tran);
+                affected += DoBatchInsert(tableName, tmpList, con, tran);
                 tmpList.Clear();
             }
         }
 
         if (tmpList.Count > 0)
         {
-            DoBatchInsert(tableName, tmpList, con, tran);
+            affected += DoBatchInsert(tableName, tmpList, con, tran);
         }
+
+        return affected;
     }
 
     public int Delete(string tableName, WhereConditions where, 
@@ -121,7 +124,7 @@ public partial class DbEngine
         return Count(table, where, con) > 0;
     }
 
-    private void DoBatchInsert(string tableName, IEnumerable<InputValues> inputs,
+    private int DoBatchInsert(string tableName, IEnumerable<InputValues> inputs,
         IDbConnection con, IDbTransaction tran)
     {
         var inputList = inputs.ToList();
@@ -130,6 +133,6 @@ public partial class DbEngine
         var forceUseParameter = valuesCount < 2100; // sqlserver default parameter count limit.
 
         var sql = Executor.SqlBuilder.Insert(tableName, inputList, out var dbParams, forceUseParameter);
-        Executor.Execute(sql, dbParams, con, tran);
+        return Executor.Execute(sql, dbParams, con, tran);
     }
 }

@@ -18,8 +18,12 @@ public static class DbContainer
         Add(name, engine);
     }
 
-    public static DbEngine Get(string engineName)
+    public static DbEngine Get(string engineName = null)
     {
+        if(string.IsNullOrEmpty(engineName))
+        {
+            engineName = nameof(DbEngine);
+        }
         return Engines.TryGetValue(engineName, out var engine) ? engine : null;
     }
 
