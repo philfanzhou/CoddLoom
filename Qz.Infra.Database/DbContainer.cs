@@ -4,10 +4,12 @@ namespace Qz.Infra.Database;
 
 public static class DbContainer
 {
+    private const string DefaultName = nameof(DbEngine);
     private static readonly ConcurrentDictionary<string, DbEngine> Engines = new();
 
     public static void Add(string engineName, DbEngine engine)
     {
+        Engines.TryAdd(DefaultName, engine);
         Engines.TryAdd(engineName, engine);
         //Engines.AddOrUpdate(engineName, engine, (_, _) => engine);
     }
@@ -22,7 +24,7 @@ public static class DbContainer
     {
         if(string.IsNullOrEmpty(engineName))
         {
-            engineName = nameof(DbEngine);
+            engineName = DefaultName;
         }
         return Engines.TryGetValue(engineName, out var engine) ? engine : null;
     }
