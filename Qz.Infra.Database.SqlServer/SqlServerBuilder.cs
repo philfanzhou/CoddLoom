@@ -44,7 +44,7 @@ public class SqlServerBuilder : SqlBuilder
         var sql = $"EXECUTE {name}";
         if (parameters != null)
         {
-            sql += string.Join(", ", parameters.Select(GetParamName));
+            sql += $" {string.Join(", ", parameters.Select(GetParamName))}";
         }
         return sql;
     }

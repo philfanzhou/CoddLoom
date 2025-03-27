@@ -76,7 +76,7 @@ public class MySqlBuilder : SqlBuilder
         var sql = $"CALL {name}";
         if (parameters != null)
         {
-            sql += string.Join(", ", parameters.Select(GetParamName));
+            sql += $" {string.Join(", ", parameters.Select(GetParamName))}";
         }
         return sql;
     }
