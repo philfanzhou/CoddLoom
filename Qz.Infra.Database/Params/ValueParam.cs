@@ -8,7 +8,7 @@ public class ValueParam
         ParamName = paramName;
     }
 
-    public ValueParam(string column, object value, string paramName)
+    internal ValueParam(string column, object value, string paramName)
         : this(value, paramName)
     {
         Column = column;
