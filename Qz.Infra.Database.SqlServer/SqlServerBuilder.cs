@@ -4,6 +4,7 @@ using Qz.Infra.Database.Sql;
 using Qz.Infra.Database.Table;
 using Qz.Infra.Database.Table.Base;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
@@ -38,9 +39,14 @@ public class SqlServerBuilder : SqlBuilder
         return base.Select(tableName, where, orderBy, pageParam, select);
     }
 
-    public override string Procedure(string name)
+    public override string Procedure(string name, IEnumerable<ValueParam> parameters = null)
     {
-        return $"EXECUTE {name}";
+        var sql = $"EXECUTE {name}";
+        if (parameters != null)
+        {
+            sql += string.Join(", ", parameters.Select(GetParamName));
+        }
+        return sql;
     }
 
     #region ColumnType

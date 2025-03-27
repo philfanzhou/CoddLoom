@@ -1,7 +1,10 @@
-﻿using Qz.Infra.Database.Sql;
+﻿using Qz.Infra.Database.Params;
+using Qz.Infra.Database.Sql;
 using Qz.Infra.Database.Table;
 using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 
 namespace Qz.Infra.Database.MySql;
 
@@ -68,8 +71,13 @@ public class MySqlBuilder : SqlBuilder
         }
     }
 
-    public override string Procedure(string name)
+    public override string Procedure(string name, IEnumerable<ValueParam> parameters = null)
     {
-        return $"CALL {name}";
+        var sql = $"CALL {name}";
+        if (parameters != null)
+        {
+            sql += string.Join(", ", parameters.Select(GetParamName));
+        }
+        return sql;
     }
 }

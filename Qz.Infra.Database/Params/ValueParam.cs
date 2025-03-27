@@ -2,14 +2,19 @@
 
 public class ValueParam
 {
-    public ValueParam(string column, object value, string paramName)
+    public ValueParam(object value, string paramName)
     {
-        Column = column;
         Value = value;
         ParamName = paramName;
     }
 
-    public ValueParam(string column, object value, string paramName, bool forceParameter)
+    public ValueParam(string column, object value, string paramName)
+        : this(value, paramName)
+    {
+        Column = column;
+    }
+
+    internal ValueParam(string column, object value, string paramName, bool forceParameter)
         : this(column, value, paramName)
     {
         ForceParameter = forceParameter;
@@ -21,5 +26,5 @@ public class ValueParam
 
     public string ParamName { get; internal set; }
 
-    public bool ForceParameter { get; }
+    internal bool ForceParameter { get; }
 }

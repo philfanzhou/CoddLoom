@@ -102,7 +102,7 @@ public partial class SqlBuilder
         return AppendLimit(sql, pageParam);
     }
 
-    public virtual string Procedure(string name)
+    public virtual string Procedure(string name, IEnumerable<ValueParam> parameters = null)
     {
         throw new NotSupportedException();
     }
