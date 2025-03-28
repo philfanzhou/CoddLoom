@@ -1,10 +1,7 @@
-﻿using Qz.Infra.Database.Params;
-using Qz.Infra.Database.Sql;
+﻿using Qz.Infra.Database.Sql;
 using Qz.Infra.Database.Table;
 using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 
 namespace Qz.Infra.Database.MySql;
 
@@ -69,15 +66,5 @@ public class MySqlBuilder : SqlBuilder
             default:
                 throw new NotSupportedException($"{type} not support for column.");
         }
-    }
-
-    public override string Procedure(string name, IEnumerable<ValueParam> parameters = null)
-    {
-        var sql = $"CALL {name}";
-        if (parameters != null)
-        {
-            sql += $" {string.Join(", ", parameters.Select(GetParamName))}";
-        }
-        return sql;
     }
 }

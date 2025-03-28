@@ -146,9 +146,7 @@ public abstract class DbExecutor
         return command;
     }
 
-    #region Public
-
-    public T Execute<T>(string commandText, Func<IDbCommand, T> func,
+    private T Execute<T>(string commandText, Func<IDbCommand, T> func,
         IEnumerable<ValueParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
     {
         if (tran != null)
@@ -170,12 +168,12 @@ public abstract class DbExecutor
         });
     }
 
-    public int NonQuery(IDbCommand command)
+    private int NonQuery(IDbCommand command)
     {
-        return command.ExecuteNonQuery(); 
+        return command.ExecuteNonQuery();
     }
 
-    public List<T> Reader<T>(IDbCommand command, Func<IDataRecord, T> convertor)
+    private List<T> Reader<T>(IDbCommand command, Func<IDataRecord, T> convertor)
     {
         using var reader = command.ExecuteReader();
         var result = new List<T>();
@@ -190,7 +188,7 @@ public abstract class DbExecutor
         return result;
     }
 
-    public DataSet Adapter(IDbCommand command)
+    private DataSet Adapter(IDbCommand command)
     {
         var adapter = GetAdapter(command);
         var ds = new DataSet();
@@ -198,16 +196,74 @@ public abstract class DbExecutor
         return ds;
     }
 
-    public T Scalar<T>(IDbCommand command, Func<object, T> convertor)
+    private T Scalar<T>(IDbCommand command, Func<object, T> convertor)
     {
         var result = command.ExecuteScalar();
         return result == null ? default(T) : convertor(result);
     }
 
-    public T Procedure<T>(IDbCommand command, Func<IDbCommand, T> func)
+    private T Procedure<T>(IDbCommand command, Func<IDbCommand, T> func)
     {
         command.CommandType = CommandType.StoredProcedure;
         return func(command);
+    }
+
+    #region Public
+
+    public int NonQuery(string commandText,
+        IEnumerable<ValueParam> dbParams = null,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        return Execute(commandText, NonQuery, dbParams, con, tran);
+    }
+
+    public int NonQueryProcedure(string procedureName,
+        IEnumerable<ValueParam> dbParams = null,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        return Execute(procedureName, command => Procedure(command, NonQuery), dbParams, con, tran);
+    }
+
+    public List<T> Reader<T>(string commandText, Func<IDataRecord, T> convertor,
+        IEnumerable<ValueParam> dbParams = null,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        return Execute(commandText, command => Reader(command, convertor), dbParams, con, tran);
+    }
+
+    public List<T> ReaderProcedure<T>(string procedureName, Func<IDataRecord, T> convertor,
+        IEnumerable<ValueParam> dbParams = null,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        return Execute(procedureName, command => Procedure(command, c => Reader(c, convertor)), dbParams, con, tran);
+    }
+
+    public DataSet Adapter(string commandText, 
+        IEnumerable<ValueParam> dbParams = null,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        return Execute(commandText, Adapter, dbParams, con, tran);
+    }
+
+    public DataSet AdapterProcedure(string procedureName,
+        IEnumerable<ValueParam> dbParams = null,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        return Execute(procedureName, command => Procedure(command, Adapter), dbParams, con, tran);
+    }
+
+    public T Scalar<T>(string commandText, Func<object, T> convertor,
+        IEnumerable<ValueParam> dbParams = null,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        return Execute(commandText, command => Scalar(command, convertor), dbParams, con, tran);
+    }
+
+    public T ScalarProcedure<T>(string procedureName, Func<object, T> convertor,
+        IEnumerable<ValueParam> dbParams = null,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        return Execute(procedureName, command => Procedure(command, c => Scalar(c, convertor)), dbParams, con, tran);
     }
 
     #endregion

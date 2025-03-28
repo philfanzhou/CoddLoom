@@ -102,11 +102,6 @@ public partial class SqlBuilder
         return AppendLimit(sql, pageParam);
     }
 
-    public virtual string Procedure(string name, IEnumerable<ValueParam> parameters = null)
-    {
-        throw new NotSupportedException();
-    }
-
     #region Protected virtual
 
     protected virtual string AppendGroupBy(string sql, 

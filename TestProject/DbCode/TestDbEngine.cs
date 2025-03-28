@@ -27,8 +27,8 @@ namespace TestProject.DbCode
         public IEnumerable<string> GetAllTenant(IDbConnection conn)
         {
             var sql = Executor.SqlBuilder.Select(TenantTable.TableName);
-            var tenants = Executor.Execute(
-                sql, command => Executor.Reader(command, record => record[TenantTable.Id].ToString()), null, conn);
+            var tenants = Executor.Reader(
+                sql, record => record[TenantTable.Id].ToString(), null, conn);
             return tenants.ToList();
         }
 
@@ -42,7 +42,7 @@ namespace TestProject.DbCode
             var where = new WhereConditions();
             where.Add(TenantTable.Id, tenant);
             var sql = Executor.SqlBuilder.Delete(TenantTable.TableName, where);
-            Executor.Execute(sql, Executor.NonQuery, where.Parameters, conn);
+            Executor.NonQuery(sql, where.Parameters, conn);
         }
 
         public void DeleteUser(string unionId)
