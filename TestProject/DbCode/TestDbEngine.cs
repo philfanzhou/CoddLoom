@@ -28,7 +28,7 @@ namespace TestProject.DbCode
         {
             var sql = Executor.SqlBuilder.Select(TenantTable.TableName);
             var tenants = Executor.Execute(
-                sql, record => record[TenantTable.Id].ToString(), null, conn);
+                sql, command => Executor.Reader(command, record => record[TenantTable.Id].ToString()), null, conn);
             return tenants.ToList();
         }
 
@@ -42,7 +42,7 @@ namespace TestProject.DbCode
             var where = new WhereConditions();
             where.Add(TenantTable.Id, tenant);
             var sql = Executor.SqlBuilder.Delete(TenantTable.TableName, where);
-            Executor.Execute(sql, where.Parameters, conn);
+            Executor.Execute(sql, Executor.NonQuery, where.Parameters, conn);
         }
 
         public void DeleteUser(string unionId)

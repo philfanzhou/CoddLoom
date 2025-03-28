@@ -23,7 +23,7 @@ public partial class DbEngine
             foreach (var table in tableList.Where(table => !ExistTable(table, con)))
             {
                 var sql = Executor.SqlBuilder.GetCreateTableSql(table);
-                Executor.Execute(sql, null, con);
+                Executor.Execute(sql, Executor.NonQuery, null, con);
             }
         });
     }
@@ -62,7 +62,7 @@ public partial class DbEngine
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var sql = Executor.SqlBuilder.Delete(tableName, where);
-        return Executor.Execute(sql, where.Parameters, con, tran);
+        return Executor.Execute(sql, Executor.NonQuery, where.Parameters, con, tran);
     }
 
     public int Update(string tableName, InputValues input, WhereConditions where, 
@@ -72,14 +72,14 @@ public partial class DbEngine
         var dbParams = new List<ValueParam>();
         dbParams.AddRange(input.Items);
         dbParams.AddRange(where.Parameters);
-        return Executor.Execute(sql, dbParams, con, tran);
+        return Executor.Execute(sql, Executor.NonQuery, dbParams, con, tran);
     }
 
     public int Count(string tableName, WhereConditions where, ColumnParam columns,
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var sql = Executor.SqlBuilder.Count(tableName, where, columns);
-        return Executor.ExecuteScalar(sql, System.Convert.ToInt32, where?.Parameters, con, tran);
+        return Executor.Execute(sql, command => Executor.Scalar(command, System.Convert.ToInt32), where?.Parameters, con, tran);
     }
 
     public List<T> Select<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where,
@@ -87,7 +87,7 @@ public partial class DbEngine
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var sql = Executor.SqlBuilder.Select(tableName, where, orderBy, null, columns);
-        return Executor.Execute(sql, convertor, where?.Parameters, con, tran);
+        return Executor.Execute(sql, command => Executor.Reader(command, convertor), where?.Parameters, con, tran);
     }
 
     public List<T> PageSelect<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where,
@@ -111,7 +111,7 @@ public partial class DbEngine
         }
 
         var sql = Executor.SqlBuilder.Select(tableName, where, orderBy, pageParam, columns);
-        return Executor.Execute(sql, convertor, where?.Parameters, con, tran);
+        return Executor.Execute(sql, command => Executor.Reader(command, convertor), where?.Parameters, con, tran);
     }
 
     private bool ExistTable(TableDefine tableDefine, IDbConnection con)
@@ -133,6 +133,6 @@ public partial class DbEngine
         var forceUseParameter = valuesCount < 2100; // sqlserver default parameter count limit.
 
         var sql = Executor.SqlBuilder.Insert(tableName, inputList, out var dbParams, forceUseParameter);
-        return Executor.Execute(sql, dbParams, con, tran);
+        return Executor.Execute(sql, Executor.NonQuery, dbParams, con, tran);
     }
 }

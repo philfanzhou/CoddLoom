@@ -120,14 +120,14 @@ public abstract class DbExecutor
 
     protected abstract IDataAdapter GetAdapter(IDbCommand command);
 
-    private IDbCommand BuildCommand(IDbConnection con, string sql,
+    private IDbCommand BuildCommand(IDbConnection con, string commandText,
         IEnumerable<ValueParam> dbParams = null, IDbTransaction tran = null)
     {
         if (con == null) throw new ArgumentNullException(nameof(con));
-        if (string.IsNullOrEmpty(sql)) throw new ArgumentNullException(nameof(sql));
+        if (string.IsNullOrEmpty(commandText)) throw new ArgumentNullException(nameof(commandText));
 
         var command = con.CreateCommand();
-        command.CommandText = sql;
+        command.CommandText = commandText;
 
         if (dbParams != null)
         {
@@ -146,78 +146,68 @@ public abstract class DbExecutor
         return command;
     }
 
-    private T Execute<T>(string sql, Func<IDbCommand, T> func, 
+    #region Public
+
+    public T Execute<T>(string commandText, Func<IDbCommand, T> func,
         IEnumerable<ValueParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
     {
         if (tran != null)
         {
-            using var command = BuildCommand(tran.Connection, sql, dbParams, tran);
+            using var command = BuildCommand(tran.Connection, commandText, dbParams, tran);
             return func(command);
         }
 
         if (con != null)
         {
-            using var command = BuildCommand(con, sql, dbParams);
+            using var command = BuildCommand(con, commandText, dbParams);
             return func(command);
         }
 
         return Execute(newCon =>
         {
-            using var command = BuildCommand(newCon, sql, dbParams);
+            using var command = BuildCommand(newCon, commandText, dbParams);
             return func(command);
         });
     }
 
-    #region Public Execute
-
-    public int Execute(string sql,
-        IEnumerable<ValueParam> dbParams = null,
-        IDbConnection con = null, IDbTransaction tran = null)
+    public int NonQuery(IDbCommand command)
     {
-        return Execute(sql, command => command.ExecuteNonQuery(), dbParams, con, tran);
+        return command.ExecuteNonQuery(); 
     }
 
-    public List<T> Execute<T>(string sql, Func<IDataRecord, T> convertor,
-        IEnumerable<ValueParam> dbParams = null, 
-        IDbConnection con = null, IDbTransaction tran = null)
+    public List<T> Reader<T>(IDbCommand command, Func<IDataRecord, T> convertor)
     {
-        return Execute(sql, command =>
+        using var reader = command.ExecuteReader();
+        var result = new List<T>();
+        if (reader is not DbDataReader { HasRows: true })
         {
-            using var reader = command.ExecuteReader();
-            var result = new List<T>();
-            if (reader is DbDataReader { HasRows: true })
-            {
-                while (reader.Read())
-                {
-                    result.Add(convertor(reader));
-                }
-            }
             return result;
-        }, dbParams, con, tran);
+        }
+        while (reader.Read())
+        {
+            result.Add(convertor(reader));
+        }
+        return result;
     }
 
-    public DataSet ExecuteAdapter(string sql,
-        IEnumerable<ValueParam> dbParams = null, 
-        IDbConnection con = null, IDbTransaction tran = null)
+    public DataSet Adapter(IDbCommand command)
     {
-        return Execute(sql, command =>
-        {
-            var adapter = GetAdapter(command);
-            var ds = new DataSet();
-            adapter.Fill(ds);
-            return ds;
-        }, dbParams, con, tran);
+        var adapter = GetAdapter(command);
+        var ds = new DataSet();
+        adapter.Fill(ds);
+        return ds;
     }
 
-    public T ExecuteScalar<T>(string sql, Func<object, T> convertor, 
-        IEnumerable<ValueParam> dbParams = null,
-        IDbConnection con = null, IDbTransaction tran = null)
+    public T Scalar<T>(IDbCommand command, Func<object, T> convertor)
     {
-        return Execute(sql, command =>
-        {
-            var result = command.ExecuteScalar();
-            return result == null ? default(T) : convertor(result);
-        }, dbParams, con, tran);
+        var result = command.ExecuteScalar();
+        return result == null ? default(T) : convertor(result);
+    }
+
+    public T Procedure<T>(IDbCommand command, Func<IDbCommand, T> func)
+    {
+        command.CommandType = CommandType.StoredProcedure;
+        return func(command);
     }
 
     #endregion
