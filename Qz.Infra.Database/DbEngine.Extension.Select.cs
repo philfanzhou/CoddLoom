@@ -35,7 +35,7 @@ partial class DbEngine
         return Select<T>(where, orderBy, null, con, tran);
     }
 
-    public T Select<T>(object id,
+    public T SelectById<T>(object id,
         IDbConnection con = null, IDbTransaction tran = null)
         where T : new()
     {
