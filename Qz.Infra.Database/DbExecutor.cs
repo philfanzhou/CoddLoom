@@ -128,6 +128,7 @@ public abstract class DbExecutor
 
         var command = con.CreateCommand();
         command.CommandText = commandText;
+        command.CommandTimeout = 300;
 
         if (dbParams != null)
         {
