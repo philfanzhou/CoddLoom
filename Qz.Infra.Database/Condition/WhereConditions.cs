@@ -15,10 +15,10 @@ public class WhereConditions
 
     private readonly ParameterNameGenerator _parameterNameGenerator = new();
 
-    private readonly List<PartialWhereConditions> _partialConditions = new();
+    private readonly List<PartialWhereConditions> _partialConditions = [];
 
-    private readonly List<ValueParam> _valueParamList = new();
-    private readonly List<WhereConditionsItemBase> _conditionsItemList = new();
+    private readonly List<ValueParam> _valueParamList = [];
+    private readonly List<WhereConditionsItemBase> _conditionsItemList = [];
 
     #endregion
 
@@ -63,22 +63,22 @@ public class WhereConditions
         return where;
     }
 
-    public void Add(string column, object value,
+    public WhereConditions Add(string column, object value,
         WhereOperator whereOperator = WhereOperator.Equal, 
         WhereConnector connector = WhereConnector.And, 
         bool allowEmptyValue = false)
     {
-        Add(column, value, null, whereOperator, connector, allowEmptyValue);
+        return Add(column, value, null, whereOperator, connector, allowEmptyValue);
     }
 
-    public void Add(string column, object value, DbType? castType,
+    public WhereConditions Add(string column, object value, DbType? castType,
         WhereOperator whereOperator = WhereOperator.Equal, 
         WhereConnector connector = WhereConnector.And, 
         bool allowEmptyValue = false)
     {
         if (string.IsNullOrEmpty(column)) throw new ArgumentNullException(nameof(column));
-        if (value == null) return; // use AddIsNull condition to instead null value.
-        if (allowEmptyValue == false && string.IsNullOrEmpty(value.ToString())) return;
+        if (value == null) return this; // use AddIsNull condition to instead null value.
+        if (allowEmptyValue == false && string.IsNullOrEmpty(value.ToString())) return this;
 
         var param = new ValueParam(column, value, _parameterNameGenerator.Get(column));
 
@@ -86,8 +86,10 @@ public class WhereConditions
         _conditionsItemList.Add(castType != null
             ? new WhereConditionsItem(param, castType.Value, whereOperator, connector)
             : new WhereConditionsItem(param, whereOperator, connector));
+        return this;
     }
 
+    [Obsolete]
     public void AddIsNull(string column, 
         WhereConnector connector = WhereConnector.And, bool isNull = true)
     {
@@ -97,13 +99,32 @@ public class WhereConditions
         _conditionsItemList.Add(conditionItem);
     }
 
+    public WhereConditions IsNull(string column,
+        WhereConnector connector = WhereConnector.And)
+    {
+        if (string.IsNullOrEmpty(column)) throw new ArgumentNullException(nameof(column));
+        var conditionItem = new WhereConditionsNullItem(column, true, connector);
+        _conditionsItemList.Add(conditionItem);
+        return this;
+    }
+
+    [Obsolete]
     public void AddIsNotNull(string column, 
         WhereConnector connector = WhereConnector.And)
     {
         AddIsNull(column, connector, false);
     }
 
-    public void Add(WhereConditions where,
+    public WhereConditions IsNotNull(string column,
+        WhereConnector connector = WhereConnector.And)
+    {
+        if (string.IsNullOrEmpty(column)) throw new ArgumentNullException(nameof(column));
+        var conditionItem = new WhereConditionsNullItem(column, false, connector);
+        _conditionsItemList.Add(conditionItem);
+        return this;
+    }
+
+    public WhereConditions Add(WhereConditions where,
         WhereConnector connector = WhereConnector.And)
     {
         RefreshParamName(where);
@@ -112,6 +133,7 @@ public class WhereConditions
             WhereConditions = where,
             WhereConnector = connector
         });
+        return this;
     }
 
     public bool IsEmpty()

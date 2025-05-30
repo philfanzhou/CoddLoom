@@ -27,7 +27,7 @@ public class InputValues
 
     public IReadOnlyList<ValueParam> Items => _items.Values.ToList().AsReadOnly();
 
-    public void Add<T>(string column, T value, bool forceParameter = false)
+    public InputValues Add<T>(string column, T value, bool forceParameter = false)
     {
         if (null == value)
         {
@@ -45,9 +45,11 @@ public class InputValues
         {
             AddItem(column, value, forceParameter);
         }
+
+        return this;
     }
 
-    public void AddString(string column, string value,
+    public InputValues AddString(string column, string value,
         bool allowEmpty = true, bool forceParameter = false, bool autoTrim = false)
     {
         if (null == value)
@@ -63,9 +65,11 @@ public class InputValues
         {
             AddItem(column, autoTrim ? value.Trim() : value, forceParameter);
         }
+
+        return this;
     }
 
-    public void AddDateTime(string column, DateTime? time, 
+    public InputValues AddDateTime(string column, DateTime? time, 
         bool allowMinValue = true, bool forceParameter = false)
     {
         if (null == time)
@@ -81,11 +85,14 @@ public class InputValues
         {
             AddItem(column, time.Value, forceParameter);
         }
+
+        return this;
     }
 
-    public void AddNull(string column, bool forceParameter = false)
+    public InputValues AddNull(string column, bool forceParameter = false)
     {
         AddItem(column, DBNull.Value, forceParameter);
+        return this;
     }
 
     internal bool IsEmpty()
