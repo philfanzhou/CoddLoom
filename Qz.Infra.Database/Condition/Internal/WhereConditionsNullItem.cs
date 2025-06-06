@@ -2,19 +2,13 @@
 
 namespace Qz.Infra.Database.Condition.Internal;
 
-internal class WhereConditionsNullItem : WhereConditionsItemBase
+internal class WhereConditionsNullItem(
+    string column,
+    bool isNull,
+    WhereConnector connector)
+    : WhereItemBase(column, connector)
 {
-    public WhereConditionsNullItem(string column, bool isNull,
-        WhereConnector whereConnector = WhereConnector.And)
-    {
-        Column = column;
-        IsNull = isNull;
-        WhereConnector = whereConnector;
-    }
-
-    public bool IsNull { get; }
-
-    public override string Column { get; }
+    public bool IsNull { get; } = isNull;
 
     protected internal override string ToSql(SqlBuilder builder)
     {

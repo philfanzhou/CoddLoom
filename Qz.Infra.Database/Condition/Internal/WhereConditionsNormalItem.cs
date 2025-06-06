@@ -4,17 +4,10 @@ using System.Data;
 
 namespace Qz.Infra.Database.Condition.Internal;
 
-internal class WhereConditionsItem : WhereConditionsItemBase
+internal class WhereConditionsNormalItem(ValueParam parameter, WhereOperator whereOperator, WhereConnector connector)
+    : WhereItemBase(connector)
 {
-    public WhereConditionsItem(ValueParam parameter,
-        WhereOperator whereOperator, WhereConnector connector)
-    {
-        Parameter = parameter;
-        WhereOperator = whereOperator;
-        WhereConnector = connector;
-    }
-
-    public WhereConditionsItem(ValueParam parameter, DbType castType,
+    public WhereConditionsNormalItem(ValueParam parameter, DbType castType,
         WhereOperator whereOperator, WhereConnector connector)
         : this(parameter, whereOperator, connector)
     {
@@ -23,9 +16,9 @@ internal class WhereConditionsItem : WhereConditionsItemBase
 
     public override string Column => Parameter.Column;
 
-    public ValueParam Parameter { get; }
+    public ValueParam Parameter { get; } = parameter;
 
-    public WhereOperator WhereOperator { get; protected set; }
+    public WhereOperator WhereOperator { get; protected set; } = whereOperator;
 
     public DbType? CastType { get; }
 

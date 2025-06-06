@@ -1,11 +1,10 @@
 ﻿using Qz.Infra.Database.Cache;
 using Qz.Infra.Database.Condition.Internal;
 using Qz.Infra.Database.Params;
-using Qz.Infra.Database.Sql;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Text;
+using System.Linq;
 
 namespace Qz.Infra.Database.Condition;
 
@@ -15,10 +14,9 @@ public class WhereConditions
 
     private readonly ParameterNameGenerator _parameterNameGenerator = new();
 
-    private readonly List<PartialWhereConditions> _partialConditions = [];
-
     private readonly List<ValueParam> _valueParamList = [];
-    private readonly List<WhereConditionsItemBase> _conditionsItemList = [];
+    private readonly List<WhereItemBase> _conditionsItemList = [];
+    private readonly List<PartialWhereConditions> _partialConditions = [];
 
     #endregion
 
@@ -39,6 +37,10 @@ public class WhereConditions
             return paramList;
         }
     }
+
+    internal IEnumerable<WhereItemBase> Items => _conditionsItemList.AsReadOnly();
+
+    internal IEnumerable<PartialWhereConditions> InnerConditions => _partialConditions.AsReadOnly();
 
     #endregion
 
@@ -63,6 +65,11 @@ public class WhereConditions
         return where;
     }
 
+    public bool IsEmpty()
+    {
+        return _conditionsItemList.Count < 1 && _partialConditions.Count < 1;
+    }
+
     public WhereConditions Add(string column, object value,
         WhereOperator whereOperator = WhereOperator.Equal, 
         WhereConnector connector = WhereConnector.And, 
@@ -81,22 +88,23 @@ public class WhereConditions
         if (allowEmptyValue == false && string.IsNullOrEmpty(value.ToString())) return this;
 
         var param = new ValueParam(column, value, _parameterNameGenerator.Get(column));
-
         _valueParamList.Add(param);
         _conditionsItemList.Add(castType != null
-            ? new WhereConditionsItem(param, castType.Value, whereOperator, connector)
-            : new WhereConditionsItem(param, whereOperator, connector));
+            ? new WhereConditionsNormalItem(param, castType.Value, whereOperator, connector)
+            : new WhereConditionsNormalItem(param, whereOperator, connector));
         return this;
     }
 
-    [Obsolete]
-    public void AddIsNull(string column, 
-        WhereConnector connector = WhereConnector.And, bool isNull = true)
+    public WhereConditions Add(WhereConditions where,
+        WhereConnector connector = WhereConnector.And)
     {
-        if (string.IsNullOrEmpty(column)) throw new ArgumentNullException(nameof(column));
-
-        var conditionItem = new WhereConditionsNullItem(column, isNull, connector);
-        _conditionsItemList.Add(conditionItem);
+        RefreshParamName(where, _parameterNameGenerator);
+        _partialConditions.Add(new PartialWhereConditions
+        {
+            WhereConditions = where,
+            WhereConnector = connector
+        });
+        return this;
     }
 
     public WhereConditions IsNull(string column,
@@ -108,13 +116,6 @@ public class WhereConditions
         return this;
     }
 
-    [Obsolete]
-    public void AddIsNotNull(string column, 
-        WhereConnector connector = WhereConnector.And)
-    {
-        AddIsNull(column, connector, false);
-    }
-
     public WhereConditions IsNotNull(string column,
         WhereConnector connector = WhereConnector.And)
     {
@@ -124,62 +125,59 @@ public class WhereConditions
         return this;
     }
 
-    public WhereConditions Add(WhereConditions where,
+    public WhereConditions In<T>(string column, IEnumerable<T> ranges,
         WhereConnector connector = WhereConnector.And)
     {
-        RefreshParamName(where);
-        _partialConditions.Add(new PartialWhereConditions
-        {
-            WhereConditions = where,
-            WhereConnector = connector
-        });
+        if (string.IsNullOrEmpty(column)) throw new ArgumentNullException(nameof(column));
+        if (ranges == null) return this;
+        var valueList = ranges.Where(v => v != null).ToList();
+        if(valueList.Count < 1) return this;
+
+        var paramList = valueList
+            .Select(v => new ValueParam(column, v, _parameterNameGenerator.Get(column)))
+            .ToList();
+
+        _valueParamList.AddRange(paramList);
+        _conditionsItemList.Add(new WhereConditionsInItem(column, paramList, connector));
         return this;
     }
 
-    public bool IsEmpty()
-    {
-        return _conditionsItemList.Count < 1 && _partialConditions.Count < 1;
-    }
-
-    internal string GetWhereString(SqlBuilder builder)
-    {
-        var whereBuilder = new StringBuilder();
-        foreach (var item in _conditionsItemList)
-        {
-            if (whereBuilder.Length > 0)
-            {
-                whereBuilder.Append(builder.GetConnector(item.WhereConnector));
-            }
-            whereBuilder.Append(item.ToSql(builder));
-        }
-
-        foreach (var partialItem in _partialConditions)
-        {
-            if (whereBuilder.Length > 0)
-            {
-                whereBuilder.Append(builder.GetConnector(partialItem.WhereConnector));
-            }
-            whereBuilder.Append(builder.GetPartialCondition(partialItem.WhereConditions));
-        }
-
-        return whereBuilder.ToString();
-    }
-
-    private void RefreshParamName(WhereConditions where)
+    private static void RefreshParamName(WhereConditions where, ParameterNameGenerator nameGenerator)
     {
         foreach (var item in where._conditionsItemList)
         {
-            if (item is WhereConditionsItem condition)
+            if (item is WhereConditionsNormalItem condition)
             {
-                condition.Parameter.ParamName = _parameterNameGenerator.Get(condition.Column);
+                condition.Parameter.ParamName = nameGenerator.Get(condition.Column);
             }
         }
 
         foreach(var item in where._partialConditions)
         {
-            RefreshParamName(item.WhereConditions);
+            RefreshParamName(item.WhereConditions, nameGenerator);
         }
     }
+
+    #region Obsolete
+
+    [Obsolete]
+    public void AddIsNull(string column,
+        WhereConnector connector = WhereConnector.And, bool isNull = true)
+    {
+        if (string.IsNullOrEmpty(column)) throw new ArgumentNullException(nameof(column));
+
+        var conditionItem = new WhereConditionsNullItem(column, isNull, connector);
+        _conditionsItemList.Add(conditionItem);
+    }
+
+    [Obsolete]
+    public void AddIsNotNull(string column,
+        WhereConnector connector = WhereConnector.And)
+    {
+        AddIsNull(column, connector, false);
+    }
+
+    #endregion
 
     private class ParameterNameGenerator
     {
