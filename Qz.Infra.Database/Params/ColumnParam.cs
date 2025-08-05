@@ -6,55 +6,27 @@ namespace Qz.Infra.Database.Params;
 
 public class ColumnParam
 {
-    private readonly List<IDbColumn> _items = new();
+    private readonly List<SelectItem> _items = [];
 
-    internal IReadOnlyCollection<SelectItem> Select => _items.OfType<SelectItem>().ToList().AsReadOnly();
-
-    internal IReadOnlyCollection<GroupByItem> GroupBy => _items.OfType<GroupByItem>().Where(p => p.GroupBy).ToList().AsReadOnly();
-
-    public void AddSelect(string column, 
-        string dbFunc = null, DbType? cast = null, string alias = null, bool groupBy = false)
+    public ColumnParam AddSelect(string column,
+        string dbFunc = null,
+        DbType? cast = null,
+        string alias = null,
+        bool groupBy = false)
     {
         _items.Add(new SelectItem(column, dbFunc, cast, alias, groupBy));
+        return this;
     }
 
-    public void AddGroupBy(string column)
-    {
-        _items.Add(new GroupByItem(column, true));
-    }
+    internal IReadOnlyCollection<SelectItem> Select => _items.AsReadOnly();
+    internal IReadOnlyCollection<SelectItem> GroupBy => _items.Where(i => i.GroupBy).ToList().AsReadOnly();
 }
 
-internal class SelectItem : GroupByItem
+internal class SelectItem(string column, string dbFunc, DbType? cast, string alias, bool groupBy)
 {
-    public SelectItem(string column, string dbFunc, DbType? cast, string alias, bool groupBy)
-        : base(column, groupBy)
-    {
-        DbFunc = dbFunc;
-        Cast = cast;
-        Alias = alias;
-    }
-
-    public string DbFunc { get; }
-
-    public DbType? Cast { get; }
-
-    public string Alias { get; }
-}
-
-internal class GroupByItem : IDbColumn
-{
-    public GroupByItem(string column, bool groupBy)
-    {
-        Column = column;
-        GroupBy = groupBy;
-    }
-
-    public string Column { get; }
-
-    internal bool GroupBy { get; }
-}
-
-internal interface IDbColumn
-{
-    string Column { get; }
+    public string Column { get; } = column;
+    public string DbFunc { get; } = dbFunc;
+    public DbType? Cast { get; } = cast;
+    public string Alias { get; } = alias;
+    public bool GroupBy { get; } = groupBy;
 }
