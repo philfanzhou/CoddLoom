@@ -1,5 +1,4 @@
-﻿using Qz.Infra.Database.Cache;
-using Qz.Infra.Database.Condition;
+﻿using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Input;
 using Qz.Infra.Database.Params;
 using Qz.Infra.Database.Table;
@@ -15,18 +14,11 @@ public partial class DbEngine
     public DbEngine(DbExecutor executor, IEnumerable<TableDefine> tables)
     {
         Executor = executor;
-
-        var tableList = tables.ToList();
-        TableColumnsCache.Initialize(tableList);
-        Executor.Execute(con =>
-        {
-            foreach (var table in tableList.Where(table => !ExistTable(table, con)))
-            {
-                var sql = Executor.SqlBuilder.GetCreateTableSql(table);
-                Executor.NonQuery(sql, null, con);
-            }
-        });
+        InitializeTable(tables);
     }
+
+    public DbEngine(DbExecutor executor) : this(executor, null)
+    { }
 
     public DbExecutor Executor { get; }
 
