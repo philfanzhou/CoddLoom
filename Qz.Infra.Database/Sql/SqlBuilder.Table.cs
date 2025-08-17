@@ -9,6 +9,11 @@ namespace Qz.Infra.Database.Sql;
 
 partial class SqlBuilder
 {
+    protected internal virtual string DropTableSql(string tableName)
+    {
+        return $"DROP TABLE IF EXISTS {tableName}";
+    }
+
     protected internal virtual string GetCreateTableSql(TableDefine table)
     {
         return $"CREATE TABLE {table.Name}({GetCreateColumnsSql(table.Columns, table.PrimaryKey)})";

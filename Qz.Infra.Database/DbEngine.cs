@@ -22,6 +22,13 @@ public partial class DbEngine
 
     public DbExecutor Executor { get; }
 
+    public void Drop(string tableName,
+        IDbConnection con = null, IDbTransaction tran = null)
+    {
+        var sql = Executor.SqlBuilder.DropTableSql(tableName);
+        Executor.NonQuery(sql, null, con, tran);
+    }
+
     public int Insert(string tableName, IEnumerable<InputValues> inputs, int batchSize, 
         IDbConnection con = null, IDbTransaction tran = null)
     {
