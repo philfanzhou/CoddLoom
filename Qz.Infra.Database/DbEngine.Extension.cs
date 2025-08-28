@@ -15,7 +15,7 @@ partial class DbEngine
     public int Insert(string tableName, InputValues input,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        return Insert(tableName, new[] { input }, 10, con, tran);
+        return Insert(tableName, [input], 10, con, tran);
     }
 
     public int Insert<T>(IEnumerable<T> entities, int batchSize,
@@ -28,13 +28,13 @@ partial class DbEngine
     public int Insert<T>(T entity,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        return Insert(new[] { entity }, 10, con, tran);
+        return Insert([entity], 10, con, tran);
     }
 
     public int Delete<T>(object id,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var where = WhereConditions.Create<T>(id, out var tableName);
+        var where = WhereConditions.ById<T>(id, out var tableName);
         return Delete(tableName, where, con, tran);
     }
 

@@ -39,7 +39,7 @@ partial class DbEngine
         IDbConnection con = null, IDbTransaction tran = null)
         where T : new()
     {
-        var where = WhereConditions.Create<T>(id, out var tableName);
+        var where = WhereConditions.ById<T>(id, out var tableName);
         var ret = Select(DbConverter.ToEntity<T>, tableName, where, null, null, con, tran);
         
         if(ret == null || ret.Count == 0)

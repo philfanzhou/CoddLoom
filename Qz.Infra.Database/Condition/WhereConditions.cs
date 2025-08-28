@@ -20,6 +20,16 @@ public class WhereConditions
 
     #endregion
 
+    public WhereConditions() { }
+
+    public WhereConditions(string column, object value,
+        WhereOperator whereOperator = WhereOperator.Equal,
+        WhereConnector connector = WhereConnector.And,
+        bool allowEmptyValue = false)
+    {
+        Add(column, value, whereOperator, connector, allowEmptyValue);
+    }
+
     #region Property
 
     public IEnumerable<ValueParam> Parameters
@@ -44,7 +54,7 @@ public class WhereConditions
 
     #endregion
 
-    public static WhereConditions Create<TEntity>(object id, 
+    public static WhereConditions ById<TEntity>(object id, 
         out string tableName)
     {
         if (id is null 
