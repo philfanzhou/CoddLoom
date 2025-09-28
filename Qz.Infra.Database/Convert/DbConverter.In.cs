@@ -10,6 +10,16 @@ namespace Qz.Infra.Database.Convert;
 
 partial class DbConverter
 {
+    internal static void ToInsert<T>(T entity, 
+        out string tableName, out List<InputValues> inputs)
+    {
+        if(entity == null)
+        {
+            throw new ArgumentNullException(nameof(entity));
+        }
+        ToInsert([entity], out tableName, out inputs);
+    }
+
     internal static void ToInsert<T>(IEnumerable<T> entities, 
         out string tableName, out List<InputValues> inputs)
     {

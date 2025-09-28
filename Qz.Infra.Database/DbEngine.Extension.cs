@@ -1,7 +1,6 @@
 ﻿using Qz.Infra.Database.Cache;
 using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Convert;
-using Qz.Infra.Database.Input;
 using Qz.Infra.Database.Params;
 using System;
 using System.Collections.Generic;
@@ -12,23 +11,18 @@ namespace Qz.Infra.Database;
 
 partial class DbEngine
 {
-    public int Insert(string tableName, InputValues input,
-        IDbConnection con = null, IDbTransaction tran = null)
-    {
-        return Insert(tableName, [input], 10, con, tran);
-    }
-
-    public int Insert<T>(IEnumerable<T> entities, int batchSize,
-        IDbConnection con = null, IDbTransaction tran = null)
-    {
-        DbConverter.ToInsert(entities, out var table, out var inputs);
-        return Insert(table, inputs, batchSize, con, tran);
-    }
-
     public int Insert<T>(T entity,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        return Insert([entity], 10, con, tran);
+        DbConverter.ToInsert(entity, out var table, out var inputs);
+        return Insert(table, inputs.First(), con, tran);
+    }
+
+    public int Insert<T>(IEnumerable<T> entities, int batchSize,
+        IDbTransaction tran = null)
+    {
+        DbConverter.ToInsert(entities, out var table, out var inputs);
+        return Insert(table, inputs, batchSize, tran);
     }
 
     public int Delete<T>(object id,
