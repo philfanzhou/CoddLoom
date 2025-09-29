@@ -14,6 +14,7 @@ namespace TestProject.DbCode
             : base(executor, new List<TableDefine>
             {
                 //new(typeof(CodeFirstEntity)),
+                new(typeof(BatchRecordTable)),
                 new(typeof(PasswordUserTable)),
                 new(typeof(TenantTable)),
                 new(typeof(UserRoleTable)),

@@ -44,24 +44,13 @@ public partial class DbEngine
             batchSize = 10;
         }
 
-        var affected = 0;
-        var tmpList = new List<InputValues>();
-        foreach (var input in inputs)
+        if (tran == null)
         {
-            tmpList.Add(input);
-            if (tmpList.Count >= batchSize)
-            {
-                affected += DoBatchInsert(tableName, tmpList, tran);
-                tmpList.Clear();
-            }
+            return Executor.Transaction(transaction =>
+                InsertWithTransaction(new BatchInsertContext(tableName, batchSize, transaction), inputs));
         }
 
-        if (tmpList.Count > 0)
-        {
-            affected += DoBatchInsert(tableName, tmpList, tran);
-        }
-
-        return affected;
+        return InsertWithTransaction(new BatchInsertContext(tableName, batchSize, tran), inputs);
     }
 
     public int Delete(string tableName, WhereConditions where, 
@@ -130,15 +119,4 @@ public partial class DbEngine
         return Count(table, where, con) > 0;
     }
 
-    private int DoBatchInsert(string tableName, IEnumerable<InputValues> inputs,
-        IDbTransaction tran)
-    {
-        var inputList = inputs.ToList();
-
-        var valuesCount = inputList.Count * inputList[0].Items.Count;
-        var forceUseParameter = valuesCount < 2100; // sqlserver default parameter count limit.
-
-        var sql = Executor.SqlBuilder.Insert(tableName, inputList, out var dbParams, forceUseParameter);
-        return Executor.NonQuery(sql, dbParams, null, tran);
-    }
 }

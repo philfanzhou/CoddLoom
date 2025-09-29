@@ -6,6 +6,7 @@ using Qz.Infra.Database.Input;
 using Qz.Infra.Database.Params;
 using Qz.Infra.Database.SQLite;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -62,6 +63,93 @@ namespace TestProject.DbTest
 
             con.Close();
         }
+
+        [TestMethod]
+        public void BatchInsert_Should_InsertAllRecords_WhenNoException()
+        {
+            var executor = CreateSQLiteExecutor(out var dbPath);
+            try
+            {
+                var engine = new TestDbEngine(executor);
+
+                var entities = Enumerable.Range(1, 6)
+                    .Select(i => new BatchRecord { Id = i, Name = $"Name_{i}" })
+                    .ToList();
+
+                var affected = engine.Insert(entities, batchSize: 3);
+
+                Assert.AreEqual(entities.Count, affected);
+
+                using var con = executor.GetConnection();
+                con.Open();
+                var sql = executor.SqlBuilder.Select(BatchRecordTable.TableName);
+                var rows = executor.Reader(sql, record => record[BatchRecordTable.Name].ToString(), null, con);
+                Assert.AreEqual(entities.Count, rows.Count);
+
+                var expectedNames = entities
+                    .Select(e => e.Name)
+                    .OrderBy(n => n)
+                    .ToList();
+                var actualNames = rows.OrderBy(n => n).ToList();
+
+                CollectionAssert.AreEqual(expectedNames, actualNames);
+            }
+            finally
+            {
+                if (File.Exists(dbPath))
+                {
+                    File.Delete(dbPath);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void BatchInsert_Should_RollBack_WhenExceptionOccurs()
+        {
+            var executor = CreateSQLiteExecutor(out var dbPath);
+            try
+            {
+                var engine = new TestDbEngine(executor);
+
+                var entities = new[]
+                {
+                    new BatchRecord { Id = 1, Name = "Valid_1" },
+                    new BatchRecord { Id = 1, Name = "Duplicate" }, // duplicate PK triggers exception
+                    new BatchRecord { Id = 2, Name = "Valid_2" }
+                };
+
+                Assert.ThrowsExactly<InvalidOperationException>(() =>
+                    engine.Insert(entities, batchSize: 3));
+
+                using var con = executor.GetConnection();
+                con.Open();
+                var sql = executor.SqlBuilder.Select(BatchRecordTable.TableName);
+                var rows = executor.Reader(sql, record => record[BatchRecordTable.Name].ToString(), null, con);
+                Assert.AreEqual(0, rows.Count, "All inserts should be rolled back when exception occurs.");
+            }
+            finally
+            {
+                if (File.Exists(dbPath))
+                {
+                    File.Delete(dbPath);
+                }
+            }
+        }
+
+        private static SQLiteExecutor CreateSQLiteExecutor(out string dbPath)
+        {
+            var directory = Path.Combine(Path.GetTempPath(), "DbEngineBatchTests");
+            Directory.CreateDirectory(directory);
+            var fileName = $"batch_{Guid.NewGuid():N}.db";
+            dbPath = Path.Combine(directory, fileName);
+            if (File.Exists(dbPath))
+            {
+                File.Delete(dbPath);
+            }
+
+            return new SQLiteExecutor(directory, fileName);
+        }
+
 
         private static void InsertUpdateDelete(TestDbEngine dbEngine, IDbConnection con)
         {
