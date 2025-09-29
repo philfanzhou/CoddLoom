@@ -8,18 +8,11 @@ namespace Qz.Infra.Database;
 
 partial class DbEngine
 {
-    private readonly struct BatchInsertContext
+    private readonly struct BatchInsertContext(string table, int batchSize, IDbTransaction transaction)
     {
-        public string Table { get; }
-        public int BatchSize { get; }
-        public IDbTransaction Transaction { get; }
-
-        public BatchInsertContext(string table, int batchSize, IDbTransaction transaction)
-        {
-            Table = table ?? throw new ArgumentNullException(nameof(table));
-            BatchSize = batchSize < 1 ? throw new ArgumentOutOfRangeException(nameof(batchSize), "Batch size must be greater than 0.") : batchSize;
-            Transaction = transaction ?? throw new ArgumentNullException(nameof(transaction));
-        }
+        public string Table { get; } = table ?? throw new ArgumentNullException(nameof(table));
+        public int BatchSize { get; } = batchSize < 1 ? throw new ArgumentOutOfRangeException(nameof(batchSize), "Batch size must be greater than 0.") : batchSize;
+        public IDbTransaction Transaction { get; } = transaction ?? throw new ArgumentNullException(nameof(transaction));
     }
 
     private int InsertWithTransaction(BatchInsertContext context, IEnumerable<InputValues> inputs)
@@ -46,28 +39,6 @@ partial class DbEngine
         }
 
         return affected;
-    }
-
-    /// <summary>
-    /// 将序列分块
-    /// </summary>
-    private static IEnumerable<IEnumerable<T>> Batch<T>(IEnumerable<T> source, int size)
-    {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (size < 1) throw new ArgumentOutOfRangeException(nameof(size), "Batch size must be greater than 0.");
-
-        using (var enumerator = source.GetEnumerator())
-        {
-            while (enumerator.MoveNext())
-            {
-                var batch = new List<T>(size) { enumerator.Current };
-                for (int i = 1; i < size && enumerator.MoveNext(); i++)
-                {
-                    batch.Add(enumerator.Current);
-                }
-                yield return batch;
-            }
-        }
     }
 
     private int InsertChunk(IReadOnlyList<InputValues> chunk, BatchInsertContext context, int startIndex)
@@ -190,5 +161,3 @@ partial class DbEngine
         }
     }
 }
-
-
