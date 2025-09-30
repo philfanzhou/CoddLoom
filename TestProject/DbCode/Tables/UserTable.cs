@@ -8,7 +8,7 @@ namespace TestProject.DbCode.Tables
         [DbTableName]
         internal const string TableName = "UserTable";
 
-        [DbPrimaryKey(Type = DbType.Int32)]
+        [DbPrimaryKey(Type = DbType.String)]
         internal const string Id = "id";
 
         [DbColumnString(AllowEmpty = false)]
