@@ -47,10 +47,10 @@ public partial class DbEngine
         if (tran == null)
         {
             return Executor.Transaction(transaction =>
-                InsertWithTransaction(new BatchInsertContext(tableName, batchSize, transaction), inputs));
+                InsertWithTransaction(tableName, inputs, batchSize, transaction));
         }
 
-        return InsertWithTransaction(new BatchInsertContext(tableName, batchSize, tran), inputs);
+        return InsertWithTransaction(tableName, inputs, batchSize, tran);
     }
 
     public int Delete(string tableName, WhereConditions where, 
