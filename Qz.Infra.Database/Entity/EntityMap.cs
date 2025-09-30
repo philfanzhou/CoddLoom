@@ -32,14 +32,11 @@ internal class EntityMap
             {
                 memberList.Add(new Tuple<MemberInfo, MapColumnAttribute>(member, attribute));
 
-                // 优先使用TableDefine中定义的主键，如果未指定则使用Entity的PrimaryKey属性
+                // 主键确定逻辑：
+                // 1. 如果TableDefine中定义了主键，且Entity中的属性映射到该主键字段名，则认为是主键（不需要Entity中标记PrimaryKey=true）
                 if (primaryKeyFromTable != null && attribute.Name == primaryKeyFromTable)
                 {
-                    PrimaryKey = attribute.Name;
-                }
-                else if (attribute.PrimaryKey && string.IsNullOrEmpty(PrimaryKey))
-                {
-                    // 如果TableDefine未指定主键，但Entity中标记了PrimaryKey，则使用Entity的标记
+                    // TableDefine中已定义主键，且Entity中的属性映射到该主键字段，则认为是主键
                     PrimaryKey = attribute.Name;
                 }
             }
@@ -88,7 +85,7 @@ internal class EntityMap
             var tableTypes = entityType.Assembly.GetTypes();
             foreach (var tableType in tableTypes)
             {
-                if (tableType.IsClass && !tableType.IsAbstract)
+                if (tableType.IsClass && (!tableType.IsAbstract || tableType.IsSealed))
                 {
                     var members = tableType.GetAllMembers();
                     foreach (var member in members)
@@ -106,9 +103,10 @@ internal class EntityMap
                 }
             }
         }
-        catch
+        catch (Exception ex)
         {
             // 如果获取TableDefine失败，返回null，让代码回退到原有的PrimaryKey属性检测
+            System.Diagnostics.Debug.WriteLine($"GetTableDefine failed for {entityType.Name}: {ex.Message}");
         }
 
         return null;

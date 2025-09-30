@@ -67,7 +67,8 @@ partial class DbConverter
         {
             var value = memberInfo.GetMemberValue(entity);
 
-            if (attribute.PrimaryKey)
+            // 使用EntityMap.PrimaryKey而不是attribute.PrimaryKey
+            if (entityMap.PrimaryKey == attribute.Name)
             {
                 where.Add(attribute.Name, value);
             }
