@@ -120,7 +120,7 @@ namespace TestProject.DbTest
                 }
 
                 // 执行批量插入应该抛出异常
-                Assert.ThrowsException<InvalidOperationException>(() => 
+                Assert.ThrowsExactly<InvalidOperationException>(() => 
                 {
                     engine.Insert(entities, 2);
                 }, "主键冲突时应该抛出异常");
@@ -288,7 +288,7 @@ namespace TestProject.DbTest
                 }
 
                 // 在事务中执行批量插入，并故意抛出异常
-                Assert.ThrowsException<InvalidOperationException>(() =>
+                Assert.ThrowsExactly<InvalidOperationException>(() =>
                 {
                     executor.Transaction(tran =>
                     {

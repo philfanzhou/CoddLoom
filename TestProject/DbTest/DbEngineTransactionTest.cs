@@ -107,7 +107,7 @@ namespace TestProject.DbTest
                 var user1 = CreateTestUser("1", "RollbackUser1", 100, "Rollback1");
                 var user2 = CreateTestUser("2", "RollbackUser2", 200, "Rollback2");
 
-                Assert.ThrowsException<InvalidOperationException>(() =>
+                Assert.ThrowsExactly<InvalidOperationException>(() =>
                 {
                     executor.Transaction(tran =>
                     {
