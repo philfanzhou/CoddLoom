@@ -5,7 +5,6 @@ using Qz.Infra.Database.Table;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 
 namespace Qz.Infra.Database;
 
@@ -32,7 +31,7 @@ public partial class DbEngine
     public int Insert(string tableName, InputValues input,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var sql = Executor.SqlBuilder.Insert(tableName, [input], out var dbParams, true);
+        var sql = Executor.SqlBuilder.Insert(tableName, [input], out var dbParams);
         return Executor.NonQuery(sql, dbParams, con, tran);
     }
 

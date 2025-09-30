@@ -31,7 +31,7 @@ partial class DbEngine
         {
             try
             {
-                affected += InsertChunk(batch, table, batchSize, transaction, batchIndex * batchSize);
+                affected += InsertChunk(batch, table, transaction, batchIndex * batchSize);
             }
             catch (Exception ex)
             {
@@ -49,7 +49,7 @@ partial class DbEngine
     /// <summary>
     /// 插入单个批次，如果失败则使用二分查找确定具体失败的记录
     /// </summary>
-    private int InsertChunk(IReadOnlyList<InputValues> chunk, string table, int batchSize, IDbTransaction transaction, int startIndex)
+    private int InsertChunk(IReadOnlyList<InputValues> chunk, string table, IDbTransaction transaction, int startIndex)
     {
         try
         {
@@ -58,7 +58,7 @@ partial class DbEngine
         catch (Exception)
         {
             // 如果批次失败，使用二分查找确定具体失败的记录
-            var failedIndex = BinarySearchFailedRecord(chunk, table, batchSize, transaction, 0, chunk.Count - 1);
+            var failedIndex = BinarySearchFailedRecord(chunk, table, transaction, 0, chunk.Count - 1);
             throw BuildRowException(new Exception("Record insertion failed"), chunk[failedIndex], startIndex + failedIndex);
         }
     }
@@ -66,7 +66,7 @@ partial class DbEngine
     /// <summary>
     /// 使用二分查找定位失败的记录
     /// </summary>
-    private int BinarySearchFailedRecord(IReadOnlyList<InputValues> chunk, string table, int batchSize, IDbTransaction transaction, int left, int right)
+    private int BinarySearchFailedRecord(IReadOnlyList<InputValues> chunk, string table, IDbTransaction transaction, int left, int right)
     {
         // 如果只有一个元素，直接返回
         if (left == right)
@@ -98,12 +98,12 @@ partial class DbEngine
             ExecuteChunk(leftChunk, table, transaction);
             
             // 左半部分成功，问题在右半部分
-            return BinarySearchFailedRecord(chunk, table, batchSize, transaction, mid + 1, right);
+            return BinarySearchFailedRecord(chunk, table, transaction, mid + 1, right);
         }
         catch
         {
             // 左半部分失败，问题在左半部分
-            return BinarySearchFailedRecord(chunk, table, batchSize, transaction, left, mid);
+            return BinarySearchFailedRecord(chunk, table, transaction, left, mid);
         }
     }
 
