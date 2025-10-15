@@ -20,6 +20,8 @@
     <ProjectReference Include="..\Qz.Infra.Database.MySql\Qz.Infra.Database.MySql.csproj" />
     <ProjectReference Include="..\Qz.Infra.Database.SQLite\Qz.Infra.Database.SQLite.csproj" />
     <ProjectReference Include="..\Qz.Infra.Database.SqlServer\Qz.Infra.Database.SqlServer.csproj" />
+    <ProjectReference Include="..\Qz.Infra.Database.Maria\Qz.Infra.Database.Maria.csproj" />
+    <ProjectReference Include="..\Qz.Infra.Database.Oracle\Qz.Infra.Database.Oracle.csproj" />
     <ProjectReference Include="..\Qz.Infra.Database\Qz.Infra.Database.csproj" />
   </ItemGroup>
 

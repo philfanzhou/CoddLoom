@@ -1,15 +1,14 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Qz.Infra.Database;
 using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.SQLite;
 using Qz.Infra.Database.Table;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using TestProject.DbCode;
 using TestProject.DbCode.Entity;
 using TestProject.DbCode.Tables;
+using TestProject.DbTest;
 
 namespace TestProject.DbTest
 {
@@ -20,15 +19,7 @@ namespace TestProject.DbTest
     [TestClass]
     public class DbEngineBatchTest
     {
-        /// <summary>
-        /// 创建SQLite执行器
-        /// </summary>
-        private static SQLiteExecutor CreateSQLiteExecutor(out string dbPath)
-        {
-            dbPath = Path.GetTempFileName();
-            var connectionString = $"Data Source={dbPath};Version=3;";
-            return new SQLiteExecutor(connectionString);
-        }
+        
 
         /// <summary>
         /// 创建测试用户实体
@@ -57,7 +48,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_BatchRecords_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -88,7 +79,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -99,7 +90,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_BatchRecords_WithPrimaryKeyConflict_Should_ThrowException()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -133,7 +124,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -144,7 +135,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_LargeBatchRecords_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -175,7 +166,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -186,7 +177,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_SmallBatchSize_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -217,7 +208,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -228,7 +219,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_BatchInTransaction_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -260,7 +251,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -270,7 +261,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_BatchExceptionRollback_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -305,7 +296,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -315,7 +306,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_SingleRecordBatch_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -345,7 +336,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -355,7 +346,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_EmptyEntityList_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -375,7 +366,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -386,7 +377,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_MixedEntityTypes_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -415,7 +406,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -425,7 +416,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void BatchInsert_Should_InsertAllRecords_WhenNoException()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -458,7 +449,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -468,7 +459,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void BatchInsert_Should_RollBack_WhenExceptionOccurs()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -495,7 +486,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -506,7 +497,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_ParameterLimitTest_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -538,7 +529,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -549,7 +540,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_LargeVolumeTest_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -580,7 +571,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
     }

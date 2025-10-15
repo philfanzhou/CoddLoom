@@ -2,15 +2,14 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Qz.Infra.Database;
 using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Params;
-using Qz.Infra.Database.SQLite;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.IO;
 using System.Linq;
 using TestProject.DbCode;
 using TestProject.DbCode.Entity;
 using TestProject.DbCode.Tables;
+using TestProject.DbTest;
 
 namespace TestProject.DbTest
 {
@@ -21,15 +20,7 @@ namespace TestProject.DbTest
     [TestClass]
     public class DbEnginePaginationTest
     {
-        /// <summary>
-        /// 创建SQLite执行器
-        /// </summary>
-        private static SQLiteExecutor CreateSQLiteExecutor(out string dbPath)
-        {
-            dbPath = Path.GetTempFileName();
-            var connectionString = $"Data Source={dbPath};Version=3;";
-            return new SQLiteExecutor(connectionString);
-        }
+        
 
         /// <summary>
         /// 测试基础分页查询
@@ -37,7 +28,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void PageSelect_BasicPagination_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -80,7 +71,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -90,7 +81,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void PageSelect_SecondPage_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -133,7 +124,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -143,7 +134,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void PageSelect_LastPage_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -184,7 +175,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -194,7 +185,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void PageSelect_EmptyResult_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -214,7 +205,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -224,7 +215,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void PageSelect_LargePageSize_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -264,7 +255,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -274,7 +265,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void PageSelect_DescendingOrder_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -317,7 +308,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -327,7 +318,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void PageSelect_WithColumnSelection_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -374,7 +365,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
     }

@@ -2,7 +2,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Qz.Infra.Database;
 using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Params;
-using Qz.Infra.Database.SQLite;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -11,6 +10,7 @@ using System.Linq;
 using TestProject.DbCode;
 using TestProject.DbCode.Entity;
 using TestProject.DbCode.Tables;
+using TestProject.DbTest;
 
 namespace TestProject.DbTest
 {
@@ -21,15 +21,6 @@ namespace TestProject.DbTest
     [TestClass]
     public class DbEngineBasicCrudTest
     {
-        /// <summary>
-        /// 创建SQLite执行器
-        /// </summary>
-        private static SQLiteExecutor CreateSQLiteExecutor(out string dbPath)
-        {
-            dbPath = Path.GetTempFileName();
-            var connectionString = $"Data Source={dbPath};Version=3;";
-            return new SQLiteExecutor(connectionString);
-        }
 
         /// <summary>
         /// 创建测试用户实体
@@ -57,7 +48,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_SingleRecord_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -79,7 +70,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -89,7 +80,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_BatchRecords_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -115,7 +106,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -125,7 +116,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Update_Record_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -153,7 +144,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -163,7 +154,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Delete_Record_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -190,9 +181,9 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
-        }
+       }
 
         /// <summary>
         /// 测试记录查询（使用Entity）
@@ -200,7 +191,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Select_Records_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -231,7 +222,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -241,7 +232,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void SelectById_Record_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -260,9 +251,9 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
-        }
+       }
 
         /// <summary>
         /// 测试记录计数（使用Entity）
@@ -270,7 +261,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Count_Records_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -295,9 +286,9 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
-        }
+       }
 
         /// <summary>
         /// 测试记录存在性检查（使用Entity）
@@ -305,7 +296,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Exist_Record_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -330,7 +321,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -340,7 +331,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Drop_Table_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -371,7 +362,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -381,7 +372,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Select_WithComplexConditions_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -410,7 +401,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -420,7 +411,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Select_EmptyResult_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -438,7 +429,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
     }

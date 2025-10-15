@@ -4,15 +4,14 @@ using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Convert;
 using Qz.Infra.Database.Input;
 using Qz.Infra.Database.Params;
-using Qz.Infra.Database.SQLite;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.IO;
 using System.Linq;
 using TestProject.DbCode;
 using TestProject.DbCode.Entity;
 using TestProject.DbCode.Tables;
+using TestProject.DbTest;
 
 namespace TestProject.DbTest
 {
@@ -24,12 +23,7 @@ namespace TestProject.DbTest
     [TestClass]
     public class DbEngineJoinTest
     {
-        private static SQLiteExecutor CreateSQLiteExecutor(out string dbPath)
-        {
-            dbPath = Path.GetTempFileName();
-            var connectionString = $"Data Source={dbPath};Version=3;";
-            return new SQLiteExecutor(connectionString);
-        }
+        
 
         private static User CreateTestUser(string id, string unionId, int intData, string specialString)
         {
@@ -86,7 +80,7 @@ namespace TestProject.DbTest
             join.Add("Table1.Status", "Table2.Status");
 
             // 验证连接条件已添加（通过GetTableName方法验证）
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -99,7 +93,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -109,7 +103,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void JoinConditions_GetTableName_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -140,7 +134,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -150,7 +144,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void JoinConditions_ComplexJoin_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -171,7 +165,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -203,7 +197,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void DbEngine_SelectWithJoinConditions_Should_NotThrowException()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -234,7 +228,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -244,7 +238,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void JoinConditions_ParameterCompatibility_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -281,7 +275,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -291,7 +285,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void JoinConditions_EdgeCases_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new TestDbEngine(executor);
@@ -318,7 +312,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
     }

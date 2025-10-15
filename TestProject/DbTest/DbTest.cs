@@ -2,7 +2,6 @@
 using Qz.Infra.Database;
 using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Convert;
-using Qz.Infra.Database.SQLite;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -23,15 +22,6 @@ namespace TestProject.DbTest
     [TestClass]
     public class DbTest
     {
-        /// <summary>
-        /// 创建SQLite执行器
-        /// </summary>
-        private static SQLiteExecutor CreateSQLiteExecutor(out string dbPath)
-        {
-            dbPath = Path.GetTempFileName();
-            var connectionString = $"Data Source={dbPath};Version=3;";
-            return new SQLiteExecutor(connectionString);
-        }
 
         /// <summary>
         /// 集成测试：复杂数据类型和关联查询
@@ -40,7 +30,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void IntegrationTest_ComplexDataTypesAndJoins_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var dbEngine = new TestDbEngine(executor);
@@ -57,7 +47,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
@@ -159,7 +149,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Test_OrderByFunctionality_Should_Succeed()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var dbEngine = new TestDbEngine(executor);
@@ -181,7 +171,7 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 

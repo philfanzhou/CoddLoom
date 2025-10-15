@@ -2,14 +2,13 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Qz.Infra.Database;
 using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Entity;
-using Qz.Infra.Database.SQLite;
 using Qz.Infra.Database.Table;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.IO;
 using System.Linq;
 using TestProject.DbCode;
+using TestProject.DbTest;
 
 namespace TestProject.DbTest
 {
@@ -19,7 +18,7 @@ namespace TestProject.DbTest
         [TestMethod]
         public void EntityWithoutPrimaryKeyAttribute_Should_Work_WhenTableDefineHasPrimaryKey()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new PrimaryKeyTestDbEngine(executor);
@@ -52,17 +51,14 @@ namespace TestProject.DbTest
             }
             finally
             {
-                if (File.Exists(dbPath))
-                {
-                    File.Delete(dbPath);
-                }
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
         [TestMethod]
         public void EntityWithoutPrimaryKey_Should_ThrowException_WhenNoPrimaryKeyDefined()
         {
-            var executor = CreateSQLiteExecutor(out var dbPath);
+            var executor = TestExecutorFactory.CreateInMemoryExecutor();
             try
             {
                 var engine = new PrimaryKeyTestDbEngine(executor);
@@ -93,15 +89,11 @@ namespace TestProject.DbTest
             }
             finally
             {
-                File.Delete(dbPath);
+                TestExecutorFactory.CleanupTestData(executor);
             }
         }
 
-        private static SQLiteExecutor CreateSQLiteExecutor(out string dbPath)
-        {
-            dbPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".db");
-            return new SQLiteExecutor($"Data Source={dbPath};Version=3;");
-        }
+        
 
         private static void AssertDateTime(DateTime time1, DateTime time2)
         {
