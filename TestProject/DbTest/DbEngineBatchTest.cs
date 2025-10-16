@@ -17,7 +17,7 @@ namespace TestProject.DbTest
     /// 测试DbEngine的批量插入功能（使用Entity操作）
     /// </summary>
     [TestClass]
-    public class DbEngineBatchTest
+    public class DbEngineBatchTest : TestBase
     {
         
 
@@ -48,10 +48,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_BatchRecords_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 准备批量测试实体 - 使用完全唯一的ID避免主键冲突
                 var entities = new List<User>();
@@ -66,7 +62,7 @@ namespace TestProject.DbTest
                 }
 
                 // 执行批量插入，批次大小为50（测试分批处理）
-                var affected = engine.Insert(entities, 50);
+                var affected = DbEngine.Insert(entities, 50);
 
                 // 验证结果 - 应该插入所有记录
                 Assert.AreEqual(100, affected, "应该插入所有100条记录");
@@ -74,13 +70,8 @@ namespace TestProject.DbTest
                 // 验证数据是否正确插入
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "BatchUser%", WhereOperator.Like);
-                var count = engine.Count(UserTable.TableName, where);
+                var count = DbEngine.Count(UserTable.TableName, where);
                 Assert.AreEqual(100, count, "应该插入所有100条记录");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -90,10 +81,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_BatchRecords_WithPrimaryKeyConflict_Should_ThrowException()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 准备包含重复主键的测试实体，故意制造主键冲突
                 var entities = new List<User>();
@@ -113,19 +100,14 @@ namespace TestProject.DbTest
                 // 执行批量插入应该抛出异常
                 Assert.ThrowsExactly<InvalidOperationException>(() => 
                 {
-                    engine.Insert(entities, 2);
+                    DbEngine.Insert(entities, 2);
                 }, "主键冲突时应该抛出异常");
 
                 // 验证没有记录被插入（事务回滚）
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "ConflictUser%", WhereOperator.Like);
-                var count = engine.Count(UserTable.TableName, where);
+                var count = DbEngine.Count(UserTable.TableName, where);
                 Assert.AreEqual(0, count, "主键冲突时不应该插入任何记录");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -135,10 +117,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_LargeBatchRecords_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 准备大批量测试实体 - 500条记录，测试参数限制处理
                 var entities = new List<User>();
@@ -153,7 +131,7 @@ namespace TestProject.DbTest
                 }
 
                 // 执行大批量插入，批次大小为100（测试参数限制和分批处理）
-                var affected = engine.Insert(entities, 100);
+                var affected = DbEngine.Insert(entities, 100);
 
                 // 验证结果 - 应该插入所有记录
                 Assert.AreEqual(500, affected, "应该插入所有500条记录");
@@ -161,13 +139,8 @@ namespace TestProject.DbTest
                 // 验证数据是否正确插入
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "LargeBatchUser%", WhereOperator.Like);
-                var count = engine.Count(UserTable.TableName, where);
+                var count = DbEngine.Count(UserTable.TableName, where);
                 Assert.AreEqual(500, count, "应该插入所有500条记录");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -177,10 +150,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_SmallBatchSize_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 准备测试实体 - 30条记录
                 var entities = new List<User>();
@@ -195,7 +164,7 @@ namespace TestProject.DbTest
                 }
 
                 // 执行批量插入，使用小批次大小（测试分批处理）
-                var affected = engine.Insert(entities, 5);
+                var affected = DbEngine.Insert(entities, 5);
 
                 // 验证结果 - 应该插入所有记录
                 Assert.AreEqual(30, affected, "应该插入所有30条记录");
@@ -203,13 +172,8 @@ namespace TestProject.DbTest
                 // 验证数据是否正确插入
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "SmallBatchUser%", WhereOperator.Like);
-                var count = engine.Count(UserTable.TableName, where);
+                var count = DbEngine.Count(UserTable.TableName, where);
                 Assert.AreEqual(30, count, "应该插入所有30条记录");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -219,10 +183,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_BatchInTransaction_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 准备测试实体 - 200条记录
                 var entities = new List<User>();
@@ -237,22 +197,17 @@ namespace TestProject.DbTest
                 }
 
                 // 在事务中执行批量插入
-                executor.Transaction(tran =>
+                Executor.Transaction(tran =>
                 {
-                    var affected = engine.Insert(entities, 50, tran);
+                    var affected = DbEngine.Insert(entities, 50, tran);
                     Assert.AreEqual(200, affected, "事务中应该插入所有200条记录");
                 });
 
                 // 验证数据是否正确插入
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "TranBatchUser%", WhereOperator.Like);
-                var count = engine.Count(UserTable.TableName, where);
+                var count = DbEngine.Count(UserTable.TableName, where);
                 Assert.AreEqual(200, count, "事务提交后应该查询到所有200条记录");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -261,10 +216,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_BatchExceptionRollback_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 准备测试实体
                 var entities = new List<User>();
@@ -281,9 +232,9 @@ namespace TestProject.DbTest
                 // 在事务中执行批量插入，并故意抛出异常
                 Assert.ThrowsExactly<InvalidOperationException>(() =>
                 {
-                    executor.Transaction(tran =>
+                    Executor.Transaction(tran =>
                     {
-                        engine.Insert(entities, 2, tran);
+                        DbEngine.Insert(entities, 2, tran);
                         throw new InvalidOperationException("Intentional exception for rollback test");
                     });
                 });
@@ -291,13 +242,8 @@ namespace TestProject.DbTest
                 // 验证数据已回滚
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "RollbackBatchUser%", WhereOperator.Like);
-                var count = engine.Count(UserTable.TableName, where);
+                var count = DbEngine.Count(UserTable.TableName, where);
                 Assert.AreEqual(0, count, "事务回滚后应该没有记录");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -306,10 +252,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_SingleRecordBatch_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 准备单条测试实体
                 var entities = new List<User>
@@ -323,7 +265,7 @@ namespace TestProject.DbTest
                 };
 
                 // 执行单条记录的批量插入
-                var affected = engine.Insert(entities, 2);
+                var affected = DbEngine.Insert(entities, 2);
 
                 // 验证结果
                 Assert.AreEqual(1, affected, "应该插入1条记录");
@@ -331,13 +273,8 @@ namespace TestProject.DbTest
                 // 验证数据是否正确插入
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "SingleBatchUser");
-                var count = engine.Count(UserTable.TableName, where);
+                var count = DbEngine.Count(UserTable.TableName, where);
                 Assert.AreEqual(1, count, "应该查询到1条记录");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -346,28 +283,19 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_EmptyEntityList_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 准备空实体列表
                 var entities = new List<User>();
 
                 // 执行空列表的批量插入
-                var affected = engine.Insert(entities, 2);
+                var affected = DbEngine.Insert(entities, 2);
 
                 // 验证结果
                 Assert.AreEqual(0, affected, "空列表应该插入0条记录");
 
                 // 验证没有数据插入
-                var count = engine.Count(UserTable.TableName, new WhereConditions());
+                var count = DbEngine.Count(UserTable.TableName, new WhereConditions());
                 Assert.AreEqual(0, count, "应该没有记录");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -377,10 +305,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_MixedEntityTypes_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 准备不同类型的测试实体
                 var userEntities = new List<User>();
@@ -395,19 +319,14 @@ namespace TestProject.DbTest
                 }
 
                 // 分别插入不同类型的实体
-                var affected1 = engine.Insert(userEntities, 2);
+                var affected1 = DbEngine.Insert(userEntities, 2);
                 Assert.AreEqual(3, affected1, "用户实体应该插入所有3条记录");
 
                 // 验证数据是否正确插入
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "MixedUser%", WhereOperator.Like);
-                var count = engine.Count(UserTable.TableName, where);
+                var count = DbEngine.Count(UserTable.TableName, where);
                 Assert.AreEqual(3, count, "应该插入所有3条用户记录");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -416,27 +335,23 @@ namespace TestProject.DbTest
         [TestMethod]
         public void BatchInsert_Should_InsertAllRecords_WhenNoException()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 确保BatchRecordTable存在
-                engine.Drop(BatchRecordTable.TableName);
-                engine.InitializeTable(new List<TableDefine> { new(typeof(BatchRecordTable)) });
+                DbEngine.Drop(BatchRecordTable.TableName);
+                DbEngine.InitializeTable(new List<TableDefine> { new(typeof(BatchRecordTable)) });
 
                 var entities = Enumerable.Range(1, 6)
                     .Select(i => new BatchRecord { Id = i, Name = $"Name_{i}" })
                     .ToList();
 
-                var affected = engine.Insert(entities, batchSize: 3);
+                var affected = DbEngine.Insert(entities, batchSize: 3);
 
                 Assert.AreEqual(entities.Count, affected);
 
-                using var con = executor.GetConnection();
+                using var con = Executor.GetConnection();
                 con.Open();
-                var sql = executor.SqlBuilder.Select(BatchRecordTable.TableName);
-                var rows = executor.Reader(sql, record => record[BatchRecordTable.Name].ToString(), null, con);
+                var sql = Executor.SqlBuilder.Select(BatchRecordTable.TableName);
+                var rows = Executor.Reader(sql, record => record[BatchRecordTable.Name].ToString(), null, con);
                 Assert.AreEqual(entities.Count, rows.Count);
 
                 var expectedNames = entities
@@ -446,11 +361,6 @@ namespace TestProject.DbTest
                 var actualNames = rows.OrderBy(n => n).ToList();
 
                 CollectionAssert.AreEqual(expectedNames, actualNames);
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -459,14 +369,10 @@ namespace TestProject.DbTest
         [TestMethod]
         public void BatchInsert_Should_RollBack_WhenExceptionOccurs()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 确保BatchRecordTable存在
-                engine.Drop(BatchRecordTable.TableName);
-                engine.InitializeTable(new List<TableDefine> { new(typeof(BatchRecordTable)) });
+                DbEngine.Drop(BatchRecordTable.TableName);
+                DbEngine.InitializeTable(new List<TableDefine> { new(typeof(BatchRecordTable)) });
 
                 var entities = new[]
                 {
@@ -476,18 +382,13 @@ namespace TestProject.DbTest
                 };
 
                 Assert.ThrowsExactly<InvalidOperationException>(() =>
-                    engine.Insert(entities, batchSize: 3));
+                    DbEngine.Insert(entities, batchSize: 3));
 
-                using var con = executor.GetConnection();
+                using var con = Executor.GetConnection();
                 con.Open();
-                var sql = executor.SqlBuilder.Select(BatchRecordTable.TableName);
-                var rows = executor.Reader(sql, record => record[BatchRecordTable.Name].ToString(), null, con);
+                var sql = Executor.SqlBuilder.Select(BatchRecordTable.TableName);
+                var rows = Executor.Reader(sql, record => record[BatchRecordTable.Name].ToString(), null, con);
                 Assert.AreEqual(0, rows.Count, "All inserts should be rolled back when exception occurs.");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -497,10 +398,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_ParameterLimitTest_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 准备接近参数限制的测试实体
                 // User实体有10个字段，批次大小200意味着2000个参数，接近2100的限制
@@ -516,7 +413,7 @@ namespace TestProject.DbTest
                 }
 
                 // 执行批量插入，批次大小为200（测试参数限制处理）
-                var affected = engine.Insert(entities, 200);
+                var affected = DbEngine.Insert(entities, 200);
 
                 // 验证结果 - 应该插入所有记录
                 Assert.AreEqual(200, affected, "应该插入所有200条记录");
@@ -524,13 +421,8 @@ namespace TestProject.DbTest
                 // 验证数据是否正确插入
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "ParamLimitUser%", WhereOperator.Like);
-                var count = engine.Count(UserTable.TableName, where);
+                var count = DbEngine.Count(UserTable.TableName, where);
                 Assert.AreEqual(200, count, "应该插入所有200条记录");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -540,10 +432,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_LargeVolumeTest_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 准备超大测试实体 - 1000条记录
                 var entities = new List<User>();
@@ -558,7 +446,7 @@ namespace TestProject.DbTest
                 }
 
                 // 执行批量插入，批次大小为50（合理的批次大小，测试分批处理）
-                var affected = engine.Insert(entities, 50);
+                var affected = DbEngine.Insert(entities, 50);
 
                 // 验证结果 - 应该插入所有记录
                 Assert.AreEqual(1000, affected, "应该插入所有1000条记录");
@@ -566,13 +454,8 @@ namespace TestProject.DbTest
                 // 验证数据是否正确插入
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "LargeVolumeUser%", WhereOperator.Like);
-                var count = engine.Count(UserTable.TableName, where);
+                var count = DbEngine.Count(UserTable.TableName, where);
                 Assert.AreEqual(1000, count, "应该插入所有1000条记录");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
     }
 }

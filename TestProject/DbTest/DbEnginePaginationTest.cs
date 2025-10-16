@@ -18,7 +18,7 @@ namespace TestProject.DbTest
     /// 测试DbEngine的分页查询功能
     /// </summary>
     [TestClass]
-    public class DbEnginePaginationTest
+    public class DbEnginePaginationTest : TestBase
     {
         
 
@@ -28,10 +28,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void PageSelect_BasicPagination_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 准备测试数据 - 插入10条记录
                 var entities = new List<User>();
@@ -51,7 +47,7 @@ namespace TestProject.DbTest
                         SpecialString = $"Pagination{i}"
                     });
                 }
-                engine.Insert(entities, 5); // 批量插入
+                DbEngine.Insert(entities, 5); // 批量插入
 
                 // 测试分页查询 - 第1页，每页3条
                 var pageParam = new PageParam { PageNumber = 1, PageSize = 3 };
@@ -59,7 +55,7 @@ namespace TestProject.DbTest
                 where.Add(UserTable.UnionId, "PaginationUser%", WhereOperator.Like);
                 var orderBy = new OrderByCondition(UserTable.IntData, false); // ASC
 
-                var result = engine.PageSelect<User>(where, orderBy, pageParam, out var totalPages, out var totalCount);
+                var result = DbEngine.PageSelect<User>(where, orderBy, pageParam, out var totalPages, out var totalCount);
 
                 // 验证结果
                 Assert.AreEqual(10, totalCount, "总记录数应该是10");
@@ -68,11 +64,6 @@ namespace TestProject.DbTest
                 Assert.AreEqual("PaginationUser1", result[0].UnionId, "第1条记录应该是PaginationUser1");
                 Assert.AreEqual("PaginationUser2", result[1].UnionId, "第2条记录应该是PaginationUser2");
                 Assert.AreEqual("PaginationUser3", result[2].UnionId, "第3条记录应该是PaginationUser3");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -81,10 +72,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void PageSelect_SecondPage_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 准备测试数据 - 插入10条记录
                 var entities = new List<User>();
@@ -104,7 +91,7 @@ namespace TestProject.DbTest
                         SpecialString = $"SecondPage{i}"
                     });
                 }
-                engine.Insert(entities, 5);
+                DbEngine.Insert(entities, 5);
 
                 // 测试分页查询 - 第2页，每页3条
                 var pageParam = new PageParam { PageNumber = 2, PageSize = 3 };
@@ -112,7 +99,7 @@ namespace TestProject.DbTest
                 where.Add(UserTable.UnionId, "SecondPageUser%", WhereOperator.Like);
                 var orderBy = new OrderByCondition(UserTable.IntData, false); // ASC
 
-                var result = engine.PageSelect<User>(where, orderBy, pageParam, out var totalPages, out var totalCount);
+                var result = DbEngine.PageSelect<User>(where, orderBy, pageParam, out var totalPages, out var totalCount);
 
                 // 验证结果
                 Assert.AreEqual(10, totalCount, "总记录数应该是10");
@@ -121,11 +108,6 @@ namespace TestProject.DbTest
                 Assert.AreEqual("SecondPageUser4", result[0].UnionId, "第1条记录应该是SecondPageUser4");
                 Assert.AreEqual("SecondPageUser5", result[1].UnionId, "第2条记录应该是SecondPageUser5");
                 Assert.AreEqual("SecondPageUser6", result[2].UnionId, "第3条记录应该是SecondPageUser6");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -134,10 +116,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void PageSelect_LastPage_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 准备测试数据 - 插入10条记录
                 var entities = new List<User>();
@@ -157,7 +135,7 @@ namespace TestProject.DbTest
                         SpecialString = $"LastPage{i}"
                     });
                 }
-                engine.Insert(entities, 5);
+                DbEngine.Insert(entities, 5);
 
                 // 测试分页查询 - 第4页（最后一页），每页3条
                 var pageParam = new PageParam { PageNumber = 4, PageSize = 3 };
@@ -165,18 +143,13 @@ namespace TestProject.DbTest
                 where.Add(UserTable.UnionId, "LastPageUser%", WhereOperator.Like);
                 var orderBy = new OrderByCondition(UserTable.IntData, false); // ASC
 
-                var result = engine.PageSelect<User>(where, orderBy, pageParam, out var totalPages, out var totalCount);
+                var result = DbEngine.PageSelect<User>(where, orderBy, pageParam, out var totalPages, out var totalCount);
 
                 // 验证结果
                 Assert.AreEqual(10, totalCount, "总记录数应该是10");
                 Assert.AreEqual(4, totalPages, "总页数应该是4");
                 Assert.AreEqual(1, result.Count, "最后一页应该返回1条记录");
                 Assert.AreEqual("LastPageUser10", result[0].UnionId, "最后一条记录应该是LastPageUser10");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -185,10 +158,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void PageSelect_EmptyResult_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 不插入任何数据，测试空结果的分页查询
                 var pageParam = new PageParam { PageNumber = 1, PageSize = 5 };
@@ -196,17 +165,12 @@ namespace TestProject.DbTest
                 where.Add(UserTable.UnionId, "NonExistentUser");
                 var orderBy = new OrderByCondition(UserTable.IntData, false);
 
-                var result = engine.PageSelect<User>(where, orderBy, pageParam, out var totalPages, out var totalCount);
+                var result = DbEngine.PageSelect<User>(where, orderBy, pageParam, out var totalPages, out var totalCount);
 
                 // 验证结果
                 Assert.AreEqual(0, totalCount, "总记录数应该是0");
                 Assert.AreEqual(0, totalPages, "总页数应该是0");
                 Assert.AreEqual(0, result.Count, "结果应该为空");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -215,10 +179,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void PageSelect_LargePageSize_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 准备测试数据 - 插入5条记录
                 var entities = new List<User>();
@@ -238,7 +198,7 @@ namespace TestProject.DbTest
                         SpecialString = $"LargePage{i}"
                     });
                 }
-                engine.Insert(entities, 5);
+                DbEngine.Insert(entities, 5);
 
                 // 测试分页查询 - 页面大小大于总记录数
                 var pageParam = new PageParam { PageNumber = 1, PageSize = 10 };
@@ -246,17 +206,12 @@ namespace TestProject.DbTest
                 where.Add(UserTable.UnionId, "LargePageUser%", WhereOperator.Like);
                 var orderBy = new OrderByCondition(UserTable.IntData, false);
 
-                var result = engine.PageSelect<User>(where, orderBy, pageParam, out var totalPages, out var totalCount);
+                var result = DbEngine.PageSelect<User>(where, orderBy, pageParam, out var totalPages, out var totalCount);
 
                 // 验证结果
                 Assert.AreEqual(5, totalCount, "总记录数应该是5");
                 Assert.AreEqual(1, totalPages, "总页数应该是1");
                 Assert.AreEqual(5, result.Count, "应该返回所有5条记录");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -265,10 +220,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void PageSelect_DescendingOrder_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 准备测试数据 - 插入5条记录
                 var entities = new List<User>();
@@ -288,7 +239,7 @@ namespace TestProject.DbTest
                         SpecialString = $"Desc{i}"
                     });
                 }
-                engine.Insert(entities, 5);
+                DbEngine.Insert(entities, 5);
 
                 // 测试分页查询 - 降序排列
                 var pageParam = new PageParam { PageNumber = 1, PageSize = 3 };
@@ -296,7 +247,7 @@ namespace TestProject.DbTest
                 where.Add(UserTable.UnionId, "DescUser%", WhereOperator.Like);
                 var orderBy = new OrderByCondition(UserTable.IntData, true); // DESC
 
-                var result = engine.PageSelect<User>(where, orderBy, pageParam, out var totalPages, out var totalCount);
+                var result = DbEngine.PageSelect<User>(where, orderBy, pageParam, out var totalPages, out var totalCount);
 
                 // 验证结果
                 Assert.AreEqual(5, totalCount, "总记录数应该是5");
@@ -305,11 +256,6 @@ namespace TestProject.DbTest
                 Assert.AreEqual("DescUser5", result[0].UnionId, "第1条记录应该是DescUser5（降序）");
                 Assert.AreEqual("DescUser4", result[1].UnionId, "第2条记录应该是DescUser4");
                 Assert.AreEqual("DescUser3", result[2].UnionId, "第3条记录应该是DescUser3");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -318,10 +264,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void PageSelect_WithColumnSelection_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 准备测试数据 - 插入3条记录
                 var entities = new List<User>();
@@ -341,7 +283,7 @@ namespace TestProject.DbTest
                         SpecialString = $"Column{i}"
                     });
                 }
-                engine.Insert(entities, 5);
+                DbEngine.Insert(entities, 5);
 
                 // 测试分页查询 - 只选择特定列
                 var pageParam = new PageParam { PageNumber = 1, PageSize = 2 };
@@ -352,7 +294,7 @@ namespace TestProject.DbTest
                 columns.AddSelect(UserTable.UnionId);
                 columns.AddSelect(UserTable.IntData);
 
-                var result = engine.PageSelect<User>(where, orderBy, columns, pageParam, out var totalPages, out var totalCount);
+                var result = DbEngine.PageSelect<User>(where, orderBy, columns, pageParam, out var totalPages, out var totalCount);
 
                 // 验证结果
                 Assert.AreEqual(3, totalCount, "总记录数应该是3");
@@ -362,11 +304,6 @@ namespace TestProject.DbTest
                 Assert.AreEqual(1, result[0].IntData, "第1条记录的IntData应该是1");
                 Assert.AreEqual("ColumnUser2", result[1].UnionId, "第2条记录的UnionId应该是ColumnUser2");
                 Assert.AreEqual(2, result[1].IntData, "第2条记录的IntData应该是2");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
     }
 }

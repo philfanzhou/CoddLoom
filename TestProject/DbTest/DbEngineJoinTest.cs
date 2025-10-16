@@ -21,7 +21,7 @@ namespace TestProject.DbTest
     /// 注意：由于当前测试环境只有一个表，我们主要测试JoinConditions的基本功能
     /// </summary>
     [TestClass]
-    public class DbEngineJoinTest
+    public class DbEngineJoinTest : TestBase
     {
         
 
@@ -80,21 +80,12 @@ namespace TestProject.DbTest
             join.Add("Table1.Status", "Table2.Status");
 
             // 验证连接条件已添加（通过GetTableName方法验证）
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
-                var tableName = join.GetTableName(engine.Executor.SqlBuilder);
+            var tableName = join.GetTableName(DbEngine.Executor.SqlBuilder);
                 
                 Assert.IsNotNull(tableName, "GetTableName应该返回非null值");
-                Assert.IsTrue(tableName.Contains("Table1"), "应该包含Table1");
-                Assert.IsTrue(tableName.Contains("Table2"), "应该包含Table2");
-                Assert.IsTrue(tableName.Contains("INNER JOIN"), "应该包含INNER JOIN");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
+            Assert.IsTrue(tableName.Contains("Table1"), "应该包含Table1");
+            Assert.IsTrue(tableName.Contains("Table2"), "应该包含Table2");
+            Assert.IsTrue(tableName.Contains("INNER JOIN"), "应该包含INNER JOIN");
         }
 
         /// <summary>
@@ -103,14 +94,10 @@ namespace TestProject.DbTest
         [TestMethod]
         public void JoinConditions_GetTableName_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 测试内连接
                 var innerJoin = new JoinConditions("Users", "Id", "Orders", "UserId", JoinType.Inner);
-                var innerTableName = innerJoin.GetTableName(engine.Executor.SqlBuilder);
+                var innerTableName = innerJoin.GetTableName(DbEngine.Executor.SqlBuilder);
                 Assert.IsNotNull(innerTableName, "内连接表名不应为null");
                 Assert.IsTrue(innerTableName.Contains("Users"), "应该包含Users表");
                 Assert.IsTrue(innerTableName.Contains("Orders"), "应该包含Orders表");
@@ -118,7 +105,7 @@ namespace TestProject.DbTest
 
                 // 测试左连接
                 var leftJoin = new JoinConditions("Customers", "CustomerId", "Orders", "CustomerId", JoinType.Left);
-                var leftTableName = leftJoin.GetTableName(engine.Executor.SqlBuilder);
+                var leftTableName = leftJoin.GetTableName(DbEngine.Executor.SqlBuilder);
                 Assert.IsNotNull(leftTableName, "左连接表名不应为null");
                 Assert.IsTrue(leftTableName.Contains("Customers"), "应该包含Customers表");
                 Assert.IsTrue(leftTableName.Contains("Orders"), "应该包含Orders表");
@@ -126,16 +113,11 @@ namespace TestProject.DbTest
 
                 // 测试右连接
                 var rightJoin = new JoinConditions("Products", "ProductId", "OrderItems", "ProductId", JoinType.Right);
-                var rightTableName = rightJoin.GetTableName(engine.Executor.SqlBuilder);
+                var rightTableName = rightJoin.GetTableName(DbEngine.Executor.SqlBuilder);
                 Assert.IsNotNull(rightTableName, "右连接表名不应为null");
                 Assert.IsTrue(rightTableName.Contains("Products"), "应该包含Products表");
                 Assert.IsTrue(rightTableName.Contains("OrderItems"), "应该包含OrderItems表");
                 Assert.IsTrue(rightTableName.Contains("RIGHT JOIN"), "应该包含RIGHT JOIN");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -144,17 +126,13 @@ namespace TestProject.DbTest
         [TestMethod]
         public void JoinConditions_ComplexJoin_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 创建复杂的连接条件
                 var join = new JoinConditions("Users", "Id", "UserRoles", "UserId", JoinType.Inner);
                 join.Add("Users.Status", "UserRoles.Status");
                 join.Add("Users.TenantId", "UserRoles.TenantId");
 
-                var tableName = join.GetTableName(engine.Executor.SqlBuilder);
+                var tableName = join.GetTableName(DbEngine.Executor.SqlBuilder);
                 
                 Assert.IsNotNull(tableName, "复杂连接表名不应为null");
                 Assert.IsTrue(tableName.Contains("Users"), "应该包含Users表");
@@ -162,11 +140,6 @@ namespace TestProject.DbTest
                 Assert.IsTrue(tableName.Contains("INNER JOIN"), "应该包含INNER JOIN");
                 Assert.IsTrue(tableName.Contains("Id"), "应该包含Id字段");
                 Assert.IsTrue(tableName.Contains("UserId"), "应该包含UserId字段");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -197,14 +170,9 @@ namespace TestProject.DbTest
         [TestMethod]
         public void DbEngine_SelectWithJoinConditions_Should_NotThrowException()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
-
-                // 插入测试数据
-                engine.Insert(CreateTestUser("1", "JoinTestUser1", 100, "JoinTest1"));
-                engine.Insert(CreateTestUser("2", "JoinTestUser2", 200, "JoinTest2"));
+            // 插入测试数据
+                DbEngine.Insert(CreateTestUser("1", "JoinTestUser1", 100, "JoinTest1"));
+                DbEngine.Insert(CreateTestUser("2", "JoinTestUser2", 200, "JoinTest2"));
 
                 // 创建连接条件（虽然会导致SQL错误，但可以测试方法调用）
                 var join = new JoinConditions(UserTable.TableName, UserTable.Id, UserTable.TableName, UserTable.Id, JoinType.Inner);
@@ -215,7 +183,7 @@ namespace TestProject.DbTest
                 // 注意：实际执行会因为SQL列名冲突而失败，但这是预期的
                 try
                 {
-                    var results = engine.Select(DbConverter.ToEntity<User>, join, where, null);
+                    var results = DbEngine.Select(DbConverter.ToEntity<User>, join, where, null);
                     // 如果执行到这里，说明SQL查询成功了（虽然这不太可能）
                     Assert.IsNotNull(results, "查询结果不应为null");
                 }
@@ -225,11 +193,6 @@ namespace TestProject.DbTest
                     Assert.IsTrue(ex.Message.Contains("ambiguous") || ex.Message.Contains("column name"), 
                         $"应该抛出列名冲突异常，但实际异常是: {ex.Message}");
                 }
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -238,13 +201,9 @@ namespace TestProject.DbTest
         [TestMethod]
         public void JoinConditions_ParameterCompatibility_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 插入测试数据
-                engine.Insert(CreateTestUser("1", "CompatTestUser1", 100, "CompatTest1"));
+                DbEngine.Insert(CreateTestUser("1", "CompatTestUser1", 100, "CompatTest1"));
 
                 // 测试JoinConditions与WhereConditions的组合
                 var join = new JoinConditions("Table1", "Id", "Table2", "Table1Id", JoinType.Inner);
@@ -264,7 +223,7 @@ namespace TestProject.DbTest
                 // 虽然实际执行会失败，但参数传递应该没有问题
                 try
                 {
-                    var results = engine.Select(DbConverter.ToEntity<User>, join, where, orderBy, columns);
+                    var results = DbEngine.Select(DbConverter.ToEntity<User>, join, where, orderBy, columns);
                     Assert.IsNotNull(results, "查询结果不应为null");
                 }
                 catch (Exception ex)
@@ -272,11 +231,6 @@ namespace TestProject.DbTest
                     // 预期会抛出异常，因为表不存在或SQL语法错误
                     Assert.IsTrue(ex.Message.Length > 0, "应该抛出有意义的异常");
                 }
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -285,14 +239,10 @@ namespace TestProject.DbTest
         [TestMethod]
         public void JoinConditions_EdgeCases_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 测试特殊字符（避免空字符串，因为会导致异常）
                 var join1 = new JoinConditions("Table-1", "Column_1", "Table-2", "Column_2", JoinType.Left);
-                var tableName1 = join1.GetTableName(engine.Executor.SqlBuilder);
+                var tableName1 = join1.GetTableName(DbEngine.Executor.SqlBuilder);
                 Assert.IsNotNull(tableName1, "特殊字符表名应该也能生成SQL");
                 Assert.IsTrue(tableName1.Contains("Table-1"), "应该包含特殊字符表名");
 
@@ -300,20 +250,15 @@ namespace TestProject.DbTest
                 var longTableName = "VeryLongTableNameThatExceedsNormalLength";
                 var longColumnName = "VeryLongColumnNameThatExceedsNormalLength";
                 var join2 = new JoinConditions(longTableName, longColumnName, "Table2", "Column2", JoinType.Right);
-                var tableName2 = join2.GetTableName(engine.Executor.SqlBuilder);
+                var tableName2 = join2.GetTableName(DbEngine.Executor.SqlBuilder);
                 Assert.IsNotNull(tableName2, "长表名应该也能生成SQL");
                 Assert.IsTrue(tableName2.Contains(longTableName), "应该包含长表名");
 
                 // 测试数字开头的表名
                 var join3 = new JoinConditions("Table123", "Column456", "Table789", "Column012", JoinType.Inner);
-                var tableName3 = join3.GetTableName(engine.Executor.SqlBuilder);
+                var tableName3 = join3.GetTableName(DbEngine.Executor.SqlBuilder);
                 Assert.IsNotNull(tableName3, "数字开头的表名应该也能生成SQL");
                 Assert.IsTrue(tableName3.Contains("Table123"), "应该包含数字开头的表名");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
     }
 }

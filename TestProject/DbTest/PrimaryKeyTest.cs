@@ -13,15 +13,12 @@ using TestProject.DbTest;
 namespace TestProject.DbTest
 {
     [TestClass]
-    public class PrimaryKeyTest
+    public class PrimaryKeyTest : TestBase
     {
         [TestMethod]
         public void EntityWithoutPrimaryKeyAttribute_Should_Work_WhenTableDefineHasPrimaryKey()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new PrimaryKeyTestDbEngine(executor);
+                var engine = new PrimaryKeyTestDbEngine(Executor);
 
                 // 测试Entity没有指定PrimaryKey属性，但TableDefine中定义了主键的情况
                 var entity = new TestEntityWithoutPrimaryKey
@@ -32,11 +29,11 @@ namespace TestProject.DbTest
                 };
 
                 // 这应该不会抛出异常，因为TableDefine中已经定义了主键
-                var affected = engine.Insert(entity);
+                var affected = DbEngine.Insert(entity);
                 Assert.AreEqual(1, affected);
 
                 // 验证可以通过主键查询
-                using var con = executor.GetConnection();
+                using var con = Executor.GetConnection();
                 con.Open();
 
                 // 使用ById方法测试主键查询，这应该不会抛出"does not have a primary key"异常
@@ -44,24 +41,16 @@ namespace TestProject.DbTest
                 var where = WhereConditions.ById<TestEntityWithoutPrimaryKey>(1, out var tableName);
                 Assert.AreEqual(TestEntityWithoutPrimaryKeyTable.TableName, tableName);
                 
-                var result = engine.Select<TestEntityWithoutPrimaryKey>(where, null, con).FirstOrDefault();
+                var result = DbEngine.Select<TestEntityWithoutPrimaryKey>(where, null, con).FirstOrDefault();
                 Assert.IsNotNull(result);
                 Assert.AreEqual(1, result.Id);
                 Assert.AreEqual("TestEntity", result.Name);
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         [TestMethod]
         public void EntityWithoutPrimaryKey_Should_ThrowException_WhenNoPrimaryKeyDefined()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new PrimaryKeyTestDbEngine(executor);
+                var engine = new PrimaryKeyTestDbEngine(Executor);
 
                 // 测试Entity没有指定PrimaryKey属性，且TableDefine中也没有定义主键的情况
                 var entity = new TestEntityWithoutPrimaryKey2
@@ -71,7 +60,7 @@ namespace TestProject.DbTest
                 };
 
                 // 这应该会抛出异常，因为既没有TableDefine中的主键，也没有Entity中的PrimaryKey属性
-                var affected = engine.Insert(entity);
+                var affected = DbEngine.Insert(entity);
                 Assert.AreEqual(1, affected);
 
                 // 验证使用ById方法会抛出异常（可能是ArgumentException或InvalidOperationException）
@@ -86,11 +75,6 @@ namespace TestProject.DbTest
                     Assert.IsTrue(ex.Message.Contains("primary key") || ex.Message.Contains("PrimaryKey"), 
                         $"Exception message should contain 'primary key' information. Actual message: {ex.Message}");
                 }
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         

@@ -17,7 +17,7 @@ namespace TestProject.DbTest
     /// 测试DbEngine的泛型CRUD操作（Insert<T>、Update<T>、Delete<T>、Select<T>等）
     /// </summary>
     [TestClass]
-    public class DbEngineExtensionTest
+    public class DbEngineExtensionTest : TestBase
     {
         
 
@@ -27,10 +27,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_GenericEntity_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 准备测试实体
                 var entity = new User
@@ -48,7 +44,7 @@ namespace TestProject.DbTest
                 };
 
                 // 执行泛型插入
-                var affected = engine.Insert(entity);
+                var affected = DbEngine.Insert(entity);
 
                 // 验证结果
                 Assert.AreEqual(1, affected, "应该插入1条记录");
@@ -56,13 +52,8 @@ namespace TestProject.DbTest
                 // 验证数据是否正确插入
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "GenericUser");
-                var count = engine.Count(UserTable.TableName, where);
+                var count = DbEngine.Count(UserTable.TableName, where);
                 Assert.AreEqual(1, count, "应该查询到1条记录");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -71,10 +62,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Insert_GenericBatchEntities_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 准备批量测试实体
                 var entities = new List<User>();
@@ -96,7 +83,7 @@ namespace TestProject.DbTest
                 }
 
                 // 执行泛型批量插入
-                var affected = engine.Insert(entities, 2);
+                var affected = DbEngine.Insert(entities, 2);
 
                 // 验证结果
                 Assert.AreEqual(3, affected, "应该插入3条记录");
@@ -104,13 +91,8 @@ namespace TestProject.DbTest
                 // 验证数据是否正确插入
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "BatchGenericUser%", WhereOperator.Like);
-                var count = engine.Count(UserTable.TableName, where);
+                var count = DbEngine.Count(UserTable.TableName, where);
                 Assert.AreEqual(3, count, "应该查询到3条记录");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -119,10 +101,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Update_GenericEntity_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 先插入测试数据
                 var originalEntity = new User
@@ -138,7 +116,7 @@ namespace TestProject.DbTest
                     BoolData = true,
                     SpecialString = "OriginalGeneric"
                 };
-                engine.Insert(originalEntity);
+                DbEngine.Insert(originalEntity);
 
                 // 准备更新实体（保持相同的主键ID）
                 var updatedEntity = new User
@@ -156,7 +134,7 @@ namespace TestProject.DbTest
                 };
 
                 // 执行泛型更新
-                var affected = engine.Update(updatedEntity);
+                var affected = DbEngine.Update(updatedEntity);
 
                 // 验证结果
                 Assert.AreEqual(1, affected, "应该更新1条记录");
@@ -164,13 +142,8 @@ namespace TestProject.DbTest
                 // 验证数据是否正确更新
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "UpdatedGenericUser");
-                var count = engine.Count(UserTable.TableName, where);
+                var count = DbEngine.Count(UserTable.TableName, where);
                 Assert.AreEqual(1, count, "应该查询到1条更新后的记录");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -179,10 +152,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Delete_GenericEntity_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 先插入测试数据
                 var entity = new User
@@ -198,28 +167,23 @@ namespace TestProject.DbTest
                     BoolData = true,
                     SpecialString = "DeleteGeneric"
                 };
-                engine.Insert(entity);
+                DbEngine.Insert(entity);
 
                 // 验证数据已插入
                 var beforeWhere = new WhereConditions();
                 beforeWhere.Add(UserTable.UnionId, "ToBeDeletedGeneric");
-                var beforeCount = engine.Count(UserTable.TableName, beforeWhere);
+                var beforeCount = DbEngine.Count(UserTable.TableName, beforeWhere);
                 Assert.AreEqual(1, beforeCount, "删除前应该有1条记录");
 
                 // 执行泛型删除（通过主键ID删除）
-                var affected = engine.Delete<User>("1"); // 使用字符串主键ID
+                var affected = DbEngine.Delete<User>("1"); // 使用字符串主键ID
 
                 // 验证结果
                 Assert.AreEqual(1, affected, "应该删除1条记录");
 
                 // 验证数据已删除
-                var afterCount = engine.Count(UserTable.TableName, beforeWhere);
+                var afterCount = DbEngine.Count(UserTable.TableName, beforeWhere);
                 Assert.AreEqual(0, afterCount, "删除后应该没有记录");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -228,10 +192,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Select_GenericEntities_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 先插入测试数据
                 var entity1 = new User
@@ -247,7 +207,7 @@ namespace TestProject.DbTest
                     BoolData = true,
                     SpecialString = "Select1"
                 };
-                engine.Insert(entity1);
+                DbEngine.Insert(entity1);
 
                 var entity2 = new User
                 {
@@ -262,23 +222,18 @@ namespace TestProject.DbTest
                     BoolData = false,
                     SpecialString = "Select2"
                 };
-                engine.Insert(entity2);
+                DbEngine.Insert(entity2);
 
                 // 执行泛型查询
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "SelectUser%", WhereOperator.Like);
                 var orderBy = new OrderByCondition(UserTable.UnionId, false); // false = ASC
-                var results = engine.Select<User>(where, orderBy);
+                var results = DbEngine.Select<User>(where, orderBy);
 
                 // 验证结果
                 Assert.AreEqual(2, results.Count, "应该查询到2条记录");
                 Assert.AreEqual("SelectUser1", results[0].UnionId, "第一条记录应该是SelectUser1");
                 Assert.AreEqual("SelectUser2", results[1].UnionId, "第二条记录应该是SelectUser2");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -287,10 +242,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void SelectById_GenericEntity_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 先插入测试数据
                 var entity = new User
@@ -306,20 +257,15 @@ namespace TestProject.DbTest
                     BoolData = true,
                     SpecialString = "SelectById"
                 };
-                engine.Insert(entity);
+                DbEngine.Insert(entity);
 
                 // 执行通过ID查询
-                var result = engine.SelectById<User>("1"); // 使用字符串主键ID
+                var result = DbEngine.SelectById<User>("1"); // 使用字符串主键ID
 
                 // 验证结果
                 Assert.IsNotNull(result, "应该查询到实体");
                 Assert.AreEqual("SelectByIdUser", result.UnionId, "UnionId应该匹配");
                 Assert.AreEqual(500, result.IntData, "IntData应该匹配");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
 
         /// <summary>
@@ -328,10 +274,6 @@ namespace TestProject.DbTest
         [TestMethod]
         public void Exist_GenericEntity_Should_Succeed()
         {
-            var executor = TestExecutorFactory.CreateInMemoryExecutor();
-            try
-            {
-                var engine = new TestDbEngine(executor);
 
                 // 先插入测试数据
                 var entity = new User
@@ -347,12 +289,12 @@ namespace TestProject.DbTest
                     BoolData = false,
                     SpecialString = "ExistGeneric"
                 };
-                engine.Insert(entity);
+                DbEngine.Insert(entity);
 
                 // 测试存在性检查
                 var existsWhere = new WhereConditions();
                 existsWhere.Add(UserTable.UnionId, "ExistGenericUser");
-                var exists = engine.Exist(UserTable.TableName, existsWhere);
+                var exists = DbEngine.Exist(UserTable.TableName, existsWhere);
 
                 // 验证结果
                 Assert.IsTrue(exists, "应该存在记录");
@@ -360,15 +302,10 @@ namespace TestProject.DbTest
                 // 测试不存在的记录
                 var notExistsWhere = new WhereConditions();
                 notExistsWhere.Add(UserTable.UnionId, "NonExistentUser");
-                var notExists = engine.Exist(UserTable.TableName, notExistsWhere);
+                var notExists = DbEngine.Exist(UserTable.TableName, notExistsWhere);
 
                 // 验证结果
                 Assert.IsFalse(notExists, "不应该存在记录");
-            }
-            finally
-            {
-                TestExecutorFactory.CleanupTestData(executor);
-            }
         }
     }
 }
