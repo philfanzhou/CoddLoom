@@ -47,29 +47,34 @@ namespace TestProject.DbTest
                 Assert.AreEqual("TestEntity", result.Name);
         }
 
+        /// <summary>
+        /// 测试当Entity对应的TableDefine中没有定义主键时，调用ById方法应该抛出异常
+        /// 底层逻辑：ById方法通过EntityMap查找TableDefine中的主键定义，如果TableDefine没有定义主键，则抛出异常
+        /// </summary>
         [TestMethod]
-        public void EntityWithoutPrimaryKey_Should_ThrowException_WhenNoPrimaryKeyDefined()
+        public void EntityWithoutPrimaryKey_Should_ThrowException_WhenTableDefineHasNoPrimaryKey()
         {
                 var engine = new PrimaryKeyTestDbEngine(Executor);
 
-                // 测试Entity没有指定PrimaryKey属性，且TableDefine中也没有定义主键的情况
+                // 测试Entity：TestEntityWithoutPrimaryKey2
+                // 对应的TableDefine：TestEntityWithoutPrimaryKeyTable2（注意：这个Table没有定义主键）
                 var entity = new TestEntityWithoutPrimaryKey2
                 {
                     Name = "TestEntity",
                     CreatedDate = DateTime.Now
                 };
 
-                // 这应该会抛出异常，因为既没有TableDefine中的主键，也没有Entity中的PrimaryKey属性
+                // 插入应该成功，因为TableDefine定义了列结构（即使没有主键）
                 var affected = DbEngine.Insert(entity);
                 Assert.AreEqual(1, affected);
 
-                // 验证使用ById方法会抛出异常（可能是ArgumentException或InvalidOperationException）
+                // 验证使用ById方法会抛出异常，因为TableDefine中没有定义主键
                 try
                 {
                     WhereConditions.ById<TestEntityWithoutPrimaryKey2>(1, out var tableName);
-                    Assert.Fail("Should throw exception when entity has no primary key defined");
+                    Assert.Fail("Should throw exception when TableDefine has no primary key defined");
                 }
-                catch (Exception ex)
+                catch (ArgumentException ex)
                 {
                     // 验证异常消息包含"primary key"相关信息
                     Assert.IsTrue(ex.Message.Contains("primary key") || ex.Message.Contains("PrimaryKey"), 
