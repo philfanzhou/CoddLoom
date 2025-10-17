@@ -156,7 +156,7 @@ namespace TestProject.DbTest
                 var dbEngine = new DbEngine(executor);
                 
                 // 统一删除所有测试表，适用于所有数据库类型
-                var tables = new[] { "User", "PasswordUser", "Tenant", "UserRole", "BatchRecord" };
+                var tables = new[] { "UserTable" };
                 
                 foreach (var table in tables)
                 {

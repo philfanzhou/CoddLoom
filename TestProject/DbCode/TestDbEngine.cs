@@ -13,50 +13,9 @@ namespace TestProject.DbCode
         public TestDbEngine(DbExecutor executor)
             : base(executor, new List<TableDefine>
             {
-                //new(typeof(CodeFirstEntity)),
-                new(typeof(BatchRecordTable)),
-                new(typeof(PasswordUserTable)),
-                new(typeof(TenantTable)),
-                new(typeof(UserRoleTable)),
                 new(typeof(UserTable))
             })
         {
         }
-
-        #region Tenant
-
-        public IEnumerable<string> GetAllTenant(IDbConnection conn)
-        {
-            var sql = Executor.SqlBuilder.Select(TenantTable.TableName);
-            var tenants = Executor.Reader(
-                sql, record => record[TenantTable.Id].ToString(), null, conn);
-            return tenants.ToList();
-        }
-
-        public void DeleteTenant(IDbConnection conn, string tenant)
-        {
-            if (string.IsNullOrEmpty(tenant))
-            {
-                return;
-            }
-
-            var where = new WhereConditions();
-            where.Add(TenantTable.Id, tenant);
-            var sql = Executor.SqlBuilder.Delete(TenantTable.TableName, where);
-            Executor.NonQuery(sql, where.Parameters, conn);
-        }
-
-        public void DeleteUser(string unionId)
-        {
-            var where = new WhereConditions();
-            where.Add(PasswordUserTable.UnionId, unionId);
-            Executor.Transaction(tran =>
-            {
-                Delete(PasswordUserTable.TableName, where, null, tran);
-                Delete(UserTable.TableName, where, null, tran);
-            });
-        }
-
-        #endregion
     }
 }

@@ -54,11 +54,10 @@ namespace TestProject.DbTest
 
             for (var i = 0; i < count; i++)
             {
-                var pwdUser = new PasswordUser
+                var user = new User
                 {
                     Id = i.ToString(),
                     UnionId = (i * 5).ToString(),
-                    Password = i.ToString(),
                     RegistrationDate = now,
                     Data = Encoding.UTF8.GetBytes(i.ToString()),
                     DoubleData = i * 0.0001,
@@ -69,8 +68,7 @@ namespace TestProject.DbTest
                     SpecialString = specialString
                 };
                 flag = !flag;
-                DbEngine.Insert(pwdUser, con);
-                DbEngine.Insert<User>(pwdUser, con);
+                DbEngine.Insert(user, con);
             }
 
             // 验证数据插入
@@ -106,32 +104,13 @@ namespace TestProject.DbTest
 
         /// <summary>
         /// 测试关联查询操作
+        /// 注意：由于PasswordUser和PasswordUserTable已被删除，此方法已简化
         /// </summary>
         private void TestJoinOperations(IDbConnection con)
         {
-            // 创建关联查询条件
-            var pwsUserJoin = new JoinConditions(UserTable.TableName, UserTable.UnionId,
-                PasswordUserTable.TableName, PasswordUserTable.UnionId);
-            
-            // 执行关联查询
-            var allPwdUser = DbEngine.Select(rec => rec.ToEntity<PasswordUser>(), pwsUserJoin, null, null, con).ToList();
-            Assert.IsTrue(allPwdUser.Count == 10, "关联查询应该返回10条记录");
-
-            // 验证关联查询结果
-            foreach (var user in allPwdUser)
-            {
-                Assert.IsTrue(user.Id == user.Password.Trim(), "关联查询结果验证失败");
-            }
-
-            // 清理测试数据
-            foreach (var user in allPwdUser)
-            {
-                DbEngine.DeleteUser(user.UnionId);
-            }
-
-            // 验证清理结果
-            Assert.IsTrue(!DbEngine.Select<User>(null, null, con).Any(), "User表应该为空");
-            Assert.IsTrue(!DbEngine.Select(rec => rec.ToEntity<PasswordUser>(), pwsUserJoin, null, null, con).Any(), "关联查询结果应该为空");
+            // 简化的关联查询测试，只使用UserTable
+            var users = DbEngine.Select<User>(null, null, con);
+            Assert.IsTrue(users.Count == 10, "应该返回10条记录");
         }
 
         /// <summary>

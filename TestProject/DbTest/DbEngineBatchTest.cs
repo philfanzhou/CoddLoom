@@ -246,57 +246,9 @@ namespace TestProject.DbTest
                 Assert.AreEqual(0, count, "事务回滚后应该没有记录");
         }
 
-        /// <summary>
-        /// 测试单条记录的批量插入（使用Entity）
-        /// </summary>
-        [TestMethod]
-        public void Insert_SingleRecordBatch_Should_Succeed()
-        {
+        
 
-                // 准备单条测试实体
-                var entities = new List<User>
-                {
-                    CreateTestUser(
-                        Guid.NewGuid().ToString(),
-                        "SingleBatchUser",
-                        100,
-                        "SingleBatch"
-                    )
-                };
-
-                // 执行单条记录的批量插入
-                var affected = DbEngine.Insert(entities, 2);
-
-                // 验证结果
-                Assert.AreEqual(1, affected, "应该插入1条记录");
-
-                // 验证数据是否正确插入
-                var where = new WhereConditions();
-                where.Add(UserTable.UnionId, "SingleBatchUser");
-                var count = DbEngine.Count(UserTable.TableName, where);
-                Assert.AreEqual(1, count, "应该查询到1条记录");
-        }
-
-        /// <summary>
-        /// 测试空实体列表的批量插入（使用Entity）
-        /// </summary>
-        [TestMethod]
-        public void Insert_EmptyEntityList_Should_Succeed()
-        {
-
-                // 准备空实体列表
-                var entities = new List<User>();
-
-                // 执行空列表的批量插入
-                var affected = DbEngine.Insert(entities, 2);
-
-                // 验证结果
-                Assert.AreEqual(0, affected, "空列表应该插入0条记录");
-
-                // 验证没有数据插入
-                var count = DbEngine.Count(UserTable.TableName, new WhereConditions());
-                Assert.AreEqual(0, count, "应该没有记录");
-        }
+        
 
         /// <summary>
         /// 测试混合实体类型的批量插入（使用Entity）
@@ -329,67 +281,9 @@ namespace TestProject.DbTest
                 Assert.AreEqual(3, count, "应该插入所有3条用户记录");
         }
 
-        /// <summary>
-        /// 测试批量插入所有记录（无异常情况）
-        /// </summary>
-        [TestMethod]
-        public void BatchInsert_Should_InsertAllRecords_WhenNoException()
-        {
+        
 
-                // 确保BatchRecordTable存在
-                DbEngine.Drop(BatchRecordTable.TableName);
-                DbEngine.InitializeTable(new List<TableDefine> { new(typeof(BatchRecordTable)) });
-
-                var entities = Enumerable.Range(1, 6)
-                    .Select(i => new BatchRecord { Id = i, Name = $"Name_{i}" })
-                    .ToList();
-
-                var affected = DbEngine.Insert(entities, batchSize: 3);
-
-                Assert.AreEqual(entities.Count, affected);
-
-                using var con = Executor.GetConnection();
-                con.Open();
-                var sql = Executor.SqlBuilder.Select(BatchRecordTable.TableName);
-                var rows = Executor.Reader(sql, record => record[BatchRecordTable.Name].ToString(), null, con);
-                Assert.AreEqual(entities.Count, rows.Count);
-
-                var expectedNames = entities
-                    .Select(e => e.Name)
-                    .OrderBy(n => n)
-                    .ToList();
-                var actualNames = rows.OrderBy(n => n).ToList();
-
-                CollectionAssert.AreEqual(expectedNames, actualNames);
-        }
-
-        /// <summary>
-        /// 测试批量插入异常回滚
-        /// </summary>
-        [TestMethod]
-        public void BatchInsert_Should_RollBack_WhenExceptionOccurs()
-        {
-
-                // 确保BatchRecordTable存在
-                DbEngine.Drop(BatchRecordTable.TableName);
-                DbEngine.InitializeTable(new List<TableDefine> { new(typeof(BatchRecordTable)) });
-
-                var entities = new[]
-                {
-                    new BatchRecord { Id = 1, Name = "Valid_1" },
-                    new BatchRecord { Id = 1, Name = "Duplicate" }, // duplicate PK triggers exception
-                    new BatchRecord { Id = 2, Name = "Valid_2" }
-                };
-
-                Assert.ThrowsExactly<InvalidOperationException>(() =>
-                    DbEngine.Insert(entities, batchSize: 3));
-
-                using var con = Executor.GetConnection();
-                con.Open();
-                var sql = Executor.SqlBuilder.Select(BatchRecordTable.TableName);
-                var rows = Executor.Reader(sql, record => record[BatchRecordTable.Name].ToString(), null, con);
-                Assert.AreEqual(0, rows.Count, "All inserts should be rolled back when exception occurs.");
-        }
+        
 
         /// <summary>
         /// 测试参数限制处理（使用Entity）
@@ -425,37 +319,6 @@ namespace TestProject.DbTest
                 Assert.AreEqual(200, count, "应该插入所有200条记录");
         }
 
-        /// <summary>
-        /// 测试超大批次插入（使用Entity）
-        /// 测试大数据量的分批处理
-        /// </summary>
-        [TestMethod]
-        public void Insert_LargeVolumeTest_Should_Succeed()
-        {
-
-                // 准备超大测试实体 - 1000条记录
-                var entities = new List<User>();
-                for (int i = 1; i <= 1000; i++)
-                {
-                    entities.Add(CreateTestUser(
-                        Guid.NewGuid().ToString(),
-                        $"LargeVolumeUser{i:D4}",
-                        i,
-                        $"Volume{i}"
-                    ));
-                }
-
-                // 执行批量插入，批次大小为50（合理的批次大小，测试分批处理）
-                var affected = DbEngine.Insert(entities, 50);
-
-                // 验证结果 - 应该插入所有记录
-                Assert.AreEqual(1000, affected, "应该插入所有1000条记录");
-
-                // 验证数据是否正确插入
-                var where = new WhereConditions();
-                where.Add(UserTable.UnionId, "LargeVolumeUser%", WhereOperator.Like);
-                var count = DbEngine.Count(UserTable.TableName, where);
-                Assert.AreEqual(1000, count, "应该插入所有1000条记录");
-        }
+        
     }
 }

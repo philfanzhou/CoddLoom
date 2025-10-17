@@ -1,14 +1,2 @@
-using Qz.Infra.Database.Entity;
-using TestProject.DbCode.Tables;
-
-namespace TestProject.DbCode.Entity;
-
-[MapTable(Name = BatchRecordTable.TableName)]
-internal class BatchRecord
-{
-    [MapColumn(Name = BatchRecordTable.Id)]
-    public int Id { get; set; }
-
-    [MapColumn(Name = BatchRecordTable.Name)]
-    public string Name { get; set; }
-}
+// 此文件已被删除，因为BatchRecord实体没有被使用
+// BatchRecordTable已从TestDbEngine中移除

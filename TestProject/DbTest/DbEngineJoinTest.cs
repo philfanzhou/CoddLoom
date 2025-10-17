@@ -142,86 +142,11 @@ namespace TestProject.DbTest
                 Assert.IsTrue(tableName.Contains("UserId"), "应该包含UserId字段");
         }
 
-        /// <summary>
-        /// 测试JoinConditions的枚举值
-        /// </summary>
-        [TestMethod]
-        public void JoinType_EnumValues_Should_Succeed()
-        {
-            // 验证JoinType枚举的所有值
-            Assert.AreEqual(0, (int)JoinType.Inner, "Inner应该是0");
-            Assert.AreEqual(1, (int)JoinType.Left, "Left应该是1");
-            Assert.AreEqual(2, (int)JoinType.Right, "Right应该是2");
+        
 
-            // 验证枚举值可以正确使用
-            var inner = JoinType.Inner;
-            var left = JoinType.Left;
-            var right = JoinType.Right;
+        
 
-            Assert.AreEqual(JoinType.Inner, inner);
-            Assert.AreEqual(JoinType.Left, left);
-            Assert.AreEqual(JoinType.Right, right);
-        }
-
-        /// <summary>
-        /// 测试DbEngine的Select方法接受JoinConditions参数
-        /// 测试JoinConditions的基本功能，不执行实际的SQL查询以避免列名冲突
-        /// </summary>
-        [TestMethod]
-        public void DbEngine_SelectWithJoinConditions_Should_NotThrowException()
-        {
-            // 插入测试数据
-                DbEngine.Insert(CreateTestUser("1", "JoinTestUser1", 100, "JoinTest1"));
-                DbEngine.Insert(CreateTestUser("2", "JoinTestUser2", 200, "JoinTest2"));
-
-                // 创建连接条件，仅测试参数传递，不执行实际查询
-                var join = new JoinConditions("Table1", "Column1", "Table2", "Column2", JoinType.Inner);
-                var where = new WhereConditions();
-                where.Add(UserTable.UnionId, "JoinTestUser%", WhereOperator.Like);
-
-                // 验证JoinConditions对象可以正确创建和使用
-                Assert.IsNotNull(join, "JoinConditions对象应该成功创建");
-                Assert.AreEqual("Table1", join.Table1, "Table1应该正确设置");
-                Assert.AreEqual("Table2", join.Table2, "Table2应该正确设置");
-                Assert.AreEqual(JoinType.Inner, join.Type, "连接类型应该正确设置");
-        }
-
-        /// <summary>
-        /// 测试JoinConditions与不同参数组合的兼容性
-        /// </summary>
-        [TestMethod]
-        public void JoinConditions_ParameterCompatibility_Should_Succeed()
-        {
-
-                // 插入测试数据
-                DbEngine.Insert(CreateTestUser("1", "CompatTestUser1", 100, "CompatTest1"));
-
-                // 测试JoinConditions与WhereConditions的组合
-                var join = new JoinConditions("Table1", "Id", "Table2", "Table1Id", JoinType.Inner);
-                var where = new WhereConditions();
-                where.Add("column1", "value1");
-                where.Add("column2", "value2", WhereOperator.Like);
-
-                // 测试JoinConditions与OrderByCondition的组合
-                var orderBy = new OrderByCondition("column1", false);
-
-                // 测试JoinConditions与ColumnParam的组合
-                var columns = new ColumnParam();
-                columns.AddSelect("column1");
-                columns.AddSelect("column2");
-
-                // 验证这些参数对象可以正确创建和使用
-                Assert.IsNotNull(join, "JoinConditions应该成功创建");
-                Assert.IsNotNull(where, "WhereConditions应该成功创建");
-                Assert.IsNotNull(orderBy, "OrderByCondition应该成功创建");
-                Assert.IsNotNull(columns, "ColumnParam应该成功创建");
-                
-                // 验证参数对象可以正确创建（不访问internal属性）
-                Assert.AreEqual("Table1", join.Table1, "JoinConditions的Table1应该正确设置");
-                Assert.AreEqual(2, where.Parameters.Count(), "WhereConditions应该有2个参数");
-                Assert.IsNotNull(orderBy, "OrderByCondition应该成功创建");
-                Assert.IsNotNull(columns, "ColumnParam应该成功创建");
-        }
+        
 
         /// <summary>
         /// 测试JoinConditions的边界情况

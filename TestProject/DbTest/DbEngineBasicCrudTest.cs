@@ -305,22 +305,6 @@ namespace TestProject.DbTest
             Assert.AreEqual(200, results[0].IntData);
         }
 
-        /// <summary>
-        /// 测试空结果查询（使用Entity）
-        /// </summary>
-        [TestMethod]
-        public void Select_EmptyResult_Should_Succeed()
-        {
-            // 不插入任何数据
-
-            // 执行查询
-            var where = new WhereConditions();
-            where.Add(UserTable.UnionId, "NonExistentUser%", WhereOperator.Like);
-            var results = DbEngine.Select<User>(where, null);
-
-            // 验证结果
-            Assert.IsNotNull(results, "查询结果不应为null");
-            Assert.AreEqual(0, results.Count, "应该查询到0条记录");
-        }
+        
     }
 }

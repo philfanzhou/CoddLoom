@@ -17,7 +17,7 @@ namespace TestProject.DbCode.Tables
         [DbColumn(Type = DbType.DateTime, AllowEmpty = true)]
         public const string RegistrationDate = "registrationDate";
 
-        [DbColumnBinary]
+        [DbColumnBinary(AllowEmpty = true)]
         public const string Data = "data";
 
         [DbColumn(Type = DbType.Double)]
@@ -35,7 +35,7 @@ namespace TestProject.DbCode.Tables
         [DbColumn(Type = DbType.Boolean)]
         public const string BoolData = "boolData";
 
-        [DbColumnString(AllowUnicode = true)]
+        [DbColumnString(AllowUnicode = true, AllowEmpty = true)]
         public const string SpecialString = "specialString";
     }
 }

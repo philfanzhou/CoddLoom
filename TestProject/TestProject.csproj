@@ -25,4 +25,8 @@
     <ProjectReference Include="..\Qz.Infra.Database\Qz.Infra.Database.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="TestResults\" />
+  </ItemGroup>
+
 </Project>

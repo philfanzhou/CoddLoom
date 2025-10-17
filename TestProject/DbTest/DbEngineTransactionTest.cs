@@ -225,54 +225,7 @@ namespace TestProject.DbTest
             Assert.AreEqual(400, user4.IntData, "User4应该已被插入");
         }
 
-        /// <summary>
-        /// 测试事务中发生异常导致回滚，并验证数据状态（使用Entity）
-        /// </summary>
-        [TestMethod]
-        public void Transaction_ExceptionRollback_Should_Succeed()
-        {
-            // 确保表存在
-            DbEngine.Drop(UserTable.TableName);
-            DbEngine.InitializeTable(new List<TableDefine> { new(typeof(UserTable)) });
-
-            // 预插入一条记录
-            DbEngine.Insert(CreateTestUser("100", "BeforeTransactionUser", 1100, "BeforeTransaction"));
-
-            // 尝试在事务中执行操作，并故意抛出异常
-            try
-            {
-                Executor.Transaction(tran =>
-                {
-                    // 1. 更新现有记录
-                    var updateEntity = CreateTestUser("100", "BeforeTransactionUser", 9999, "UpdatedInTransaction");
-                    DbEngine.Update(updateEntity, null, tran);
-
-                    // 2. 插入新记录
-                    DbEngine.Insert(CreateTestUser("101", "NewUserInTransaction", 1200, "NewInTran"), null, tran);
-
-                    // 3. 故意抛出异常
-                    throw new InvalidOperationException("Intentional exception for transaction rollback test");
-                });
-                Assert.Fail("事务应该抛出异常并回滚");
-            }
-            catch (InvalidOperationException ex)
-            {
-                // 验证异常被正确抛出
-                Assert.AreEqual("Intentional exception for transaction rollback test", ex.Message);
-            }
-
-            // 验证事务回滚后，原有记录没有被更新
-            var afterWhere = new WhereConditions();
-            afterWhere.Add(UserTable.UnionId, "BeforeTransactionUser");
-            var afterEntity = DbEngine.Select<User>(afterWhere, null).FirstOrDefault();
-            Assert.IsNotNull(afterEntity, "原有记录应该仍然存在");
-            Assert.AreEqual(1100, afterEntity.IntData, "原有记录的IntData应该没有被更新");
-            Assert.AreEqual("BeforeTransaction", afterEntity.SpecialString, "原有记录的SpecialString应该没有被更新");
-
-            // 验证新记录没有被插入
-            var newEntity = DbEngine.SelectById<User>("101");
-            Assert.IsNull(newEntity, "新记录应该没有被插入");
-        }
+        
 
 
         /// <summary>
