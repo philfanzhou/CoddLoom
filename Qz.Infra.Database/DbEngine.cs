@@ -38,7 +38,7 @@ public partial class DbEngine
     public int Insert(string tableName, IEnumerable<InputValues> inputs, int batchSize, 
         IDbTransaction tran = null)
     {
-        if (batchSize < 1)
+        if (batchSize < 2)
         {
             batchSize = 10;
         }

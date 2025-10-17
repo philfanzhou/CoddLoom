@@ -166,9 +166,9 @@ public partial class SqlBuilder
         {
             return $"'{param.Value:yyyy-MM-dd HH:mm:ss}'";
         }
-        else if (param.Value is bool)
+        else if (param.Value is bool v)
         {
-            return (bool)param.Value ? "1" : "0";
+            return v ? "1" : "0";
         }
         else
         {
