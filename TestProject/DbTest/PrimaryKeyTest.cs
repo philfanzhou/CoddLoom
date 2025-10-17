@@ -7,8 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using TestProject.DbCode;
-using TestProject.DbTest;
 
 namespace TestProject.DbTest
 {

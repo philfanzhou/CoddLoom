@@ -1,12 +1,12 @@
+using Qz.Infra.Database;
+using Qz.Infra.Database.Maria;
+using Qz.Infra.Database.MySql;
+using Qz.Infra.Database.Oracle;
+using Qz.Infra.Database.SQLite;
+using Qz.Infra.Database.SqlServer;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Qz.Infra.Database;
-using Qz.Infra.Database.SQLite;
-using Qz.Infra.Database.MySql;
-using Qz.Infra.Database.SqlServer;
-using Qz.Infra.Database.Maria;
-using Qz.Infra.Database.Oracle;
 
 namespace TestProject.DbTest
 {

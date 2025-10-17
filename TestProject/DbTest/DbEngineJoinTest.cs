@@ -1,17 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Qz.Infra.Database;
 using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Convert;
-using Qz.Infra.Database.Input;
-using Qz.Infra.Database.Params;
 using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using TestProject.DbCode;
 using TestProject.DbCode.Entity;
-using TestProject.DbCode.Tables;
-using TestProject.DbTest;
 
 namespace TestProject.DbTest
 {
