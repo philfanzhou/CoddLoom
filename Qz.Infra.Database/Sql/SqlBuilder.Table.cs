@@ -19,6 +19,16 @@ partial class SqlBuilder
         return $"CREATE TABLE {table.Name}({GetCreateColumnsSql(table.Columns, table.PrimaryKey)})";
     }
 
+    protected internal virtual string GetAddColumnSql(string tableName, DbColumnBaseAttribute column)
+    {
+        return $"ALTER TABLE {tableName} ADD {GetColumnSql(column)}";
+    }
+
+    protected internal virtual string GetTableColumnsSql(string tableName)
+    {
+        return $"SELECT name FROM pragma_table_info('{tableName}')";
+    }
+
     protected virtual string GetCreateColumnsSql(IEnumerable<DbColumnBaseAttribute> columns,
         DbPrimaryKeyBaseAttribute primaryKey = null)
     {

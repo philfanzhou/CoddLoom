@@ -115,5 +115,10 @@ public class SqlServerBuilder : SqlBuilder
         return $"DECIMAL({decimalColumn.Length},{decimalColumn.PointLength})";
     }
 
+    protected override string GetTableColumnsSql(string tableName)
+    {
+        return $"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{tableName}'";
+    }
+
     #endregion
 }
