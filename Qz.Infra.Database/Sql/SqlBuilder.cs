@@ -1,4 +1,4 @@
-﻿using Qz.Infra.Database.Condition;
+using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Input;
 using Qz.Infra.Database.Params;
 using System;

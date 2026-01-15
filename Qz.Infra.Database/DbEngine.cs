@@ -52,15 +52,15 @@ public partial class DbEngine
         return InsertWithTransaction(tableName, inputs, batchSize, tran);
     }
 
-    public int Delete(string tableName, WhereConditions where, bool force = false,
-        IDbConnection con = null, IDbTransaction tran = null)
+    public int Delete(string tableName, WhereConditions where, 
+        IDbConnection con = null, IDbTransaction tran = null, bool force = false)
     {
         var sql = Executor.SqlBuilder.Delete(tableName, where, force);
         return Executor.NonQuery(sql, where?.Parameters, con, tran);
     }
 
-    public int Update(string tableName, InputValues input, WhereConditions where, bool force = false,
-        IDbConnection con = null, IDbTransaction tran = null)
+    public int Update(string tableName, InputValues input, WhereConditions where, 
+        IDbConnection con = null, IDbTransaction tran = null, bool force = false)
     {
         var sql = Executor.SqlBuilder.Update(tableName, input, where, force);
         var dbParams = new List<ValueParam>();
