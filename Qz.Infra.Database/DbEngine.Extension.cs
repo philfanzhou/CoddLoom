@@ -1,4 +1,4 @@
-﻿using Qz.Infra.Database.Cache;
+using Qz.Infra.Database.Cache;
 using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Convert;
 using Qz.Infra.Database.Params;
@@ -29,14 +29,14 @@ partial class DbEngine
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var where = WhereConditions.ById<T>(id, out var tableName);
-        return Delete(tableName, where, con, tran);
+        return Delete(tableName, where, false, con, tran);
     }
 
     public int Update<T>(T entity,
         IDbConnection con = null, IDbTransaction tran = null)
     {
         DbConverter.ToUpdate(entity, out var table, out var input, out var where);
-        return Update(table, input, where, con, tran);
+        return Update(table, input, where, false, con, tran);
     }
 
     public int Count(string tableName, WhereConditions where,

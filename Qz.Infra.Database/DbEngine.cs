@@ -1,4 +1,4 @@
-﻿using Qz.Infra.Database.Condition;
+using Qz.Infra.Database.Condition;
 using Qz.Infra.Database.Input;
 using Qz.Infra.Database.Params;
 using Qz.Infra.Database.Table;
@@ -52,20 +52,23 @@ public partial class DbEngine
         return InsertWithTransaction(tableName, inputs, batchSize, tran);
     }
 
-    public int Delete(string tableName, WhereConditions where, 
+    public int Delete(string tableName, WhereConditions where, bool force = false,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var sql = Executor.SqlBuilder.Delete(tableName, where);
-        return Executor.NonQuery(sql, where.Parameters, con, tran);
+        var sql = Executor.SqlBuilder.Delete(tableName, where, force);
+        return Executor.NonQuery(sql, where?.Parameters, con, tran);
     }
 
-    public int Update(string tableName, InputValues input, WhereConditions where, 
+    public int Update(string tableName, InputValues input, WhereConditions where, bool force = false,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var sql = Executor.SqlBuilder.Update(tableName, input, where);
+        var sql = Executor.SqlBuilder.Update(tableName, input, where, force);
         var dbParams = new List<ValueParam>();
         dbParams.AddRange(input.Items);
-        dbParams.AddRange(where.Parameters);
+        if (where != null)
+        {
+            dbParams.AddRange(where.Parameters);
+        }
         return Executor.NonQuery(sql, dbParams, con, tran);
     }
 

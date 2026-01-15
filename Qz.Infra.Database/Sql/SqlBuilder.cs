@@ -39,20 +39,20 @@ public partial class SqlBuilder
         return $"INSERT INTO {tableName} {columnSql} VALUES {valueSql}";
     }
 
-    public virtual string Delete(string tableName, WhereConditions where)
+    public virtual string Delete(string tableName, WhereConditions where, bool force = false)
     {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
-        if (where == null || where.IsEmpty()) throw new ArgumentNullException(nameof(where));
+        if ((where == null || where.IsEmpty()) && !force) throw new ArgumentNullException(nameof(where));
 
         var sql = $"DELETE FROM {tableName}";
         return AppendWhere(sql, where);
     }
 
-    public virtual string Update(string tableName, InputValues input, WhereConditions where)
+    public virtual string Update(string tableName, InputValues input, WhereConditions where, bool force = false)
     {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
         if (input == null || input.IsEmpty()) throw new ArgumentNullException(nameof(input));
-        if (where == null || where.IsEmpty()) throw new ArgumentNullException(nameof(where));
+        if ((where == null || where.IsEmpty()) && !force) throw new ArgumentNullException(nameof(where));
 
         var valueBuilder = new StringBuilder();
         foreach (var item in input.Items)
