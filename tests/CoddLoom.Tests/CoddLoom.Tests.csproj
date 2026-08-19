@@ -22,6 +22,7 @@
     <ProjectReference Include="..\..\src\CoddLoom.SqlServer\CoddLoom.SqlServer.csproj" />
     <ProjectReference Include="..\..\src\CoddLoom.MariaDb\CoddLoom.MariaDb.csproj" />
     <ProjectReference Include="..\..\src\CoddLoom.Oracle\CoddLoom.Oracle.csproj" />
+    <ProjectReference Include="..\..\src\CoddLoom.PostgreSql\CoddLoom.PostgreSql.csproj" />
     <ProjectReference Include="..\..\src\CoddLoom\CoddLoom.csproj" />
   </ItemGroup>
 

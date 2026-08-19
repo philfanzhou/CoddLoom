@@ -10,6 +10,7 @@ $expectedPackages = @(
     'CoddLoom.MariaDb',
     'CoddLoom.MySql',
     'CoddLoom.Oracle',
+    'CoddLoom.PostgreSql',
     'CoddLoom.Sqlite',
     'CoddLoom.SqlServer'
 )

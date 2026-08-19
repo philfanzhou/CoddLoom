@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoddLoom.Oracle", "src\Codd
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoddLoom.MariaDb", "src\CoddLoom.MariaDb\CoddLoom.MariaDb.csproj", "{7E2F4840-6A8E-280B-9924-D8CF90D193D6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoddLoom.PostgreSql", "src\CoddLoom.PostgreSql\CoddLoom.PostgreSql.csproj", "{12D6D46A-4D1A-4281-8BB1-A79E1E7E06F1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{7E2F4840-6A8E-280B-9924-D8CF90D193D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E2F4840-6A8E-280B-9924-D8CF90D193D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E2F4840-6A8E-280B-9924-D8CF90D193D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12D6D46A-4D1A-4281-8BB1-A79E1E7E06F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12D6D46A-4D1A-4281-8BB1-A79E1E7E06F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12D6D46A-4D1A-4281-8BB1-A79E1E7E06F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12D6D46A-4D1A-4281-8BB1-A79E1E7E06F1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
