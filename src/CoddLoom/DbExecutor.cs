@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Reflection;
 
 namespace CoddLoom;
 
@@ -133,6 +134,41 @@ public abstract class DbExecutor
         where.Add("type", "table");
         where.Add("name", table.Name);
         checkTable = "sqlite_master";
+    }
+
+    internal bool TryGetLegacyExistTableParam(TableDefine table,
+        out string checkTable, out WhereConditions where)
+    {
+        // Existing provider assemblies may still override the obsolete hook. Detect a
+        // real override (rather than a same-named hidden method) before using the new
+        // builder-based schema query path.
+        var parameterTypes = new[]
+        {
+            typeof(TableDefine),
+            typeof(string).MakeByRefType(),
+            typeof(WhereConditions).MakeByRefType()
+        };
+        var legacyMethod = GetType().GetMethod(
+            nameof(GetExistTableParam),
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+            null,
+            parameterTypes,
+            null);
+
+        var isLegacyOverride = legacyMethod != null
+            && legacyMethod.DeclaringType != typeof(DbExecutor)
+            && legacyMethod.GetBaseDefinition().DeclaringType == typeof(DbExecutor);
+        if (!isLegacyOverride)
+        {
+            checkTable = null;
+            where = null;
+            return false;
+        }
+
+#pragma warning disable CS0618 // Required while the obsolete provider hook remains supported.
+        GetExistTableParam(table, out checkTable, out where);
+#pragma warning restore CS0618
+        return true;
     }
 
     protected abstract Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command);
