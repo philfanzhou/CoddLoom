@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Description>A lightweight, explicit ORM built directly on ADO.NET.</Description>
   </PropertyGroup>
 
