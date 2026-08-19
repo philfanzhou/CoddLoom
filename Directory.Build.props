@@ -1,0 +1,25 @@
+<Project>
+  <PropertyGroup>
+    <Authors>philfanzhou</Authors>
+    <Copyright>Copyright (c) 2022-2026 philfanzhou</Copyright>
+    <Title>$(AssemblyName)</Title>
+    <PackageId>$(AssemblyName)</PackageId>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/philfanzhou/CoddLoom</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/philfanzhou/CoddLoom.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>orm;database;ado.net;sql</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)README.md"
+          Link="README.md"
+          Pack="true"
+          PackagePath="/" />
+    <None Include="$(MSBuildThisFileDirectory)THIRD-PARTY-NOTICES.md"
+          Link="THIRD-PARTY-NOTICES.md"
+          Pack="true"
+          PackagePath="/" />
+  </ItemGroup>
+</Project>

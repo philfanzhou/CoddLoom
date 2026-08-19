@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
 	  <LangVersion>latest</LangVersion>
+	  <Description>SQL Server provider for CoddLoom.</Description>
   </PropertyGroup>
 
 	<ItemGroup>
