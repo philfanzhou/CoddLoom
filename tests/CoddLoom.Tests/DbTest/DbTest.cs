@@ -158,13 +158,10 @@ namespace CoddLoom.Tests.DbTest
         /// </summary>
         private static void AssertDateTime(DateTime time1, DateTime time2)
         {
-            Assert.AreEqual(time1.Year, time2.Year);
-            Assert.AreEqual(time1.Month, time2.Month);
-            Assert.AreEqual(time1.Day, time2.Day);
-            Assert.AreEqual(time1.Hour, time2.Hour);
-            Assert.AreEqual(time1.Minute, time2.Minute);
-            Assert.AreEqual(time1.Second, time2.Second);
-            // Do not compare milliseconds because database precision varies.
+            // Providers differ in fractional-second precision and some round to the
+            // nearest second. Compare elapsed time so rollover at a minute/day boundary
+            // does not make an equivalent stored value fail component-wise.
+            Assert.IsLessThanOrEqualTo(TimeSpan.FromSeconds(1), (time1 - time2).Duration());
         }
     }
 }

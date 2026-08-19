@@ -77,13 +77,16 @@ public class ProviderBuilderContractTest
     }
 
     [TestMethod]
-    public void SqlServerPagination_RequiresDeterministicOrdering()
+    public void SqlServerPagination_SuppliesRequiredFallbackOrdering()
     {
         var builder = new SqlServerBuilder();
         var page = new PageParam { PageNumber = 1, PageSize = 10 };
 
-        Assert.ThrowsExactly<ArgumentNullException>(() => builder.Select("sample", pageParam: page));
-        Assert.ThrowsExactly<ArgumentNullException>(() =>
+        Assert.AreEqual(
+            "SELECT * FROM sample ORDER BY (SELECT NULL) ASC OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY",
+            builder.Select("sample", pageParam: page));
+        Assert.AreEqual(
+            "SELECT * FROM sample ORDER BY (SELECT NULL) ASC OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY",
             builder.Select("sample", new WhereConditions(), pageParam: page));
 
         var where = new WhereConditions("tenantId", 1);

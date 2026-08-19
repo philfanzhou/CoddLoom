@@ -31,11 +31,14 @@ public class SqlServerBuilder : SqlBuilder
         {
             if (where?.Parameters.FirstOrDefault() == null)
             {
-                throw new ArgumentNullException(nameof(orderBy),
-                    "SQL Server pagination requires an order-by condition or a non-empty where condition.");
+                // SQL Server requires ORDER BY with OFFSET/FETCH. Preserve the base
+                // builder's unordered semantics when callers did not request ordering.
+                orderBy = new OrderByCondition("(SELECT NULL)");
             }
-
-            orderBy = new OrderByCondition(where.Parameters.First().Column);
+            else
+            {
+                orderBy = new OrderByCondition(where.Parameters.First().Column);
+            }
         }
         return base.Select(tableName, where, orderBy, pageParam, select);
     }

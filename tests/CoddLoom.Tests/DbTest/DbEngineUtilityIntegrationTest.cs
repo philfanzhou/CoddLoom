@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Data;
 using System.Linq;
+using CoddLoom.Table;
 
 namespace CoddLoom.Tests.DbTest;
 
@@ -28,9 +29,17 @@ public class DbEngineUtilityIntegrationTest : TestBase
     [TestMethod]
     public void GenerateMaxAndTimeIds_ReturnExpectedShapes()
     {
-        DbEngine.Insert(UserTable.TableName, CreateRequiredRow("3", "highest"));
-
-        Assert.AreEqual(4L, DbEngine.GenerateMaxId(UserTable.TableName, UserTable.Id));
+        var numericTable = new TableDefine(typeof(NumericIdTable));
+        DbEngine.InitializeTable([numericTable]);
+        try
+        {
+            DbEngine.Insert(NumericIdTable.TableName, new InputValues().Add(NumericIdTable.Id, 3L));
+            Assert.AreEqual(4L, DbEngine.GenerateMaxId(NumericIdTable.TableName, NumericIdTable.Id));
+        }
+        finally
+        {
+            DbEngine.Drop(NumericIdTable.TableName);
+        }
 
         var timeId = DbEngine.GenerateTimeId(UserTable.TableName, UserTable.Id,
             () => new DateTime(2024, 2, 3, 4, 5, 6));
@@ -81,5 +90,11 @@ public class DbEngineUtilityIntegrationTest : TestBase
             .Add(UserTable.ShortData, (short)0)
             .Add(UserTable.IntData, 0)
             .Add(UserTable.BoolData, false);
+    }
+
+    private static class NumericIdTable
+    {
+        [DbTableName] internal const string TableName = "NumericIdTable";
+        [DbPrimaryKey(Type = DbType.Int64)] internal const string Id = "id";
     }
 }
