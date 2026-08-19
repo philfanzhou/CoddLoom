@@ -2,6 +2,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using CoddLoom.Condition;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using CoddLoom.Sqlite;
+using CoddLoom.Tests.DbCode;
 using CoddLoom.Tests.DbCode.Entity;
 using CoddLoom.Tests.DbCode.Tables;
 
@@ -312,6 +315,75 @@ namespace CoddLoom.Tests.DbTest
                 where.Add(UserTable.UnionId, "ParamLimitUser%", WhereOperator.Like);
                 var count = DbEngine.Count(UserTable.TableName, where);
                 Assert.AreEqual(200, count, "All 200 records should be present.");
+        }
+
+        [TestMethod]
+        public void Insert_ProviderParameterLimit_Should_SplitWithoutLiteralFallback()
+        {
+            var dbPath = Path.Combine(Path.GetTempPath(), $"coddloom-limit-{Guid.NewGuid():N}.db");
+            var executor = new ConstrainedSqliteExecutor(
+                $"Data Source={dbPath};Version=3;Pooling=False;", 15, true);
+            var engine = new TestDbEngine(executor);
+
+            try
+            {
+                var entities = new List<User>
+                {
+                    CreateTestUser(Guid.NewGuid().ToString(), "LimitSplit1", 1, "Split1"),
+                    CreateTestUser(Guid.NewGuid().ToString(), "LimitSplit2", 2, "Split2"),
+                    CreateTestUser(Guid.NewGuid().ToString(), "LimitSplit3", 3, "Split3")
+                };
+
+                Assert.AreEqual(3, engine.Insert(entities, 3));
+            }
+            finally
+            {
+                engine.Drop(UserTable.TableName);
+                if (File.Exists(dbPath)) File.Delete(dbPath);
+            }
+        }
+
+        [TestMethod]
+        public void Insert_AbortedTransactionProvider_Should_NotRetryFailedCommand()
+        {
+            var dbPath = Path.Combine(Path.GetTempPath(), $"coddloom-abort-{Guid.NewGuid():N}.db");
+            var executor = new ConstrainedSqliteExecutor(
+                $"Data Source={dbPath};Version=3;Pooling=False;", 100, false);
+            var engine = new TestDbEngine(executor);
+            var duplicateId = Guid.NewGuid().ToString();
+
+            try
+            {
+                var entities = new List<User>
+                {
+                    CreateTestUser(duplicateId, "Abort1", 1, "Abort1"),
+                    CreateTestUser(duplicateId, "Abort2", 2, "Abort2")
+                };
+
+                var exception = Assert.ThrowsExactly<InvalidOperationException>(
+                    () => engine.Insert(entities, 2));
+
+                Assert.IsNotNull(exception.InnerException);
+                Assert.IsFalse(exception.InnerException is InvalidOperationException,
+                    "The original provider exception should be retained instead of retrying the failed transaction.");
+            }
+            finally
+            {
+                engine.Drop(UserTable.TableName);
+                if (File.Exists(dbPath)) File.Delete(dbPath);
+            }
+        }
+
+        private sealed class ConstrainedSqliteExecutor(
+            string connectionString,
+            int maxParametersPerCommand,
+            bool canContinueTransactionAfterCommandFailure)
+            : SqliteExecutor(connectionString)
+        {
+            public override int MaxParametersPerCommand { get; } = maxParametersPerCommand;
+
+            public override bool CanContinueTransactionAfterCommandFailure { get; }
+                = canContinueTransactionAfterCommandFailure;
         }
 
         

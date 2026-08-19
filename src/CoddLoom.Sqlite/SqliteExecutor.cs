@@ -1,5 +1,3 @@
-using CoddLoom.Condition;
-using CoddLoom.Table;
 using System;
 using System.Data;
 using System.Data.SQLite;
@@ -23,14 +21,6 @@ public class SqliteExecutor : DbExecutor
     public override IDbConnection GetConnection()
     {
         return new SQLiteConnection(ConnectionString);
-    }
-
-    protected override void GetExistTableParam(TableDefine table, out string checkTable, out WhereConditions where)
-    {
-        where = new WhereConditions();
-        where.Add("type", "table");
-        where.Add("name", table.Name);
-        checkTable = "sqlite_master";
     }
 
     protected override Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command)

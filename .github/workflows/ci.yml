@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  # Default-branch pushes are verified by release.yml before an edge package is
+  # published. Keeping them out of this trigger avoids building the same commit
+  # twice while preserving a reusable verification gate.
+  pull_request:
+    branches: [main]
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_NOLOGO: true
+
+jobs:
+  build-test-pack:
+    name: Build, test, and pack
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      PACKAGE_VERSION: 0.0.0-ci.${{ github.run_number }}.${{ github.run_attempt }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore CoddLoom.sln
+
+      - name: Build
+        run: >-
+          dotnet build CoddLoom.sln
+          --configuration Release
+          --no-restore
+          -p:Version=$PACKAGE_VERSION
+          -p:RepositoryCommit=${{ github.sha }}
+
+      - name: Test
+        run: >-
+          dotnet test CoddLoom.sln
+          --configuration Release
+          --no-build
+          --no-restore
+          --logger "trx"
+          --results-directory artifacts/test-results
+
+      - name: Pack all public projects
+        run: >-
+          dotnet pack CoddLoom.sln
+          --configuration Release
+          --no-build
+          --no-restore
+          --output artifacts/packages
+          -p:Version=$PACKAGE_VERSION
+          -p:RepositoryCommit=${{ github.sha }}
+
+      - name: Verify package set
+        shell: pwsh
+        run: ./.github/scripts/assert-package-set.ps1 -PackageDirectory artifacts/packages
+
+      - name: Smoke-test package restore
+        run: |
+          dotnet new classlib --framework net8.0 --output artifacts/package-consumer --no-restore
+          dotnet add artifacts/package-consumer package CoddLoom.Sqlite --version "$PACKAGE_VERSION" --no-restore
+          dotnet restore artifacts/package-consumer \
+            --source artifacts/packages \
+            --source https://api.nuget.org/v3/index.json
+          dotnet build artifacts/package-consumer --configuration Release --no-restore
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-results
+          path: artifacts/test-results
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload package validation artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: validation-packages
+          path: artifacts/packages
+          if-no-files-found: error
+          retention-days: 7

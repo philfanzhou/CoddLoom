@@ -4,10 +4,16 @@
     <Copyright>Copyright (c) 2022-2026 philfanzhou</Copyright>
     <Title>$(AssemblyName)</Title>
     <PackageId>$(AssemblyName)</PackageId>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/philfanzhou/CoddLoom</PackageProjectUrl>
     <RepositoryUrl>https://github.com/philfanzhou/CoddLoom.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
     <PackageTags>orm;database;ado.net;sql</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

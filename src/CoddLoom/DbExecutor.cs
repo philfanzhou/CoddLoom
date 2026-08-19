@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Reflection;
 
 namespace CoddLoom;
 
@@ -28,6 +29,18 @@ public abstract class DbExecutor
     public string ConnectionString { get; }
 
     public virtual SqlBuilder SqlBuilder { get; } = new();
+
+    /// <summary>
+    /// Gets the maximum number of parameters supported by one command.
+    /// Providers with a lower limit should override this value.
+    /// </summary>
+    public virtual int MaxParametersPerCommand => int.MaxValue;
+
+    /// <summary>
+    /// Gets whether commands may continue in a transaction after a command fails.
+    /// Providers which abort the transaction on statement failure should return false.
+    /// </summary>
+    public virtual bool CanContinueTransactionAfterCommandFailure => true;
 
     public abstract IDbConnection GetConnection();
 
@@ -113,8 +126,50 @@ public abstract class DbExecutor
         }
     }
 
-    protected internal abstract void GetExistTableParam(TableDefine table, 
-        out string checkTable, out WhereConditions where);
+    [Obsolete("Schema inspection is now provided by SqlBuilder schema query methods.")]
+    protected internal virtual void GetExistTableParam(TableDefine table,
+        out string checkTable, out WhereConditions where)
+    {
+        where = new WhereConditions();
+        where.Add("type", "table");
+        where.Add("name", table.Name);
+        checkTable = "sqlite_master";
+    }
+
+    internal bool TryGetLegacyExistTableParam(TableDefine table,
+        out string checkTable, out WhereConditions where)
+    {
+        // Existing provider assemblies may still override the obsolete hook. Detect a
+        // real override (rather than a same-named hidden method) before using the new
+        // builder-based schema query path.
+        var parameterTypes = new[]
+        {
+            typeof(TableDefine),
+            typeof(string).MakeByRefType(),
+            typeof(WhereConditions).MakeByRefType()
+        };
+        var legacyMethod = GetType().GetMethod(
+            nameof(GetExistTableParam),
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+            null,
+            parameterTypes,
+            null);
+
+        var isLegacyOverride = legacyMethod != null
+            && legacyMethod.DeclaringType != typeof(DbExecutor)
+            && legacyMethod.GetBaseDefinition().DeclaringType == typeof(DbExecutor);
+        if (!isLegacyOverride)
+        {
+            checkTable = null;
+            where = null;
+            return false;
+        }
+
+#pragma warning disable CS0618 // Required while the obsolete provider hook remains supported.
+        GetExistTableParam(table, out checkTable, out where);
+#pragma warning restore CS0618
+        return true;
+    }
 
     protected abstract Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command);
 
