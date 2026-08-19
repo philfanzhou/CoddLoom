@@ -1,4 +1,4 @@
-﻿namespace Qz.Infra.Database.Condition.Internal;
+namespace CoddLoom.Condition.Internal;
 
 internal class JoinConditionsItem
 {

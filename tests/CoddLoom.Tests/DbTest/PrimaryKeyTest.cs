@@ -1,14 +1,14 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Qz.Infra.Database;
-using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Entity;
-using Qz.Infra.Database.Table;
+using CoddLoom;
+using CoddLoom.Condition;
+using CoddLoom.Entity;
+using CoddLoom.Table;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
-namespace TestProject.DbTest
+namespace CoddLoom.Tests.DbTest
 {
     [TestClass]
     public class PrimaryKeyTest : TestBase

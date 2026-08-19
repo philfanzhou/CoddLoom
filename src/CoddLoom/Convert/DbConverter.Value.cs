@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Data;
 
-namespace Qz.Infra.Database.Convert;
+namespace CoddLoom.Convert;
 
 partial class DbConverter
 {

@@ -1,6 +1,6 @@
-﻿using Qz.Infra.Database.Sql;
+using CoddLoom.Sql;
 
-namespace Qz.Infra.Database.Condition.Internal;
+namespace CoddLoom.Condition.Internal;
 
 internal abstract class WhereItemBase(WhereConnector connector)
 {

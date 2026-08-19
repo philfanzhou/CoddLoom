@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using Qz.Infra.Database.Condition.Internal;
-using Qz.Infra.Database.Sql;
+using System.Collections.Generic;
+using CoddLoom.Condition.Internal;
+using CoddLoom.Sql;
 
-namespace Qz.Infra.Database.Condition;
+namespace CoddLoom.Condition;
 
 public class JoinConditions
 {

@@ -1,10 +1,10 @@
-﻿using Qz.Infra.Database.Cache;
+using CoddLoom.Cache;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Qz.Infra.Database.Common;
+namespace CoddLoom.Common;
 
 internal static class TypeExt
 {

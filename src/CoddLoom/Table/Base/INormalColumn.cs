@@ -1,6 +1,6 @@
-﻿using System.Data;
+using System.Data;
 
-namespace Qz.Infra.Database.Table.Base;
+namespace CoddLoom.Table.Base;
 
 public interface INormalColumn
 {

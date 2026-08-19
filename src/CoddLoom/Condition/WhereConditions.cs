@@ -1,12 +1,12 @@
-﻿using Qz.Infra.Database.Cache;
-using Qz.Infra.Database.Condition.Internal;
-using Qz.Infra.Database.Params;
+using CoddLoom.Cache;
+using CoddLoom.Condition.Internal;
+using CoddLoom.Params;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
-namespace Qz.Infra.Database.Condition;
+namespace CoddLoom.Condition;
 
 public class WhereConditions
 {

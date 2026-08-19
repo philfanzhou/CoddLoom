@@ -1,13 +1,13 @@
-﻿using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Params;
-using Qz.Infra.Database.Sql;
-using Qz.Infra.Database.Table;
+using CoddLoom.Condition;
+using CoddLoom.Params;
+using CoddLoom.Sql;
+using CoddLoom.Table;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 
-namespace Qz.Infra.Database;
+namespace CoddLoom;
 
 public abstract class DbExecutor
 {

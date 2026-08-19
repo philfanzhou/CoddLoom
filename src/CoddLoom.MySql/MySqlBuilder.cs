@@ -1,9 +1,9 @@
-﻿using Qz.Infra.Database.Sql;
-using Qz.Infra.Database.Table;
+using CoddLoom.Sql;
+using CoddLoom.Table;
 using System;
 using System.Data;
 
-namespace Qz.Infra.Database.MySql;
+namespace CoddLoom.MySql;
 
 public class MySqlBuilder : SqlBuilder
 {

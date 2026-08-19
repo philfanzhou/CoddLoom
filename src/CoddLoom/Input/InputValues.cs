@@ -1,9 +1,9 @@
-﻿using Qz.Infra.Database.Params;
+using CoddLoom.Params;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Qz.Infra.Database.Input;
+namespace CoddLoom.Input;
 
 public class InputValues
 {

@@ -1,8 +1,8 @@
-﻿using Qz.Infra.Database.Entity;
+using CoddLoom.Entity;
 using System;
-using TestProject.DbCode.Tables;
+using CoddLoom.Tests.DbCode.Tables;
 
-namespace TestProject.DbCode.Entity
+namespace CoddLoom.Tests.DbCode.Entity
 {
     [MapTable(Name = UserTable.TableName)]
     public class User

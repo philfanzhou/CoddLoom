@@ -1,13 +1,13 @@
-﻿using Qz.Infra.Database.Cache;
-using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Convert;
-using Qz.Infra.Database.Params;
+using CoddLoom.Cache;
+using CoddLoom.Condition;
+using CoddLoom.Convert;
+using CoddLoom.Params;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
-namespace Qz.Infra.Database;
+namespace CoddLoom;
 
 partial class DbEngine
 {

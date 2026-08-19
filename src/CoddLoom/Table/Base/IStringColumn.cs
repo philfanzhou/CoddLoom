@@ -1,4 +1,4 @@
-﻿namespace Qz.Infra.Database.Table.Base;
+namespace CoddLoom.Table.Base;
 
 public interface IStringColumn
 {

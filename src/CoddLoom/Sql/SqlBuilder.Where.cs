@@ -1,11 +1,11 @@
-﻿using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Params;
+using CoddLoom.Condition;
+using CoddLoom.Params;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Qz.Infra.Database.Sql;
+namespace CoddLoom.Sql;
 
 partial class SqlBuilder
 {

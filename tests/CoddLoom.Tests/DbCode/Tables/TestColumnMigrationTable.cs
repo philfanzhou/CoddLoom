@@ -1,7 +1,7 @@
-using Qz.Infra.Database.Table;
+using CoddLoom.Table;
 using System.Data;
 
-namespace TestProject.DbCode.Tables
+namespace CoddLoom.Tests.DbCode.Tables
 {
     internal static class TestColumnMigrationTable
     {

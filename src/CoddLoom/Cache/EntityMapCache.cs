@@ -1,10 +1,10 @@
-﻿using Qz.Infra.Database.Common;
-using Qz.Infra.Database.Entity;
+using CoddLoom.Common;
+using CoddLoom.Entity;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-namespace Qz.Infra.Database.Cache;
+namespace CoddLoom.Cache;
 
 internal static class EntityMapCache
 {

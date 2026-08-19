@@ -1,9 +1,9 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Qz.Infra.Database;
+using CoddLoom;
 using System;
-using TestProject.DbCode;
+using CoddLoom.Tests.DbCode;
 
-namespace TestProject.DbTest
+namespace CoddLoom.Tests.DbTest
 {
     /// <summary>
     /// 测试基类，提供统一的数据库执行器管理和清理

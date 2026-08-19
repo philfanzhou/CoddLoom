@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Data;
 
-namespace Qz.Infra.Database.Common;
+namespace CoddLoom.Common;
 
 internal static class DataRecordExt
 {

@@ -1,6 +1,6 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 
-namespace Qz.Infra.Database;
+namespace CoddLoom;
 
 public static class DbContainer
 {

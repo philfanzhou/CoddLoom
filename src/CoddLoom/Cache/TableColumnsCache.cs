@@ -1,8 +1,8 @@
-﻿using Qz.Infra.Database.Table;
+using CoddLoom.Table;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Qz.Infra.Database.Cache;
+namespace CoddLoom.Cache;
 
 internal static class TableColumnsCache
 {

@@ -1,6 +1,6 @@
-﻿using Qz.Infra.Database.Condition;
+using CoddLoom.Condition;
 
-namespace Qz.Infra.Database.Dto;
+namespace CoddLoom.Dto;
 
 public class OrderByDto : IOrderByQuery
 {

@@ -1,11 +1,11 @@
-﻿using Oracle.ManagedDataAccess.Client;
-using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Sql;
-using Qz.Infra.Database.Table;
+using Oracle.ManagedDataAccess.Client;
+using CoddLoom.Condition;
+using CoddLoom.Sql;
+using CoddLoom.Table;
 using System;
 using System.Data;
 
-namespace Qz.Infra.Database.Oracle;
+namespace CoddLoom.Oracle;
 
 public class OracleExecutor : DbExecutor
 {

@@ -1,11 +1,11 @@
-﻿using Qz.Infra.Database.Sql;
-using Qz.Infra.Database.Table;
+using CoddLoom.Sql;
+using CoddLoom.Table;
 using System;
 using System.Data;
 
-namespace Qz.Infra.Database.Maria;
+namespace CoddLoom.MariaDb;
 
-public class MariaBuilder : SqlBuilder
+public class MariaDbBuilder : SqlBuilder
 {
     protected override string GetCreateTableSql(TableDefine table)
     {

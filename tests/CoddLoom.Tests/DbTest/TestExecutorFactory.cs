@@ -1,14 +1,14 @@
-using Qz.Infra.Database;
-using Qz.Infra.Database.Maria;
-using Qz.Infra.Database.MySql;
-using Qz.Infra.Database.Oracle;
-using Qz.Infra.Database.SQLite;
-using Qz.Infra.Database.SqlServer;
+using CoddLoom;
+using CoddLoom.MariaDb;
+using CoddLoom.MySql;
+using CoddLoom.Oracle;
+using CoddLoom.Sqlite;
+using CoddLoom.SqlServer;
 using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace TestProject.DbTest
+namespace CoddLoom.Tests.DbTest
 {
     /// <summary>
     /// 数据库执行器工厂类
@@ -72,7 +72,7 @@ namespace TestProject.DbTest
             switch (dbType)
             {
                 case DatabaseType.SQLite:
-                    executor = new SQLiteExecutor(connectionString);
+                    executor = new SqliteExecutor(connectionString);
                     // 如果是文件数据库（非内存），记录文件路径用于清理
                     if (!connectionString.Contains(":memory:"))
                     {
@@ -85,7 +85,7 @@ namespace TestProject.DbTest
                 case DatabaseType.SqlServer:
                     return new SqlServerExecutor(connectionString);
                 case DatabaseType.MariaDB:
-                    return new MariaExecutor(connectionString);
+                    return new MariaDbExecutor(connectionString);
                 case DatabaseType.Oracle:
                     return new OracleExecutor(connectionString);
                 default:
@@ -129,7 +129,7 @@ namespace TestProject.DbTest
                 var tempDir = Path.GetTempPath();
                 var connectionString = $"Data Source={Path.Combine(tempDir, "test_memory.db")};Version=3;";
                 
-                var executor = new SQLiteExecutor(connectionString);
+                var executor = new SqliteExecutor(connectionString);
                 
                 // 记录这个临时文件路径用于后续清理
                 SQLiteFilePaths[executor] = Path.Combine(tempDir, "test_memory.db");

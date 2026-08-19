@@ -1,11 +1,11 @@
-﻿using Qz.Infra.Database.Common;
-using Qz.Infra.Database.Table.Base;
+using CoddLoom.Common;
+using CoddLoom.Table.Base;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Qz.Infra.Database.Table;
+namespace CoddLoom.Table;
 
 public class TableDefine
 {

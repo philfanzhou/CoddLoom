@@ -1,9 +1,9 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Qz.Infra.Database.Condition;
+using CoddLoom.Condition;
 using System;
-using TestProject.DbCode.Entity;
+using CoddLoom.Tests.DbCode.Entity;
 
-namespace TestProject.DbTest
+namespace CoddLoom.Tests.DbTest
 {
     /// <summary>
     /// DbEngine关联查询测试类

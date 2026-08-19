@@ -1,8 +1,8 @@
-﻿using Qz.Infra.Database.Common;
+using CoddLoom.Common;
 using System;
 using System.Collections.Generic;
 
-namespace Qz.Infra.Database.Condition;
+namespace CoddLoom.Condition;
 
 public class OrderByCondition
 {

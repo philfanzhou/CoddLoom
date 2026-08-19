@@ -1,8 +1,8 @@
-﻿using Qz.Infra.Database.Condition;
+using CoddLoom.Condition;
 using System;
 using System.Text;
 
-namespace Qz.Infra.Database.Sql;
+namespace CoddLoom.Sql;
 
 partial class SqlBuilder
 {

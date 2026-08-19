@@ -1,10 +1,10 @@
-using Qz.Infra.Database.Input;
+using CoddLoom.Input;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
-namespace Qz.Infra.Database;
+namespace CoddLoom;
 
 partial class DbEngine
 {

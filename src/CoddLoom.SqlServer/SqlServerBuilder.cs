@@ -1,13 +1,13 @@
-﻿using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Params;
-using Qz.Infra.Database.Sql;
-using Qz.Infra.Database.Table;
-using Qz.Infra.Database.Table.Base;
+using CoddLoom.Condition;
+using CoddLoom.Params;
+using CoddLoom.Sql;
+using CoddLoom.Table;
+using CoddLoom.Table.Base;
 using System;
 using System.Data;
 using System.Linq;
 
-namespace Qz.Infra.Database.SqlServer;
+namespace CoddLoom.SqlServer;
 
 public class SqlServerBuilder : SqlBuilder
 {

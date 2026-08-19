@@ -1,21 +1,21 @@
-﻿using MySqlConnector;
-using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Sql;
-using Qz.Infra.Database.Table;
+using MySqlConnector;
+using CoddLoom.Condition;
+using CoddLoom.Sql;
+using CoddLoom.Table;
 using System;
 using System.Data;
 
-namespace Qz.Infra.Database.Maria;
+namespace CoddLoom.MariaDb;
 
-public class MariaExecutor(string connectionString)
+public class MariaDbExecutor(string connectionString)
     : DbExecutor(connectionString, new MySqlConnection(connectionString))
 {
-    public MariaExecutor(string server, string database, string user, string password, uint port = 3306)
+    public MariaDbExecutor(string server, string database, string user, string password, uint port = 3306)
         : this(BuildConnectionString(server, database, user, password, port))
     {
     }
 
-    public override SqlBuilder SqlBuilder { get; } = new MariaBuilder();
+    public override SqlBuilder SqlBuilder { get; } = new MariaDbBuilder();
 
     public override IDbConnection GetConnection()
     {

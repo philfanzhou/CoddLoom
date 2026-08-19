@@ -1,8 +1,8 @@
-﻿using Qz.Infra.Database.Params;
-using Qz.Infra.Database.Sql;
+using CoddLoom.Params;
+using CoddLoom.Sql;
 using System.Data;
 
-namespace Qz.Infra.Database.Condition.Internal;
+namespace CoddLoom.Condition.Internal;
 
 internal class WhereConditionsNormalItem(ValueParam parameter, WhereOperator whereOperator, WhereConnector connector)
     : WhereItemBase(connector)

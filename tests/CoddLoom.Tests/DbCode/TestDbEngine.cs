@@ -1,9 +1,9 @@
-﻿using Qz.Infra.Database;
-using Qz.Infra.Database.Table;
+using CoddLoom;
+using CoddLoom.Table;
 using System.Collections.Generic;
-using TestProject.DbCode.Tables;
+using CoddLoom.Tests.DbCode.Tables;
 
-namespace TestProject.DbCode
+namespace CoddLoom.Tests.DbCode
 {
     public class TestDbEngine : DbEngine
     {

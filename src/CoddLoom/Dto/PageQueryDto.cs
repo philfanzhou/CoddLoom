@@ -1,6 +1,6 @@
-﻿using Qz.Infra.Database.Params;
+using CoddLoom.Params;
 
-namespace Qz.Infra.Database.Dto;
+namespace CoddLoom.Dto;
 
 public class PageQueryDto : IPageQuery
 {

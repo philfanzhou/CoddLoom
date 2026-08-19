@@ -1,9 +1,9 @@
-﻿using Qz.Infra.Database.Common;
+using CoddLoom.Common;
 using System;
 using System.Collections.Concurrent;
 using System.Reflection;
 
-namespace Qz.Infra.Database.Cache;
+namespace CoddLoom.Cache;
 
 internal static class TypeMembersCache
 {

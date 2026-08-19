@@ -1,11 +1,11 @@
-using Qz.Infra.Database;
-using Qz.Infra.Database.SQLite;
-using Qz.Infra.Database.Table;
+using CoddLoom;
+using CoddLoom.Sqlite;
+using CoddLoom.Table;
 using System;
 using System.Collections.Generic;
-using TestProject.DbCode.Tables;
+using CoddLoom.Tests.DbCode.Tables;
 
-namespace TestProject.DbTest
+namespace CoddLoom.Tests.DbTest
 {
     /// <summary>
     /// 列改动功能集成测试
@@ -15,7 +15,7 @@ namespace TestProject.DbTest
         public static void RunTest()
         {
             // 使用SQLite进行测试（无需额外配置）
-            var executor = new SQLiteExecutor("test_column_migration.db");
+            var executor = new SqliteExecutor("test_column_migration.db");
             var dbEngine = new DbEngine(executor);
 
             try

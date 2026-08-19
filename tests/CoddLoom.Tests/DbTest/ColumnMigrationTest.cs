@@ -1,10 +1,10 @@
-using Qz.Infra.Database;
-using Qz.Infra.Database.Table;
+using CoddLoom;
+using CoddLoom.Table;
 using System.Collections.Generic;
 using System.Data;
-using TestProject.DbCode.Tables;
+using CoddLoom.Tests.DbCode.Tables;
 
-namespace TestProject.DbTest
+namespace CoddLoom.Tests.DbTest
 {
     public class ColumnMigrationTest
     {

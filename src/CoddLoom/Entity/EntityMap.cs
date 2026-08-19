@@ -1,10 +1,10 @@
-﻿using Qz.Infra.Database.Common;
-using Qz.Infra.Database.Table;
+using CoddLoom.Common;
+using CoddLoom.Table;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Qz.Infra.Database.Entity;
+namespace CoddLoom.Entity;
 
 internal class EntityMap
 {

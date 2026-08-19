@@ -1,11 +1,11 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Qz.Infra.Database.Condition;
+using CoddLoom.Condition;
 using System;
 using System.Collections.Generic;
-using TestProject.DbCode.Entity;
-using TestProject.DbCode.Tables;
+using CoddLoom.Tests.DbCode.Entity;
+using CoddLoom.Tests.DbCode.Tables;
 
-namespace TestProject.DbTest
+namespace CoddLoom.Tests.DbTest
 {
     /// <summary>
     /// DbEngine批量操作测试类

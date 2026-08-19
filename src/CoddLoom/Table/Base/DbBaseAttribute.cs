@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 
-namespace Qz.Infra.Database.Table.Base;
+namespace CoddLoom.Table.Base;
 
 [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
 public abstract class DbBaseAttribute : Attribute

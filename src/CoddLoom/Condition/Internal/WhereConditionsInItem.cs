@@ -1,9 +1,9 @@
-﻿using Qz.Infra.Database.Params;
-using Qz.Infra.Database.Sql;
+using CoddLoom.Params;
+using CoddLoom.Sql;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Qz.Infra.Database.Condition.Internal;
+namespace CoddLoom.Condition.Internal;
 
 internal class WhereConditionsInItem(string column, IEnumerable<ValueParam> valueParams, WhereConnector connector)
     : WhereItemBase(column, connector)

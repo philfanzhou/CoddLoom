@@ -1,12 +1,12 @@
-using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Input;
-using Qz.Infra.Database.Params;
-using Qz.Infra.Database.Table;
+using CoddLoom.Condition;
+using CoddLoom.Input;
+using CoddLoom.Params;
+using CoddLoom.Table;
 using System;
 using System.Collections.Generic;
 using System.Data;
 
-namespace Qz.Infra.Database;
+namespace CoddLoom;
 
 public partial class DbEngine
 {

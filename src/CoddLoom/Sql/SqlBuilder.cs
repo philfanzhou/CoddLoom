@@ -1,12 +1,12 @@
-using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Input;
-using Qz.Infra.Database.Params;
+using CoddLoom.Condition;
+using CoddLoom.Input;
+using CoddLoom.Params;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Qz.Infra.Database.Sql;
+namespace CoddLoom.Sql;
 
 public partial class SqlBuilder
 {

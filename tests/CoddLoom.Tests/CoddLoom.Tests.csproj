@@ -17,12 +17,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Qz.Infra.Database.MySql\Qz.Infra.Database.MySql.csproj" />
-    <ProjectReference Include="..\Qz.Infra.Database.SQLite\Qz.Infra.Database.SQLite.csproj" />
-    <ProjectReference Include="..\Qz.Infra.Database.SqlServer\Qz.Infra.Database.SqlServer.csproj" />
-    <ProjectReference Include="..\Qz.Infra.Database.Maria\Qz.Infra.Database.Maria.csproj" />
-    <ProjectReference Include="..\Qz.Infra.Database.Oracle\Qz.Infra.Database.Oracle.csproj" />
-    <ProjectReference Include="..\Qz.Infra.Database\Qz.Infra.Database.csproj" />
+    <ProjectReference Include="..\..\src\CoddLoom.MySql\CoddLoom.MySql.csproj" />
+    <ProjectReference Include="..\..\src\CoddLoom.Sqlite\CoddLoom.Sqlite.csproj" />
+    <ProjectReference Include="..\..\src\CoddLoom.SqlServer\CoddLoom.SqlServer.csproj" />
+    <ProjectReference Include="..\..\src\CoddLoom.MariaDb\CoddLoom.MariaDb.csproj" />
+    <ProjectReference Include="..\..\src\CoddLoom.Oracle\CoddLoom.Oracle.csproj" />
+    <ProjectReference Include="..\..\src\CoddLoom\CoddLoom.csproj" />
   </ItemGroup>
 
 </Project>

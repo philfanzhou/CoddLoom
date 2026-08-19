@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 
-namespace Qz.Infra.Database.Entity;
+namespace CoddLoom.Entity;
 
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public class MapTableAttribute : Attribute

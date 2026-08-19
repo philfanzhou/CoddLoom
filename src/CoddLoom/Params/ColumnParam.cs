@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
-namespace Qz.Infra.Database.Params;
+namespace CoddLoom.Params;
 
 public class ColumnParam
 {

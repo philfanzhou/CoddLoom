@@ -1,11 +1,11 @@
-﻿using Qz.Infra.Database.Cache;
-using Qz.Infra.Database.Table;
+using CoddLoom.Cache;
+using CoddLoom.Table;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System;
 
-namespace Qz.Infra.Database;
+namespace CoddLoom;
 
 partial class DbEngine
 {

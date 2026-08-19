@@ -1,11 +1,11 @@
-﻿using Microsoft.Data.SqlClient;
-using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Sql;
-using Qz.Infra.Database.Table;
+using Microsoft.Data.SqlClient;
+using CoddLoom.Condition;
+using CoddLoom.Sql;
+using CoddLoom.Table;
 using System;
 using System.Data;
 
-namespace Qz.Infra.Database.SqlServer;
+namespace CoddLoom.SqlServer;
 
 public class SqlServerExecutor : DbExecutor
 {

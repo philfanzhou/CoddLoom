@@ -1,17 +1,17 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Qz.Infra.Database;
-using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Params;
+using CoddLoom;
+using CoddLoom.Condition;
+using CoddLoom.Params;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using TestProject.DbCode;
-using TestProject.DbCode.Entity;
-using TestProject.DbCode.Tables;
-using TestProject.DbTest;
+using CoddLoom.Tests.DbCode;
+using CoddLoom.Tests.DbCode.Entity;
+using CoddLoom.Tests.DbCode.Tables;
+using CoddLoom.Tests.DbTest;
 
-namespace TestProject.DbTest
+namespace CoddLoom.Tests.DbTest
 {
     /// <summary>
     /// DbEngine分页查询测试类

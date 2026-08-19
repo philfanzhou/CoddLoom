@@ -10,7 +10,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Qz.Infra.Database\Qz.Infra.Database.csproj" />
+	  <ProjectReference Include="..\CoddLoom\CoddLoom.csproj" />
 	</ItemGroup>
 
 </Project>

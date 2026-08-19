@@ -1,10 +1,10 @@
-﻿using Qz.Infra.Database.Params;
+using CoddLoom.Params;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
-namespace Qz.Infra.Database.Sql;
+namespace CoddLoom.Sql;
 
 partial class SqlBuilder
 {

@@ -1,4 +1,4 @@
-﻿namespace Qz.Infra.Database.Dto;
+namespace CoddLoom.Dto;
 
 public class PageAndOrderByDto : PageQueryDto, IOrderByQuery
 {

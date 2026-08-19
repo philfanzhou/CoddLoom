@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
-namespace Qz.Infra.Database.Model;
+namespace CoddLoom.Model;
 
 public class PageResult<T>
 {

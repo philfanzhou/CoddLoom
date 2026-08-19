@@ -5,7 +5,8 @@
     <LangVersion>latest</LangVersion>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>$(AssemblyName)</Title>
-    <Description>Qz.Infra.Database</Description>
+    <Description>A lightweight, explicit ORM built directly on ADO.NET.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
 </Project>

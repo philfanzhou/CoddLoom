@@ -1,11 +1,11 @@
-﻿using MySql.Data.MySqlClient;
-using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Sql;
-using Qz.Infra.Database.Table;
+using MySql.Data.MySqlClient;
+using CoddLoom.Condition;
+using CoddLoom.Sql;
+using CoddLoom.Table;
 using System;
 using System.Data;
 
-namespace Qz.Infra.Database.MySql;
+namespace CoddLoom.MySql;
 
 public class MySqlExecutor : DbExecutor
 {

@@ -1,11 +1,11 @@
-﻿using Qz.Infra.Database.Table;
-using Qz.Infra.Database.Table.Base;
+using CoddLoom.Table;
+using CoddLoom.Table.Base;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
 
-namespace Qz.Infra.Database.Sql;
+namespace CoddLoom.Sql;
 
 partial class SqlBuilder
 {

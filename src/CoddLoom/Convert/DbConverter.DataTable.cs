@@ -1,11 +1,11 @@
-﻿using Qz.Infra.Database.Common;
+using CoddLoom.Common;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
 
-namespace Qz.Infra.Database.Convert;
+namespace CoddLoom.Convert;
 
 partial class DbConverter
 {

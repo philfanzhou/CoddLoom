@@ -1,21 +1,21 @@
-﻿using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Table;
+using CoddLoom.Condition;
+using CoddLoom.Table;
 using System;
 using System.Data;
 using System.Data.SQLite;
 using System.IO;
 
-namespace Qz.Infra.Database.SQLite;
+namespace CoddLoom.Sqlite;
 
 // ReSharper disable once InconsistentNaming
-public class SQLiteExecutor : DbExecutor
+public class SqliteExecutor : DbExecutor
 {
-    public SQLiteExecutor(string connectionString)
+    public SqliteExecutor(string connectionString)
         : base(connectionString, BuildConnection(connectionString))
     {
     }
 
-    public SQLiteExecutor(string directory, string dbFileName)
+    public SqliteExecutor(string directory, string dbFileName)
         : this(BuildConnectionString(directory, dbFileName))
     {
     }

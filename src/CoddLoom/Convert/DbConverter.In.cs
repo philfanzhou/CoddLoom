@@ -1,12 +1,12 @@
-﻿using Qz.Infra.Database.Cache;
-using Qz.Infra.Database.Common;
-using Qz.Infra.Database.Condition;
-using Qz.Infra.Database.Entity;
-using Qz.Infra.Database.Input;
+using CoddLoom.Cache;
+using CoddLoom.Common;
+using CoddLoom.Condition;
+using CoddLoom.Entity;
+using CoddLoom.Input;
 using System;
 using System.Collections.Generic;
 
-namespace Qz.Infra.Database.Convert;
+namespace CoddLoom.Convert;
 
 partial class DbConverter
 {
