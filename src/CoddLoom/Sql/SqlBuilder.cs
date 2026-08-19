@@ -3,6 +3,7 @@ using CoddLoom.Input;
 using CoddLoom.Params;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -25,12 +26,25 @@ public partial class SqlBuilder
         }
 
         var columnSql = GetInsertColumns(inputList[0].Items);
+        var expectedColumns = inputList[0].Items.Select(item => item.Column).ToArray();
+        var rowsByColumn = inputList.Select(input =>
+            input.Items.ToDictionary(item => item.Column, StringComparer.Ordinal)).ToList();
+        if (rowsByColumn.Any(row => row.Count != expectedColumns.Length
+                || expectedColumns.Any(column => !row.ContainsKey(column))))
+        {
+            throw new ArgumentException("Every input row must contain the same columns.", nameof(inputs));
+        }
 
         dbParams = new List<ValueParam>();
         var valueList = new List<string>();
-        foreach (var input in inputList)
+        for (var inputIndex = 0; inputIndex < inputList.Count; inputIndex++)
         {
-            var values = GetInsertValues(input.Items, out var innerDbParams, useParameter);
+            // InputValues can be created directly by callers, in which case each row
+            // starts with the same V0_ prefix. Normalize names here so a multi-row
+            // command cannot bind every row to the first row's values.
+            var inputParameters = expectedColumns.Select(column => rowsByColumn[inputIndex][column]).Select(item =>
+                new ValueParam(item.Column, item.Value, $"V{inputIndex}_{item.Column}", item.ForceParameter));
+            var values = GetInsertValues(inputParameters, out var innerDbParams, useParameter);
             valueList.Add(values);
             dbParams.AddRange(innerDbParams);
         }
@@ -172,7 +186,7 @@ public partial class SqlBuilder
         }
         else
         {
-            return param.Value.ToString();
+            return System.Convert.ToString(param.Value, CultureInfo.InvariantCulture);
         }
     }
 

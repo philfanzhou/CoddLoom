@@ -9,6 +9,7 @@ namespace CoddLoom.Tests.DbTest
     /// Base class that provides consistent database-executor management and cleanup.
     /// </summary>
     [TestClass]
+    [TestCategory("Database")]
     public abstract class TestBase
     {
         private DbExecutor _executor;
@@ -48,21 +49,5 @@ namespace CoddLoom.Tests.DbTest
             }
         }
 
-        /// <summary>
-        /// Executes a test action with automatic exception handling and cleanup.
-        /// </summary>
-        /// <param name="testAction">The test action.</param>
-        /// <param name="cleanupAction">An optional additional cleanup action.</param>
-        protected void ExecuteTest(Action<TestDbEngine> testAction, Action<TestDbEngine> cleanupAction = null)
-        {
-            try
-            {
-                testAction?.Invoke(_dbEngine);
-            }
-            finally
-            {
-                cleanupAction?.Invoke(_dbEngine);
-            }
-        }
     }
 }

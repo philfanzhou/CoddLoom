@@ -128,11 +128,10 @@ namespace CoddLoom.Tests.DbTest
 
             var user = CreateTestUser("1", "TryUserFail", 100, "TryTestFail");
 
-            var result = Executor.TryTransaction(tran =>
+            var result = Executor.TryTransaction<bool>(tran =>
             {
                 DbEngine.Insert(user, null, tran);
                 throw new InvalidOperationException("Intentional exception for TryTransaction rollback test");
-                return false; // This statement is unreachable.
             });
 
             Assert.IsFalse(result, "TryTransaction should return the default value false after an exception.");
@@ -254,7 +253,7 @@ namespace CoddLoom.Tests.DbTest
             var where = new WhereConditions();
             where.Add(UserTable.UnionId, "BatchTranUser%", WhereOperator.Like);
             var results = DbEngine.Select<User>(where, null);
-            Assert.AreEqual(5, results.Count, "Five batch-inserted records should be returned.");
+            Assert.HasCount(5, results, "Five batch-inserted records should be returned.");
         }
 
         /// <summary>

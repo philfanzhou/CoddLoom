@@ -73,9 +73,9 @@ namespace CoddLoom.Tests.DbTest
             var tableName = join.GetTableName(DbEngine.Executor.SqlBuilder);
                 
                 Assert.IsNotNull(tableName, "GetTableName should return a non-null value.");
-            Assert.IsTrue(tableName.Contains("Table1"), "The result should contain Table1.");
-            Assert.IsTrue(tableName.Contains("Table2"), "The result should contain Table2.");
-            Assert.IsTrue(tableName.Contains("INNER JOIN"), "The result should contain INNER JOIN.");
+            Assert.Contains("Table1", tableName, "The result should contain Table1.");
+            Assert.Contains("Table2", tableName, "The result should contain Table2.");
+            Assert.Contains("INNER JOIN", tableName, "The result should contain INNER JOIN.");
         }
 
         /// <summary>
@@ -89,25 +89,25 @@ namespace CoddLoom.Tests.DbTest
                 var innerJoin = new JoinConditions("Users", "Id", "Orders", "UserId", JoinType.Inner);
                 var innerTableName = innerJoin.GetTableName(DbEngine.Executor.SqlBuilder);
                 Assert.IsNotNull(innerTableName, "The inner-join table name should not be null.");
-                Assert.IsTrue(innerTableName.Contains("Users"), "The result should contain the Users table.");
-                Assert.IsTrue(innerTableName.Contains("Orders"), "The result should contain the Orders table.");
-                Assert.IsTrue(innerTableName.Contains("INNER JOIN"), "The result should contain INNER JOIN.");
+                Assert.Contains("Users", innerTableName, "The result should contain the Users table.");
+                Assert.Contains("Orders", innerTableName, "The result should contain the Orders table.");
+                Assert.Contains("INNER JOIN", innerTableName, "The result should contain INNER JOIN.");
 
                 // Test a left join.
                 var leftJoin = new JoinConditions("Customers", "CustomerId", "Orders", "CustomerId", JoinType.Left);
                 var leftTableName = leftJoin.GetTableName(DbEngine.Executor.SqlBuilder);
                 Assert.IsNotNull(leftTableName, "The left-join table name should not be null.");
-                Assert.IsTrue(leftTableName.Contains("Customers"), "The result should contain the Customers table.");
-                Assert.IsTrue(leftTableName.Contains("Orders"), "The result should contain the Orders table.");
-                Assert.IsTrue(leftTableName.Contains("LEFT JOIN"), "The result should contain LEFT JOIN.");
+                Assert.Contains("Customers", leftTableName, "The result should contain the Customers table.");
+                Assert.Contains("Orders", leftTableName, "The result should contain the Orders table.");
+                Assert.Contains("LEFT JOIN", leftTableName, "The result should contain LEFT JOIN.");
 
                 // Test a right join.
                 var rightJoin = new JoinConditions("Products", "ProductId", "OrderItems", "ProductId", JoinType.Right);
                 var rightTableName = rightJoin.GetTableName(DbEngine.Executor.SqlBuilder);
                 Assert.IsNotNull(rightTableName, "The right-join table name should not be null.");
-                Assert.IsTrue(rightTableName.Contains("Products"), "The result should contain the Products table.");
-                Assert.IsTrue(rightTableName.Contains("OrderItems"), "The result should contain the OrderItems table.");
-                Assert.IsTrue(rightTableName.Contains("RIGHT JOIN"), "The result should contain RIGHT JOIN.");
+                Assert.Contains("Products", rightTableName, "The result should contain the Products table.");
+                Assert.Contains("OrderItems", rightTableName, "The result should contain the OrderItems table.");
+                Assert.Contains("RIGHT JOIN", rightTableName, "The result should contain RIGHT JOIN.");
         }
 
         /// <summary>
@@ -125,11 +125,11 @@ namespace CoddLoom.Tests.DbTest
                 var tableName = join.GetTableName(DbEngine.Executor.SqlBuilder);
                 
                 Assert.IsNotNull(tableName, "The complex join table name should not be null.");
-                Assert.IsTrue(tableName.Contains("Users"), "The result should contain the Users table.");
-                Assert.IsTrue(tableName.Contains("UserRoles"), "The result should contain the UserRoles table.");
-                Assert.IsTrue(tableName.Contains("INNER JOIN"), "The result should contain INNER JOIN.");
-                Assert.IsTrue(tableName.Contains("Id"), "The result should contain the Id column.");
-                Assert.IsTrue(tableName.Contains("UserId"), "The result should contain the UserId column.");
+                Assert.Contains("Users", tableName, "The result should contain the Users table.");
+                Assert.Contains("UserRoles", tableName, "The result should contain the UserRoles table.");
+                Assert.Contains("INNER JOIN", tableName, "The result should contain INNER JOIN.");
+                Assert.Contains("Id", tableName, "The result should contain the Id column.");
+                Assert.Contains("UserId", tableName, "The result should contain the UserId column.");
         }
 
         
@@ -149,7 +149,7 @@ namespace CoddLoom.Tests.DbTest
                 var join1 = new JoinConditions("Table-1", "Column_1", "Table-2", "Column_2", JoinType.Left);
                 var tableName1 = join1.GetTableName(DbEngine.Executor.SqlBuilder);
                 Assert.IsNotNull(tableName1, "A table name with special characters should still produce SQL.");
-                Assert.IsTrue(tableName1.Contains("Table-1"), "The result should contain the table name with special characters.");
+                Assert.Contains("Table-1", tableName1, "The result should contain the table name with special characters.");
 
                 // Test very long table and column names.
                 var longTableName = "VeryLongTableNameThatExceedsNormalLength";
@@ -157,13 +157,13 @@ namespace CoddLoom.Tests.DbTest
                 var join2 = new JoinConditions(longTableName, longColumnName, "Table2", "Column2", JoinType.Right);
                 var tableName2 = join2.GetTableName(DbEngine.Executor.SqlBuilder);
                 Assert.IsNotNull(tableName2, "A long table name should still produce SQL.");
-                Assert.IsTrue(tableName2.Contains(longTableName), "The result should contain the long table name.");
+                Assert.Contains(longTableName, tableName2, "The result should contain the long table name.");
 
                 // Test a table name that begins with a digit.
                 var join3 = new JoinConditions("Table123", "Column456", "Table789", "Column012", JoinType.Inner);
                 var tableName3 = join3.GetTableName(DbEngine.Executor.SqlBuilder);
                 Assert.IsNotNull(tableName3, "A table name beginning with a digit should still produce SQL.");
-                Assert.IsTrue(tableName3.Contains("Table123"), "The result should contain the table name beginning with a digit.");
+                Assert.Contains("Table123", tableName3, "The result should contain the table name beginning with a digit.");
         }
     }
 }

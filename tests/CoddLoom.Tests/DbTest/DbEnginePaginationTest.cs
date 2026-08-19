@@ -60,7 +60,7 @@ namespace CoddLoom.Tests.DbTest
                 // Verify the result.
                 Assert.AreEqual(10, totalCount, "The total record count should be ten.");
                 Assert.AreEqual(4, totalPages, "Ten records at three per page should produce four pages.");
-                Assert.AreEqual(3, result.Count, "The first page should contain three records.");
+                Assert.HasCount(3, result, "The first page should contain three records.");
                 Assert.AreEqual("PaginationUser1", result[0].UnionId, "The first record should be PaginationUser1.");
                 Assert.AreEqual("PaginationUser2", result[1].UnionId, "The second record should be PaginationUser2.");
                 Assert.AreEqual("PaginationUser3", result[2].UnionId, "The third record should be PaginationUser3.");
@@ -104,7 +104,7 @@ namespace CoddLoom.Tests.DbTest
                 // Verify the result.
                 Assert.AreEqual(10, totalCount, "The total record count should be ten.");
                 Assert.AreEqual(4, totalPages, "The total page count should be four.");
-                Assert.AreEqual(3, result.Count, "The second page should contain three records.");
+                Assert.HasCount(3, result, "The second page should contain three records.");
                 Assert.AreEqual("SecondPageUser4", result[0].UnionId, "The first record should be SecondPageUser4.");
                 Assert.AreEqual("SecondPageUser5", result[1].UnionId, "The second record should be SecondPageUser5.");
                 Assert.AreEqual("SecondPageUser6", result[2].UnionId, "The third record should be SecondPageUser6.");
@@ -148,7 +148,7 @@ namespace CoddLoom.Tests.DbTest
                 // Verify the result.
                 Assert.AreEqual(10, totalCount, "The total record count should be ten.");
                 Assert.AreEqual(4, totalPages, "The total page count should be four.");
-                Assert.AreEqual(1, result.Count, "The final page should contain one record.");
+                Assert.HasCount(1, result, "The final page should contain one record.");
                 Assert.AreEqual("LastPageUser10", result[0].UnionId, "The final record should be LastPageUser10.");
         }
 
@@ -170,7 +170,7 @@ namespace CoddLoom.Tests.DbTest
                 // Verify the result.
                 Assert.AreEqual(0, totalCount, "The total record count should be zero.");
                 Assert.AreEqual(0, totalPages, "The total page count should be zero.");
-                Assert.AreEqual(0, result.Count, "The result should be empty.");
+                Assert.IsEmpty(result, "The result should be empty.");
         }
 
         /// <summary>
@@ -211,7 +211,7 @@ namespace CoddLoom.Tests.DbTest
                 // Verify the result.
                 Assert.AreEqual(5, totalCount, "The total record count should be five.");
                 Assert.AreEqual(1, totalPages, "The total page count should be one.");
-                Assert.AreEqual(5, result.Count, "All five records should be returned.");
+                Assert.HasCount(5, result, "All five records should be returned.");
         }
 
         /// <summary>
@@ -252,7 +252,7 @@ namespace CoddLoom.Tests.DbTest
                 // Verify the result.
                 Assert.AreEqual(5, totalCount, "The total record count should be five.");
                 Assert.AreEqual(2, totalPages, "The total page count should be two.");
-                Assert.AreEqual(3, result.Count, "The first page should contain three records.");
+                Assert.HasCount(3, result, "The first page should contain three records.");
                 Assert.AreEqual("DescUser5", result[0].UnionId, "The first record should be DescUser5 in descending order.");
                 Assert.AreEqual("DescUser4", result[1].UnionId, "The second record should be DescUser4.");
                 Assert.AreEqual("DescUser3", result[2].UnionId, "The third record should be DescUser3.");
@@ -299,7 +299,7 @@ namespace CoddLoom.Tests.DbTest
                 // Verify the result.
                 Assert.AreEqual(3, totalCount, "The total record count should be three.");
                 Assert.AreEqual(2, totalPages, "The total page count should be two.");
-                Assert.AreEqual(2, result.Count, "The first page should contain two records.");
+                Assert.HasCount(2, result, "The first page should contain two records.");
                 Assert.AreEqual("ColumnUser1", result[0].UnionId, "The first record's UnionId should be ColumnUser1.");
                 Assert.AreEqual(1, result[0].IntData, "The first record's IntData should be one.");
                 Assert.AreEqual("ColumnUser2", result[1].UnionId, "The second record's UnionId should be ColumnUser2.");

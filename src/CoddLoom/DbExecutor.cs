@@ -255,7 +255,7 @@ public abstract class DbExecutor
     private T Scalar<T>(IDbCommand command, Func<object, T> convertor)
     {
         var result = command.ExecuteScalar();
-        return result == null ? default(T) : convertor(result);
+        return result == null || result == DBNull.Value ? default(T) : convertor(result);
     }
 
     private T Procedure<T>(IDbCommand command, Func<IDbCommand, T> func)

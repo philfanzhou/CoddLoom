@@ -9,6 +9,7 @@
 *.sln.docstates
 
 TestResults/
+artifacts/
 *.trx
 *.coverage
 *.coveragexml
@@ -16,4 +17,3 @@ TestResults/
 *.db
 *.db-shm
 *.db-wal
-

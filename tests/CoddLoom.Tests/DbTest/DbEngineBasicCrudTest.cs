@@ -169,7 +169,7 @@ namespace CoddLoom.Tests.DbTest
 
             // Verify the result.
             Assert.IsNotNull(results, "The query result should not be null.");
-            Assert.AreEqual(2, results.Count, "Two records should be returned.");
+            Assert.HasCount(2, results, "Two records should be returned.");
             Assert.AreEqual("SelectUser1", results[0].UnionId);
             Assert.AreEqual(100, results[0].IntData);
             Assert.AreEqual("SelectUser2", results[1].UnionId);
@@ -300,7 +300,7 @@ namespace CoddLoom.Tests.DbTest
 
             // Verify the result.
             Assert.IsNotNull(results, "The query result should not be null.");
-            Assert.AreEqual(1, results.Count, "One record should be returned.");
+            Assert.HasCount(1, results, "One record should be returned.");
             Assert.AreEqual("ComplexUser2", results[0].UnionId);
             Assert.AreEqual(200, results[0].IntData);
         }

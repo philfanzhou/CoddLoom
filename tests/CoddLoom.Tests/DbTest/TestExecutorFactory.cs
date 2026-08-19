@@ -149,12 +149,13 @@ namespace CoddLoom.Tests.DbTest
             {
                 // Create a temporary directory to ensure SqliteExecutor receives a non-null directory.
                 var tempDir = Path.GetTempPath();
-                var connectionString = $"Data Source={Path.Combine(tempDir, "test_memory.db")};Version=3;";
+                var databasePath = Path.Combine(tempDir, $"coddloom-test-{Guid.NewGuid():N}.db");
+                var connectionString = $"Data Source={databasePath};Version=3;Pooling=False;";
                 
                 var executor = new SqliteExecutor(connectionString);
                 
                 // Retain the temporary file path for cleanup.
-                SQLiteFilePaths[executor] = Path.Combine(tempDir, "test_memory.db");
+                SQLiteFilePaths[executor] = databasePath;
                 
                 return executor;
             }

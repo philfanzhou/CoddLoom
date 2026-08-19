@@ -26,7 +26,8 @@ public class OracleExecutor : DbExecutor
             throw new ArgumentOutOfRangeException(nameof(command));
         }
 
-        return cmd.Parameters.Add;
+        cmd.BindByName = true;
+        return (name, value) => cmd.Parameters.Add(name.TrimStart(':'), value);
     }
 
     protected override IDataAdapter GetAdapter(IDbCommand command)

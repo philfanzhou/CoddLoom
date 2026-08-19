@@ -20,7 +20,7 @@ public class SqlServerBuilder : SqlBuilder
     protected override string AppendLimit(string sql, PageParam pageParam = null)
     {
         if (pageParam == null) return sql;
-        return $"{sql} OFFSET {pageParam.Offset} ROW FETCH NEXT {pageParam.PageSize} ROW ONLY";
+        return $"{sql} OFFSET {pageParam.Offset} ROWS FETCH NEXT {pageParam.PageSize} ROWS ONLY";
     }
 
     public override string Select(string tableName,
@@ -29,9 +29,10 @@ public class SqlServerBuilder : SqlBuilder
     {
         if (pageParam != null && orderBy == null)
         {
-            if (where == null)
+            if (where?.Parameters.FirstOrDefault() == null)
             {
-                throw new ArgumentNullException("", "SqlServer can not use 'OFFSET' keyword without order by condition");
+                throw new ArgumentNullException(nameof(orderBy),
+                    "SQL Server pagination requires an order-by condition or a non-empty where condition.");
             }
 
             orderBy = new OrderByCondition(where.Parameters.First().Column);
@@ -45,6 +46,14 @@ public class SqlServerBuilder : SqlBuilder
     {
         switch (type)
         {
+            case DbType.AnsiString:
+                return "VARCHAR(255)";
+            case DbType.String:
+            case DbType.StringFixedLength:
+                return "NVARCHAR(255)";
+            case DbType.AnsiStringFixedLength:
+                return "VARCHAR(255)";
+            case DbType.Binary:
             case DbType.Object:
                 return "VARBINARY(MAX)"; // BINARY and IMAGE are alternatives
             case DbType.Boolean:
@@ -56,10 +65,14 @@ public class SqlServerBuilder : SqlBuilder
             case DbType.SByte:
             case DbType.UInt16:
             case DbType.UInt32:
-            case DbType.UInt64:
                 return "BIGINT"; // SQL Server supports BIGINT, INT, SMALLINT, TINYINT, and others
+            case DbType.UInt64:
+                return "DECIMAL(20,0)";
             case DbType.Currency:
                 return "MONEY"; // DECIMAL or PRECISION are alternatives
+            case DbType.Decimal:
+            case DbType.VarNumeric:
+                return "DECIMAL(38,18)";
             case DbType.Double:
                 return "FLOAT";
             case DbType.Single:
@@ -114,6 +127,13 @@ public class SqlServerBuilder : SqlBuilder
     protected override string GetDecimalColumnType(DbColumnDecimalAttribute decimalColumn)
     {
         return $"DECIMAL({decimalColumn.Length},{decimalColumn.PointLength})";
+    }
+
+    protected override string GetCastColumn(string column, DbType dbType)
+    {
+        return dbType == DbType.DateTime
+            ? $"CAST({column} AS DATETIME)"
+            : base.GetCastColumn(column, dbType);
     }
 
     protected override string GetTableExistsSql(TableDefine table, out List<ValueParam> dbParams)

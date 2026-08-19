@@ -22,23 +22,9 @@ env:
 
 jobs:
   build-test-pack:
-    name: Build, test, and pack
+    name: Build, SQLite test, coverage, and pack
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: coddloom
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_USER: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres -d coddloom"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     env:
       PACKAGE_VERSION: 0.0.0-ci.${{ github.run_number }}.${{ github.run_attempt }}
     steps:
@@ -61,26 +47,19 @@ jobs:
           -p:Version=$PACKAGE_VERSION
           -p:RepositoryCommit=${{ github.sha }}
 
-      - name: Test with SQLite
+      - name: Test with SQLite and collect coverage
         run: >-
           dotnet test CoddLoom.sln
           --configuration Release
           --no-build
           --no-restore
+          --collect "XPlat Code Coverage"
           --logger "trx;LogFileName=sqlite.trx"
           --results-directory artifacts/test-results
 
-      - name: Test with PostgreSQL
-        env:
-          TEST_DATABASE_TYPE: PostgreSql
-          TEST_DB_CONNECTION_POSTGRESQL: Host=localhost;Port=5432;Database=coddloom;Username=postgres;Password=postgres
-        run: >-
-          dotnet test CoddLoom.sln
-          --configuration Release
-          --no-build
-          --no-restore
-          --logger "trx;LogFileName=postgresql.trx"
-          --results-directory artifacts/test-results
+      - name: Enforce coverage baseline
+        shell: pwsh
+        run: ./.github/scripts/assert-coverage.ps1 -CoverageDirectory artifacts/test-results
 
       - name: Pack all public projects
         run: >-
@@ -122,3 +101,70 @@ jobs:
           path: artifacts/packages
           if-no-files-found: error
           retention-days: 7
+
+  database-integration:
+    name: Integration (${{ matrix.provider }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - provider: PostgreSql
+            connection_key: POSTGRESQL
+            connection: Host=localhost;Port=5432;Database=coddloom;Username=postgres;Password=postgres
+          - provider: MySql
+            connection_key: MYSQL
+            connection: Server=localhost;Port=3306;Database=coddloom;Uid=root;Pwd=coddloom;
+          - provider: MariaDB
+            connection_key: MARIADB
+            connection: Server=localhost;Port=3306;Database=coddloom;Uid=root;Pwd=coddloom;
+          - provider: SqlServer
+            connection_key: SQLSERVER
+            connection: Server=localhost,1433;Database=master;User Id=sa;Password=CoddLoom_Strong_Password1!;Encrypt=True;TrustServerCertificate=True;
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Start ${{ matrix.provider }}
+        shell: bash
+        run: bash ./.github/scripts/start-test-database.sh "${{ matrix.provider }}"
+
+      - name: Restore and build tests
+        run: >-
+          dotnet build tests/CoddLoom.Tests/CoddLoom.Tests.csproj
+          --configuration Release
+
+      - name: Configure database connection
+        shell: bash
+        run: |
+          echo "TEST_DATABASE_TYPE=${{ matrix.provider }}" >> "$GITHUB_ENV"
+          echo "TEST_DB_CONNECTION_${{ matrix.connection_key }}=${{ matrix.connection }}" >> "$GITHUB_ENV"
+
+      - name: Run database integration tests
+        run: >-
+          dotnet test tests/CoddLoom.Tests/CoddLoom.Tests.csproj
+          --configuration Release
+          --no-build
+          --no-restore
+          --filter "TestCategory=Database"
+          --logger "trx;LogFileName=${{ matrix.provider }}.trx"
+          --results-directory artifacts/test-results
+
+      - name: Show database logs on failure
+        if: failure()
+        run: docker logs coddloom-test-database
+
+      - name: Upload database test results
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-results-${{ matrix.connection_key }}
+          path: artifacts/test-results
+          if-no-files-found: error
+          retention-days: 14
