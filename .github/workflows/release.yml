@@ -67,6 +67,7 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: write
+      id-token: write
       packages: write
     steps:
       - name: Check out repository
@@ -115,21 +116,23 @@ jobs:
 
       # Edge builds intentionally stay in GitHub Packages. NuGet.org only receives
       # versions that a semantic-version tag explicitly names.
+      - name: Authenticate to NuGet.org
+        if: needs.version.outputs.tagged == 'true'
+        id: nuget_login
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        with:
+          user: ${{ vars.NUGET_USER }}
+
       - name: Publish tagged version to NuGet.org
         if: needs.version.outputs.tagged == 'true'
         shell: bash
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-        run: |
-          if [[ -z "$NUGET_API_KEY" ]]; then
-            echo "The repository secret NUGET_API_KEY is required for tagged releases." >&2
-            exit 1
-          fi
-
-          dotnet nuget push "artifacts/packages/*.nupkg" \
-            --api-key "$NUGET_API_KEY" \
-            --source https://api.nuget.org/v3/index.json \
-            --skip-duplicate
+          NUGET_API_KEY: ${{ steps.nuget_login.outputs.NUGET_API_KEY }}
+        run: >-
+          dotnet nuget push "artifacts/packages/*.nupkg"
+          --api-key "$NUGET_API_KEY"
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate
 
       - name: Create GitHub Release
         if: needs.version.outputs.tagged == 'true'
