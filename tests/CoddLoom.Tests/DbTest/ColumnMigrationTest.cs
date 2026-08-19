@@ -17,24 +17,24 @@ namespace CoddLoom.Tests.DbTest
 
         public void TestColumnMigration()
         {
-            // 1. 首先创建基础表（只包含基本列）
+            // 1. Create the base table with only the essential columns.
             var basicTable = new TableDefine(typeof(BasicTestTable));
             _dbEngine.InitializeTable(new[] { basicTable });
 
-            // 2. 再次调用InitializeTable，会自动检查并添加缺失的列
+            // 2. Call InitializeTable again to detect and add missing columns.
             var fullTable = new TableDefine(typeof(TestColumnMigrationTable));
             _dbEngine.InitializeTable(new[] { fullTable });
 
-            // 3. 验证列是否成功添加
-            // 这里可以添加验证逻辑
+            // 3. Verify that the columns were added successfully.
+            // Additional verification can be added here.
         }
     }
 
-    // 基础表定义（只包含基本列）
+    // Base table definition containing only essential columns.
     internal static class BasicTestTable
     {
         [DbTableName]
-        internal const string TableName = "TestColumnMigrationTable"; // 使用相同的表名
+        internal const string TableName = "TestColumnMigrationTable"; // Use the same table name.
 
         [DbPrimaryKey(Type = DbType.String)]
         internal const string Id = "id";

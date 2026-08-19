@@ -18,7 +18,7 @@ namespace CoddLoom.Tests.DbTest
         {
                 var engine = new PrimaryKeyTestDbEngine(Executor);
 
-                // 测试Entity没有指定PrimaryKey属性，但TableDefine中定义了主键的情况
+                // Test an entity without a PrimaryKey attribute whose TableDefine declares a primary key.
                 var entity = new TestEntityWithoutPrimaryKey
                 {
                     Id = 1,
@@ -26,16 +26,16 @@ namespace CoddLoom.Tests.DbTest
                     CreatedDate = DateTime.Now
                 };
 
-                // 这应该不会抛出异常，因为TableDefine中已经定义了主键
+                // This should not throw because TableDefine already declares a primary key.
                 var affected = DbEngine.Insert(entity);
                 Assert.AreEqual(1, affected);
 
-                // 验证可以通过主键查询
+                // Verify that the record can be queried by primary key.
                 using var con = Executor.GetConnection();
                 con.Open();
 
-                // 使用ById方法测试主键查询，这应该不会抛出"does not have a primary key"异常
-                // 如果我们的修改正确，这里应该能够成功获取主键
+                // ById should resolve the primary key without throwing a "does not have a primary key" exception.
+                // A successful call confirms that the primary key was resolved.
                 var where = WhereConditions.ById<TestEntityWithoutPrimaryKey>(1, out var tableName);
                 Assert.AreEqual(TestEntityWithoutPrimaryKeyTable.TableName, tableName);
                 
@@ -46,27 +46,27 @@ namespace CoddLoom.Tests.DbTest
         }
 
         /// <summary>
-        /// 测试当Entity对应的TableDefine中没有定义主键时，调用ById方法应该抛出异常
-        /// 底层逻辑：ById方法通过EntityMap查找TableDefine中的主键定义，如果TableDefine没有定义主键，则抛出异常
+        /// Verifies that ById throws when the entity's TableDefine does not declare a primary key.
+        /// ById uses EntityMap to find the primary-key definition and throws when none exists.
         /// </summary>
         [TestMethod]
         public void EntityWithoutPrimaryKey_Should_ThrowException_WhenTableDefineHasNoPrimaryKey()
         {
                 var engine = new PrimaryKeyTestDbEngine(Executor);
 
-                // 测试Entity：TestEntityWithoutPrimaryKey2
-                // 对应的TableDefine：TestEntityWithoutPrimaryKeyTable2（注意：这个Table没有定义主键）
+                // Test entity: TestEntityWithoutPrimaryKey2.
+                // Corresponding TableDefine: TestEntityWithoutPrimaryKeyTable2, which has no primary key.
                 var entity = new TestEntityWithoutPrimaryKey2
                 {
                     Name = "TestEntity",
                     CreatedDate = DateTime.Now
                 };
 
-                // 插入应该成功，因为TableDefine定义了列结构（即使没有主键）
+                // Insertion should succeed because TableDefine declares the columns, even without a primary key.
                 var affected = DbEngine.Insert(entity);
                 Assert.AreEqual(1, affected);
 
-                // 验证使用ById方法会抛出异常，因为TableDefine中没有定义主键
+                // Verify that ById throws because TableDefine does not declare a primary key.
                 try
                 {
                     WhereConditions.ById<TestEntityWithoutPrimaryKey2>(1, out var tableName);
@@ -74,7 +74,7 @@ namespace CoddLoom.Tests.DbTest
                 }
                 catch (ArgumentException ex)
                 {
-                    // 验证异常消息包含"primary key"相关信息
+                    // Verify that the exception message mentions the primary key.
                     Assert.IsTrue(ex.Message.Contains("primary key") || ex.Message.Contains("PrimaryKey"), 
                         $"Exception message should contain 'primary key' information. Actual message: {ex.Message}");
                 }
@@ -132,7 +132,7 @@ namespace CoddLoom.Tests.DbTest
         [DbTableName]
         internal const string TableName = "TestEntityWithoutPrimaryKey2";
 
-        // 注意：这个Table没有定义主键
+        // This table deliberately has no primary key.
         [DbColumnString(AllowEmpty = false)]
         internal const string Name = "name";
 
@@ -143,7 +143,7 @@ namespace CoddLoom.Tests.DbTest
     [MapTable(Name = TestEntityWithoutPrimaryKeyTable.TableName)]
     public class TestEntityWithoutPrimaryKey
     {
-        // 注意：这里没有指定PrimaryKey = true，但TableDefine中已经定义了主键
+        // PrimaryKey = true is omitted because TableDefine already declares the primary key.
         [MapColumn(Name = TestEntityWithoutPrimaryKeyTable.Id)]
         public int Id { get; set; }
 
@@ -157,7 +157,7 @@ namespace CoddLoom.Tests.DbTest
     [MapTable(Name = TestEntityWithoutPrimaryKeyTable2.TableName)]
     public class TestEntityWithoutPrimaryKey2
     {
-        // 注意：这里没有指定PrimaryKey = true，且TableDefine中也没有定义主键
+        // PrimaryKey = true is omitted and TableDefine does not declare a primary key.
         [MapColumn(Name = TestEntityWithoutPrimaryKeyTable2.Name)]
         public string Name { get; set; }
 

@@ -8,40 +8,40 @@ using CoddLoom.Tests.DbCode.Tables;
 namespace CoddLoom.Tests.DbTest
 {
     /// <summary>
-    /// 列改动功能集成测试
+    /// Integration tests for column migration.
     /// </summary>
     public class ColumnMigrationIntegrationTest
     {
         public static void RunTest()
         {
-            // 使用SQLite进行测试（无需额外配置）
+            // Use SQLite so the test requires no additional configuration.
             var executor = new SqliteExecutor("test_column_migration.db");
             var dbEngine = new DbEngine(executor);
 
             try
             {
-                // 测试1: 创建基础表
-                Console.WriteLine("测试1: 创建基础表...");
+                // Test 1: Create the base table.
+                Console.WriteLine("Test 1: Creating the base table...");
                 var basicTable = new TableDefine(typeof(BasicTestTable));
                 dbEngine.InitializeTable(new[] { basicTable });
-                Console.WriteLine("✓ 基础表创建成功");
+                Console.WriteLine("Base table created successfully.");
 
-                // 测试2: 添加新列
-                Console.WriteLine("测试2: 添加新列...");
+                // Test 2: Add new columns.
+                Console.WriteLine("Test 2: Adding new columns...");
                 var fullTable = new TableDefine(typeof(TestColumnMigrationTable));
                 dbEngine.InitializeTable(new[] { fullTable });
-                Console.WriteLine("✓ 新列添加成功");
+                Console.WriteLine("New columns added successfully.");
 
-                // 测试3: 再次运行（应该跳过已存在的列）
-                Console.WriteLine("测试3: 重复运行列检查...");
+                // Test 3: Run again and skip existing columns.
+                Console.WriteLine("Test 3: Repeating the column check...");
                 dbEngine.InitializeTable(new[] { fullTable });
-                Console.WriteLine("✓ 重复运行成功（跳过已存在的列）");
+                Console.WriteLine("Repeated run succeeded and skipped existing columns.");
 
-                Console.WriteLine("所有测试通过！");
+                Console.WriteLine("All tests passed.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"测试失败: {ex.Message}");
+                Console.WriteLine($"Test failed: {ex.Message}");
                 throw;
             }
         }

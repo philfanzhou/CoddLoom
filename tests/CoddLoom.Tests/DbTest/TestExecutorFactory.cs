@@ -11,13 +11,13 @@ using System.IO;
 namespace CoddLoom.Tests.DbTest
 {
     /// <summary>
-    /// 数据库执行器工厂类
-    /// 统一处理不同数据库类型的Executor创建
+    /// Factory for database executors.
+    /// Provides consistent executor creation for all supported database types.
     /// </summary>
     public static class TestExecutorFactory
     {
         /// <summary>
-        /// 支持的数据库类型
+        /// Supported database types.
         /// </summary>
         public enum DatabaseType
         {
@@ -29,12 +29,12 @@ namespace CoddLoom.Tests.DbTest
         }
 
         /// <summary>
-        /// 存储临时SQLite数据库文件路径，用于清理
+        /// Paths of temporary SQLite database files retained for cleanup.
         /// </summary>
         private static readonly Dictionary<DbExecutor, string> SQLiteFilePaths = new Dictionary<DbExecutor, string>();
 
         /// <summary>
-        /// 测试配置，可以从配置文件读取
+        /// Test configuration that can be populated from a configuration file.
         /// </summary>
         private static readonly Dictionary<DatabaseType, string> ConnectionStrings = new Dictionary<DatabaseType, string>
         {
@@ -46,24 +46,24 @@ namespace CoddLoom.Tests.DbTest
         };
 
         /// <summary>
-        /// 当前使用的数据库类型，可以通过环境变量或配置文件设置
+        /// The active database type, configurable through an environment variable or configuration file.
         /// </summary>
         public static DatabaseType CurrentDatabaseType { get; set; } = DatabaseType.SQLite;
 
         /// <summary>
-        /// 创建数据库执行器
+        /// Creates a database executor.
         /// </summary>
-        /// <returns>数据库执行器实例</returns>
+        /// <returns>A database executor.</returns>
         public static DbExecutor CreateExecutor()
         {
             return CreateExecutor(CurrentDatabaseType);
         }
 
         /// <summary>
-        /// 创建指定类型的数据库执行器
+        /// Creates an executor for the specified database type.
         /// </summary>
-        /// <param name="dbType">数据库类型</param>
-        /// <returns>数据库执行器实例</returns>
+        /// <param name="dbType">The database type.</param>
+        /// <returns>A database executor.</returns>
         public static DbExecutor CreateExecutor(DatabaseType dbType)
         {
             var connectionString = GetConnectionString(dbType);
@@ -73,7 +73,7 @@ namespace CoddLoom.Tests.DbTest
             {
                 case DatabaseType.SQLite:
                     executor = new SqliteExecutor(connectionString);
-                    // 如果是文件数据库（非内存），记录文件路径用于清理
+                    // Retain the path of a file-backed database for cleanup.
                     if (!connectionString.Contains(":memory:"))
                     {
                         var dbPath = connectionString.Split(';')[0].Replace("Data Source=", "").Trim();
@@ -89,18 +89,18 @@ namespace CoddLoom.Tests.DbTest
                 case DatabaseType.Oracle:
                     return new OracleExecutor(connectionString);
                 default:
-                    throw new ArgumentException($"不支持的数据库类型: {dbType}");
+                    throw new ArgumentException($"Unsupported database type: {dbType}");
             }
         }
 
         /// <summary>
-        /// 获取数据库连接字符串
+        /// Gets the database connection string.
         /// </summary>
-        /// <param name="dbType">数据库类型</param>
-        /// <returns>连接字符串</returns>
+        /// <param name="dbType">The database type.</param>
+        /// <returns>The connection string.</returns>
         public static string GetConnectionString(DatabaseType dbType)
         {
-            // 首先检查环境变量
+            // Check environment variables first.
             var envKey = $"TEST_DB_CONNECTION_{dbType.ToString().ToUpper()}";
             var envConnectionString = Environment.GetEnvironmentVariable(envKey);
             if (!string.IsNullOrEmpty(envConnectionString))
@@ -108,43 +108,43 @@ namespace CoddLoom.Tests.DbTest
                 return envConnectionString;
             }
 
-            // 然后检查配置文件（这里简化处理，实际可以从appsettings.json读取）
+            // Then check configuration; this simplified implementation can later read appsettings.json.
             if (ConnectionStrings.ContainsKey(dbType))
             {
                 return ConnectionStrings[dbType];
             }
 
-            throw new ArgumentException($"找不到数据库类型 {dbType} 的连接字符串配置");
+            throw new ArgumentException($"No connection string is configured for database type {dbType}.");
         }
 
         /// <summary>
-        /// 获取适合内存测试的数据库执行器（主要用于SQLite）
+        /// Gets a database executor suitable for local tests, primarily SQLite.
         /// </summary>
-        /// <returns>数据库执行器实例</returns>
+        /// <returns>A database executor.</returns>
         public static DbExecutor CreateInMemoryExecutor()
         {
             if (CurrentDatabaseType == DatabaseType.SQLite)
             {
-                // 为内存数据库创建一个临时目录，避免SQLiteExecutor的directory为null错误
+                // Create a temporary directory to ensure SqliteExecutor receives a non-null directory.
                 var tempDir = Path.GetTempPath();
                 var connectionString = $"Data Source={Path.Combine(tempDir, "test_memory.db")};Version=3;";
                 
                 var executor = new SqliteExecutor(connectionString);
                 
-                // 记录这个临时文件路径用于后续清理
+                // Retain the temporary file path for cleanup.
                 SQLiteFilePaths[executor] = Path.Combine(tempDir, "test_memory.db");
                 
                 return executor;
             }
             
-            // 对于其他数据库，创建临时数据库
+            // Create a temporary database for other providers.
             return CreateExecutor();
         }
 
         /// <summary>
-        /// 清理测试数据 - 使用DbEngine的Drop方法删除所有测试表
+        /// Cleans test data by using DbEngine.Drop to remove every test table.
         /// </summary>
-        /// <param name="executor">数据库执行器</param>
+        /// <param name="executor">The database executor.</param>
         public static void CleanupTestData(DbExecutor executor)
         {
             if (executor == null)
@@ -152,35 +152,35 @@ namespace CoddLoom.Tests.DbTest
 
             try
             {
-                // 创建DbEngine实例来使用方法
+                // Create a DbEngine instance to access its operations.
                 var dbEngine = new DbEngine(executor);
                 
-                // 统一删除所有测试表，适用于所有数据库类型
+                // Remove every test table consistently across database types.
                 var tables = new[] { "UserTable" };
                 
                 foreach (var table in tables)
                 {
                     try
                     {
-                        // 使用DbEngine的Drop方法，它会处理不同数据库的SQL语法差异
+                        // DbEngine.Drop handles provider-specific SQL syntax.
                         dbEngine.Drop(table);
                     }
                     catch (Exception ex)
                     {
-                        // 单个表删除失败不影响其他表的清理
-                        // 可能是表不存在，这是可以接受的
-                        Console.WriteLine($"清理表 {table} 失败: {ex.Message}");
+                        // Failure to remove one table must not prevent cleanup of the others.
+                        // A missing table is acceptable here.
+                        Console.WriteLine($"Failed to clean up table {table}: {ex.Message}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                // 记录清理失败，但不抛出异常，避免影响测试结果
-                Console.WriteLine($"清理测试数据时发生错误: {ex.Message}");
+                // Report cleanup failure without changing the test result.
+                Console.WriteLine($"An error occurred while cleaning test data: {ex.Message}");
             }
             finally
             {
-                // 清理SQLite文件数据库
+                // Clean up file-backed SQLite databases.
                 if (CurrentDatabaseType == DatabaseType.SQLite && SQLiteFilePaths.ContainsKey(executor))
                 {
                     try
@@ -188,7 +188,7 @@ namespace CoddLoom.Tests.DbTest
                         var filePath = SQLiteFilePaths[executor];
                         SQLiteFilePaths.Remove(executor);
                         
-                        // 尝试删除文件，但不强制要求成功
+                        // Attempt file deletion without requiring it to succeed.
                         if (File.Exists(filePath))
                         {
                             File.Delete(filePath);
@@ -196,7 +196,7 @@ namespace CoddLoom.Tests.DbTest
                     }
                     catch
                     {
-                        // 文件删除失败不影响整体清理
+                        // A file-deletion failure does not invalidate the overall cleanup.
                     }
                 }
             }

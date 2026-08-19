@@ -21,7 +21,7 @@ internal class EntityMap
         var memberList = new List<Tuple<MemberInfo, MapColumnAttribute>>();
         var members = type.GetAllMembers();
 
-        // 获取TableDefine以确定主键
+        // Obtain the TableDefine to determine the primary key.
         var tableDefine = GetTableDefine(type);
         string primaryKeyFromTable = tableDefine?.PrimaryKey?.Name;
 
@@ -32,11 +32,12 @@ internal class EntityMap
             {
                 memberList.Add(new Tuple<MemberInfo, MapColumnAttribute>(member, attribute));
 
-                // 主键确定逻辑：
-                // 1. 如果TableDefine中定义了主键，且Entity中的属性映射到该主键字段名，则认为是主键（不需要Entity中标记PrimaryKey=true）
+                // Primary-key resolution:
+                // 1. A property mapped to the primary-key column declared by TableDefine is a primary key,
+                //    even when the entity property is not marked with PrimaryKey = true.
                 if (primaryKeyFromTable != null && attribute.Name == primaryKeyFromTable)
                 {
-                    // TableDefine中已定义主键，且Entity中的属性映射到该主键字段，则认为是主键
+                    // TableDefine declares the primary key and this entity property maps to that column.
                     PrimaryKey = attribute.Name;
                 }
             }
@@ -77,11 +78,11 @@ internal class EntityMap
     {
         try
         {
-            // 尝试通过Table名称找到对应的Table类型
+            // Try to locate the corresponding table type by table name.
             var tableAttribute = GetTableAttribute(entityType);
             if (tableAttribute == null) return null;
 
-            // 查找包含TableName的Table类
+            // Find a table class that contains TableName.
             var tableTypes = entityType.Assembly.GetTypes();
             foreach (var tableType in tableTypes)
             {
@@ -105,7 +106,7 @@ internal class EntityMap
         }
         catch (Exception ex)
         {
-            // 如果获取TableDefine失败，返回null，让代码回退到原有的PrimaryKey属性检测
+            // Return null when TableDefine resolution fails so primary-key attribute detection remains the fallback.
             System.Diagnostics.Debug.WriteLine($"GetTableDefine failed for {entityType.Name}: {ex.Message}");
         }
 

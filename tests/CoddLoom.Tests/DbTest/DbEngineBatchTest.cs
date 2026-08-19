@@ -8,8 +8,8 @@ using CoddLoom.Tests.DbCode.Tables;
 namespace CoddLoom.Tests.DbTest
 {
     /// <summary>
-    /// DbEngine批量操作测试类
-    /// 测试DbEngine的批量插入功能（使用Entity操作）
+    /// Tests DbEngine batch operations.
+    /// Covers entity-based batch insertion.
     /// </summary>
     [TestClass]
     public class DbEngineBatchTest : TestBase
@@ -17,7 +17,7 @@ namespace CoddLoom.Tests.DbTest
         
 
         /// <summary>
-        /// 创建测试用户实体
+        /// Creates a test user entity.
         /// </summary>
         private static User CreateTestUser(string id, string unionId, int intData, string specialString)
         {
@@ -37,83 +37,83 @@ namespace CoddLoom.Tests.DbTest
         }
 
         /// <summary>
-        /// 测试基础批量插入（使用Entity）
-        /// 批量插入应该要么全部成功，要么全部失败
+        /// Tests a basic batch insert with entities.
+        /// A batch insert must either succeed completely or fail completely.
         /// </summary>
         [TestMethod]
         public void Insert_BatchRecords_Should_Succeed()
         {
 
-                // 准备批量测试实体 - 使用完全唯一的ID避免主键冲突
+                // Prepare entities with unique IDs to avoid primary-key conflicts.
                 var entities = new List<User>();
                 for (int i = 1; i <= 100; i++)
                 {
                     entities.Add(CreateTestUser(
-                        Guid.NewGuid().ToString(), // 使用完整GUID确保绝对唯一性
+                        Guid.NewGuid().ToString(), // Use the full GUID to ensure uniqueness.
                         $"BatchUser{i:D3}",
                         i,
                         $"Batch{i}"
                     ));
                 }
 
-                // 执行批量插入，批次大小为50（测试分批处理）
+                // Insert in batches of 50 to exercise batch splitting.
                 var affected = DbEngine.Insert(entities, 50);
 
-                // 验证结果 - 应该插入所有记录
-                Assert.AreEqual(100, affected, "应该插入所有100条记录");
+                // Verify that every record was inserted.
+                Assert.AreEqual(100, affected, "All 100 records should be inserted.");
 
-                // 验证数据是否正确插入
+                // Verify that the data was inserted correctly.
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "BatchUser%", WhereOperator.Like);
                 var count = DbEngine.Count(UserTable.TableName, where);
-                Assert.AreEqual(100, count, "应该插入所有100条记录");
+                Assert.AreEqual(100, count, "All 100 records should be present.");
         }
 
         /// <summary>
-        /// 测试批量插入主键冲突应该抛出异常
-        /// 修复后的逻辑应该要么全部成功，要么全部失败
+        /// Verifies that a batch insert throws on a primary-key conflict.
+        /// The operation must either succeed completely or fail completely.
         /// </summary>
         [TestMethod]
         public void Insert_BatchRecords_WithPrimaryKeyConflict_Should_ThrowException()
         {
 
-                // 准备包含重复主键的测试实体，故意制造主键冲突
+                // Prepare entities with duplicate primary keys to force a conflict.
                 var entities = new List<User>();
                 var duplicateId = Guid.NewGuid().ToString();
                 
-                // 添加3条记录，其中2条有相同的主键（故意制造冲突）
+                // Add three records, two of which deliberately share a primary key.
                 for (int i = 1; i <= 3; i++)
                 {
                     entities.Add(CreateTestUser(
-                        i <= 2 ? duplicateId : Guid.NewGuid().ToString(), // 前2条记录使用重复ID
+                        i <= 2 ? duplicateId : Guid.NewGuid().ToString(), // The first two records use the duplicate ID.
                         $"ConflictUser{i}",
                         i,
                         $"Conflict{i}"
                     ));
                 }
 
-                // 执行批量插入应该抛出异常
+                // The batch insert should throw.
                 Assert.ThrowsExactly<InvalidOperationException>(() => 
                 {
                     DbEngine.Insert(entities, 2);
-                }, "主键冲突时应该抛出异常");
+                }, "A primary-key conflict should throw.");
 
-                // 验证没有记录被插入（事务回滚）
+                // Verify that the transaction rollback left no inserted records.
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "ConflictUser%", WhereOperator.Like);
                 var count = DbEngine.Count(UserTable.TableName, where);
-                Assert.AreEqual(0, count, "主键冲突时不应该插入任何记录");
+                Assert.AreEqual(0, count, "No records should be inserted after a primary-key conflict.");
         }
 
         /// <summary>
-        /// 测试大批量记录插入（使用Entity）
-        /// 测试大数据量和参数限制处理
+        /// Tests inserting a large batch of entities.
+        /// Covers large data volumes and parameter-limit handling.
         /// </summary>
         [TestMethod]
         public void Insert_LargeBatchRecords_Should_Succeed()
         {
 
-                // 准备大批量测试实体 - 500条记录，测试参数限制处理
+                // Prepare 500 entities to exercise parameter-limit handling.
                 var entities = new List<User>();
                 for (int i = 1; i <= 500; i++)
                 {
@@ -125,28 +125,28 @@ namespace CoddLoom.Tests.DbTest
                     ));
                 }
 
-                // 执行大批量插入，批次大小为100（测试参数限制和分批处理）
+                // Insert in batches of 100 to exercise parameter limits and splitting.
                 var affected = DbEngine.Insert(entities, 100);
 
-                // 验证结果 - 应该插入所有记录
-                Assert.AreEqual(500, affected, "应该插入所有500条记录");
+                // Verify that every record was inserted.
+                Assert.AreEqual(500, affected, "All 500 records should be inserted.");
 
-                // 验证数据是否正确插入
+                // Verify that the data was inserted correctly.
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "LargeBatchUser%", WhereOperator.Like);
                 var count = DbEngine.Count(UserTable.TableName, where);
-                Assert.AreEqual(500, count, "应该插入所有500条记录");
+                Assert.AreEqual(500, count, "All 500 records should be present.");
         }
 
         /// <summary>
-        /// 测试小批次大小的批量插入（使用Entity）
-        /// 测试小批次处理逻辑
+        /// Tests entity insertion with a small batch size.
+        /// Covers small-batch processing.
         /// </summary>
         [TestMethod]
         public void Insert_SmallBatchSize_Should_Succeed()
         {
 
-                // 准备测试实体 - 30条记录
+                // Prepare 30 test entities.
                 var entities = new List<User>();
                 for (int i = 1; i <= 30; i++)
                 {
@@ -158,28 +158,28 @@ namespace CoddLoom.Tests.DbTest
                     ));
                 }
 
-                // 执行批量插入，使用小批次大小（测试分批处理）
+                // Use a small batch size to exercise batch splitting.
                 var affected = DbEngine.Insert(entities, 5);
 
-                // 验证结果 - 应该插入所有记录
-                Assert.AreEqual(30, affected, "应该插入所有30条记录");
+                // Verify that every record was inserted.
+                Assert.AreEqual(30, affected, "All 30 records should be inserted.");
 
-                // 验证数据是否正确插入
+                // Verify that the data was inserted correctly.
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "SmallBatchUser%", WhereOperator.Like);
                 var count = DbEngine.Count(UserTable.TableName, where);
-                Assert.AreEqual(30, count, "应该插入所有30条记录");
+                Assert.AreEqual(30, count, "All 30 records should be present.");
         }
 
         /// <summary>
-        /// 测试事务中的批量插入（使用Entity）
-        /// 测试事务中的大批量处理
+        /// Tests a batch insert of entities within a transaction.
+        /// Covers large-batch processing within a transaction.
         /// </summary>
         [TestMethod]
         public void Insert_BatchInTransaction_Should_Succeed()
         {
 
-                // 准备测试实体 - 200条记录
+                // Prepare 200 test entities.
                 var entities = new List<User>();
                 for (int i = 1; i <= 200; i++)
                 {
@@ -191,28 +191,28 @@ namespace CoddLoom.Tests.DbTest
                     ));
                 }
 
-                // 在事务中执行批量插入
+                // Perform the batch insert within a transaction.
                 Executor.Transaction(tran =>
                 {
                     var affected = DbEngine.Insert(entities, 50, tran);
-                    Assert.AreEqual(200, affected, "事务中应该插入所有200条记录");
+                    Assert.AreEqual(200, affected, "All 200 records should be inserted within the transaction.");
                 });
 
-                // 验证数据是否正确插入
+                // Verify that the data was inserted correctly.
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "TranBatchUser%", WhereOperator.Like);
                 var count = DbEngine.Count(UserTable.TableName, where);
-                Assert.AreEqual(200, count, "事务提交后应该查询到所有200条记录");
+                Assert.AreEqual(200, count, "All 200 records should be returned after commit.");
         }
 
         /// <summary>
-        /// 测试批量插入异常回滚（使用Entity）
+        /// Tests rollback after an exception during an entity batch insert.
         /// </summary>
         [TestMethod]
         public void Insert_BatchExceptionRollback_Should_Succeed()
         {
 
-                // 准备测试实体
+                // Prepare the test entities.
                 var entities = new List<User>();
                 for (int i = 1; i <= 3; i++)
                 {
@@ -224,7 +224,7 @@ namespace CoddLoom.Tests.DbTest
                     ));
                 }
 
-                // 在事务中执行批量插入，并故意抛出异常
+                // Perform the batch insert in a transaction and deliberately throw.
                 Assert.ThrowsExactly<InvalidOperationException>(() =>
                 {
                     Executor.Transaction(tran =>
@@ -234,11 +234,11 @@ namespace CoddLoom.Tests.DbTest
                     });
                 });
 
-                // 验证数据已回滚
+                // Verify that the data was rolled back.
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "RollbackBatchUser%", WhereOperator.Like);
                 var count = DbEngine.Count(UserTable.TableName, where);
-                Assert.AreEqual(0, count, "事务回滚后应该没有记录");
+                Assert.AreEqual(0, count, "No records should remain after rollback.");
         }
 
         
@@ -246,14 +246,14 @@ namespace CoddLoom.Tests.DbTest
         
 
         /// <summary>
-        /// 测试混合实体类型的批量插入（使用Entity）
-        /// 注意：这个测试主要验证Entity操作的灵活性
+        /// Tests batch insertion with different entity types.
+        /// This test primarily verifies the flexibility of entity operations.
         /// </summary>
         [TestMethod]
         public void Insert_MixedEntityTypes_Should_Succeed()
         {
 
-                // 准备不同类型的测试实体
+                // Prepare test entities of different types.
                 var userEntities = new List<User>();
                 for (int i = 1; i <= 3; i++)
                 {
@@ -265,15 +265,15 @@ namespace CoddLoom.Tests.DbTest
                     ));
                 }
 
-                // 分别插入不同类型的实体
+                // Insert each entity type separately.
                 var affected1 = DbEngine.Insert(userEntities, 2);
-                Assert.AreEqual(3, affected1, "用户实体应该插入所有3条记录");
+                Assert.AreEqual(3, affected1, "All three user entities should be inserted.");
 
-                // 验证数据是否正确插入
+                // Verify that the data was inserted correctly.
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "MixedUser%", WhereOperator.Like);
                 var count = DbEngine.Count(UserTable.TableName, where);
-                Assert.AreEqual(3, count, "应该插入所有3条用户记录");
+                Assert.AreEqual(3, count, "All three user records should be present.");
         }
 
         
@@ -281,15 +281,15 @@ namespace CoddLoom.Tests.DbTest
         
 
         /// <summary>
-        /// 测试参数限制处理（使用Entity）
-        /// 测试接近SQL Server参数限制的大批量插入
+        /// Tests parameter-limit handling with entities.
+        /// Covers a large insert close to the SQL Server parameter limit.
         /// </summary>
         [TestMethod]
         public void Insert_ParameterLimitTest_Should_Succeed()
         {
 
-                // 准备接近参数限制的测试实体
-                // User实体有10个字段，批次大小200意味着2000个参数，接近2100的限制
+                // Prepare enough entities to approach the parameter limit.
+                // User has ten fields, so a batch of 200 uses 2,000 parameters, close to the 2,100 limit.
                 var entities = new List<User>();
                 for (int i = 1; i <= 200; i++)
                 {
@@ -301,17 +301,17 @@ namespace CoddLoom.Tests.DbTest
                     ));
                 }
 
-                // 执行批量插入，批次大小为200（测试参数限制处理）
+                // Insert with a batch size of 200 to exercise parameter-limit handling.
                 var affected = DbEngine.Insert(entities, 200);
 
-                // 验证结果 - 应该插入所有记录
-                Assert.AreEqual(200, affected, "应该插入所有200条记录");
+                // Verify that every record was inserted.
+                Assert.AreEqual(200, affected, "All 200 records should be inserted.");
 
-                // 验证数据是否正确插入
+                // Verify that the data was inserted correctly.
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "ParamLimitUser%", WhereOperator.Like);
                 var count = DbEngine.Count(UserTable.TableName, where);
-                Assert.AreEqual(200, count, "应该插入所有200条记录");
+                Assert.AreEqual(200, count, "All 200 records should be present.");
         }
 
         

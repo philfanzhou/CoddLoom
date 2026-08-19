@@ -36,7 +36,7 @@ partial class SqlBuilder
     protected virtual string AppendWhere(string sql,
         WhereConditions where = null)
     {
-        if (where == null || where.IsEmpty()) return sql; // 必须检查是不是Empty
+        if (where == null || where.IsEmpty()) return sql; // Empty conditions must be handled explicitly.
         return $"{sql} WHERE {GetWhereSql(where)}";
     }
 

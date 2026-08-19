@@ -14,8 +14,8 @@ using CoddLoom.Tests.DbTest;
 namespace CoddLoom.Tests.DbTest
 {
     /// <summary>
-    /// DbEngine分页查询测试类
-    /// 测试DbEngine的分页查询功能
+    /// Tests DbEngine paginated queries.
+    /// Covers pagination behavior and result metadata.
     /// </summary>
     [TestClass]
     public class DbEnginePaginationTest : TestBase
@@ -23,13 +23,13 @@ namespace CoddLoom.Tests.DbTest
         
 
         /// <summary>
-        /// 测试基础分页查询
+        /// Tests a basic paginated query.
         /// </summary>
         [TestMethod]
         public void PageSelect_BasicPagination_Should_Succeed()
         {
 
-                // 准备测试数据 - 插入10条记录
+                // Prepare ten test records.
                 var entities = new List<User>();
                 for (int i = 1; i <= 10; i++)
                 {
@@ -47,9 +47,9 @@ namespace CoddLoom.Tests.DbTest
                         SpecialString = $"Pagination{i}"
                     });
                 }
-                DbEngine.Insert(entities, 5); // 批量插入
+                DbEngine.Insert(entities, 5); // Batch insert.
 
-                // 测试分页查询 - 第1页，每页3条
+                // Query the first page with three records per page.
                 var pageParam = new PageParam { PageNumber = 1, PageSize = 3 };
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "PaginationUser%", WhereOperator.Like);
@@ -57,23 +57,23 @@ namespace CoddLoom.Tests.DbTest
 
                 var result = DbEngine.PageSelect<User>(where, orderBy, pageParam, out var totalPages, out var totalCount);
 
-                // 验证结果
-                Assert.AreEqual(10, totalCount, "总记录数应该是10");
-                Assert.AreEqual(4, totalPages, "总页数应该是4（10/3=3余1，所以是4页）");
-                Assert.AreEqual(3, result.Count, "第1页应该返回3条记录");
-                Assert.AreEqual("PaginationUser1", result[0].UnionId, "第1条记录应该是PaginationUser1");
-                Assert.AreEqual("PaginationUser2", result[1].UnionId, "第2条记录应该是PaginationUser2");
-                Assert.AreEqual("PaginationUser3", result[2].UnionId, "第3条记录应该是PaginationUser3");
+                // Verify the result.
+                Assert.AreEqual(10, totalCount, "The total record count should be ten.");
+                Assert.AreEqual(4, totalPages, "Ten records at three per page should produce four pages.");
+                Assert.AreEqual(3, result.Count, "The first page should contain three records.");
+                Assert.AreEqual("PaginationUser1", result[0].UnionId, "The first record should be PaginationUser1.");
+                Assert.AreEqual("PaginationUser2", result[1].UnionId, "The second record should be PaginationUser2.");
+                Assert.AreEqual("PaginationUser3", result[2].UnionId, "The third record should be PaginationUser3.");
         }
 
         /// <summary>
-        /// 测试分页查询 - 第2页
+        /// Tests the second page of a paginated query.
         /// </summary>
         [TestMethod]
         public void PageSelect_SecondPage_Should_Succeed()
         {
 
-                // 准备测试数据 - 插入10条记录
+                // Prepare ten test records.
                 var entities = new List<User>();
                 for (int i = 1; i <= 10; i++)
                 {
@@ -93,7 +93,7 @@ namespace CoddLoom.Tests.DbTest
                 }
                 DbEngine.Insert(entities, 5);
 
-                // 测试分页查询 - 第2页，每页3条
+                // Query the second page with three records per page.
                 var pageParam = new PageParam { PageNumber = 2, PageSize = 3 };
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "SecondPageUser%", WhereOperator.Like);
@@ -101,23 +101,23 @@ namespace CoddLoom.Tests.DbTest
 
                 var result = DbEngine.PageSelect<User>(where, orderBy, pageParam, out var totalPages, out var totalCount);
 
-                // 验证结果
-                Assert.AreEqual(10, totalCount, "总记录数应该是10");
-                Assert.AreEqual(4, totalPages, "总页数应该是4");
-                Assert.AreEqual(3, result.Count, "第2页应该返回3条记录");
-                Assert.AreEqual("SecondPageUser4", result[0].UnionId, "第1条记录应该是SecondPageUser4");
-                Assert.AreEqual("SecondPageUser5", result[1].UnionId, "第2条记录应该是SecondPageUser5");
-                Assert.AreEqual("SecondPageUser6", result[2].UnionId, "第3条记录应该是SecondPageUser6");
+                // Verify the result.
+                Assert.AreEqual(10, totalCount, "The total record count should be ten.");
+                Assert.AreEqual(4, totalPages, "The total page count should be four.");
+                Assert.AreEqual(3, result.Count, "The second page should contain three records.");
+                Assert.AreEqual("SecondPageUser4", result[0].UnionId, "The first record should be SecondPageUser4.");
+                Assert.AreEqual("SecondPageUser5", result[1].UnionId, "The second record should be SecondPageUser5.");
+                Assert.AreEqual("SecondPageUser6", result[2].UnionId, "The third record should be SecondPageUser6.");
         }
 
         /// <summary>
-        /// 测试分页查询 - 最后一页
+        /// Tests the final page of a paginated query.
         /// </summary>
         [TestMethod]
         public void PageSelect_LastPage_Should_Succeed()
         {
 
-                // 准备测试数据 - 插入10条记录
+                // Prepare ten test records.
                 var entities = new List<User>();
                 for (int i = 1; i <= 10; i++)
                 {
@@ -137,7 +137,7 @@ namespace CoddLoom.Tests.DbTest
                 }
                 DbEngine.Insert(entities, 5);
 
-                // 测试分页查询 - 第4页（最后一页），每页3条
+                // Query the fourth and final page with three records per page.
                 var pageParam = new PageParam { PageNumber = 4, PageSize = 3 };
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "LastPageUser%", WhereOperator.Like);
@@ -145,21 +145,21 @@ namespace CoddLoom.Tests.DbTest
 
                 var result = DbEngine.PageSelect<User>(where, orderBy, pageParam, out var totalPages, out var totalCount);
 
-                // 验证结果
-                Assert.AreEqual(10, totalCount, "总记录数应该是10");
-                Assert.AreEqual(4, totalPages, "总页数应该是4");
-                Assert.AreEqual(1, result.Count, "最后一页应该返回1条记录");
-                Assert.AreEqual("LastPageUser10", result[0].UnionId, "最后一条记录应该是LastPageUser10");
+                // Verify the result.
+                Assert.AreEqual(10, totalCount, "The total record count should be ten.");
+                Assert.AreEqual(4, totalPages, "The total page count should be four.");
+                Assert.AreEqual(1, result.Count, "The final page should contain one record.");
+                Assert.AreEqual("LastPageUser10", result[0].UnionId, "The final record should be LastPageUser10.");
         }
 
         /// <summary>
-        /// 测试分页查询 - 空结果
+        /// Tests a paginated query with no results.
         /// </summary>
         [TestMethod]
         public void PageSelect_EmptyResult_Should_Succeed()
         {
 
-                // 不插入任何数据，测试空结果的分页查询
+                // Insert no data so the paginated query is empty.
                 var pageParam = new PageParam { PageNumber = 1, PageSize = 5 };
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "NonExistentUser");
@@ -167,20 +167,20 @@ namespace CoddLoom.Tests.DbTest
 
                 var result = DbEngine.PageSelect<User>(where, orderBy, pageParam, out var totalPages, out var totalCount);
 
-                // 验证结果
-                Assert.AreEqual(0, totalCount, "总记录数应该是0");
-                Assert.AreEqual(0, totalPages, "总页数应该是0");
-                Assert.AreEqual(0, result.Count, "结果应该为空");
+                // Verify the result.
+                Assert.AreEqual(0, totalCount, "The total record count should be zero.");
+                Assert.AreEqual(0, totalPages, "The total page count should be zero.");
+                Assert.AreEqual(0, result.Count, "The result should be empty.");
         }
 
         /// <summary>
-        /// 测试分页查询 - 大页面大小
+        /// Tests a paginated query with a large page size.
         /// </summary>
         [TestMethod]
         public void PageSelect_LargePageSize_Should_Succeed()
         {
 
-                // 准备测试数据 - 插入5条记录
+                // Prepare five test records.
                 var entities = new List<User>();
                 for (int i = 1; i <= 5; i++)
                 {
@@ -200,7 +200,7 @@ namespace CoddLoom.Tests.DbTest
                 }
                 DbEngine.Insert(entities, 5);
 
-                // 测试分页查询 - 页面大小大于总记录数
+                // Use a page size larger than the total record count.
                 var pageParam = new PageParam { PageNumber = 1, PageSize = 10 };
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "LargePageUser%", WhereOperator.Like);
@@ -208,20 +208,20 @@ namespace CoddLoom.Tests.DbTest
 
                 var result = DbEngine.PageSelect<User>(where, orderBy, pageParam, out var totalPages, out var totalCount);
 
-                // 验证结果
-                Assert.AreEqual(5, totalCount, "总记录数应该是5");
-                Assert.AreEqual(1, totalPages, "总页数应该是1");
-                Assert.AreEqual(5, result.Count, "应该返回所有5条记录");
+                // Verify the result.
+                Assert.AreEqual(5, totalCount, "The total record count should be five.");
+                Assert.AreEqual(1, totalPages, "The total page count should be one.");
+                Assert.AreEqual(5, result.Count, "All five records should be returned.");
         }
 
         /// <summary>
-        /// 测试分页查询 - 降序排列
+        /// Tests a paginated query in descending order.
         /// </summary>
         [TestMethod]
         public void PageSelect_DescendingOrder_Should_Succeed()
         {
 
-                // 准备测试数据 - 插入5条记录
+                // Prepare five test records.
                 var entities = new List<User>();
                 for (int i = 1; i <= 5; i++)
                 {
@@ -241,7 +241,7 @@ namespace CoddLoom.Tests.DbTest
                 }
                 DbEngine.Insert(entities, 5);
 
-                // 测试分页查询 - 降序排列
+                // Query in descending order.
                 var pageParam = new PageParam { PageNumber = 1, PageSize = 3 };
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "DescUser%", WhereOperator.Like);
@@ -249,23 +249,23 @@ namespace CoddLoom.Tests.DbTest
 
                 var result = DbEngine.PageSelect<User>(where, orderBy, pageParam, out var totalPages, out var totalCount);
 
-                // 验证结果
-                Assert.AreEqual(5, totalCount, "总记录数应该是5");
-                Assert.AreEqual(2, totalPages, "总页数应该是2");
-                Assert.AreEqual(3, result.Count, "第1页应该返回3条记录");
-                Assert.AreEqual("DescUser5", result[0].UnionId, "第1条记录应该是DescUser5（降序）");
-                Assert.AreEqual("DescUser4", result[1].UnionId, "第2条记录应该是DescUser4");
-                Assert.AreEqual("DescUser3", result[2].UnionId, "第3条记录应该是DescUser3");
+                // Verify the result.
+                Assert.AreEqual(5, totalCount, "The total record count should be five.");
+                Assert.AreEqual(2, totalPages, "The total page count should be two.");
+                Assert.AreEqual(3, result.Count, "The first page should contain three records.");
+                Assert.AreEqual("DescUser5", result[0].UnionId, "The first record should be DescUser5 in descending order.");
+                Assert.AreEqual("DescUser4", result[1].UnionId, "The second record should be DescUser4.");
+                Assert.AreEqual("DescUser3", result[2].UnionId, "The third record should be DescUser3.");
         }
 
         /// <summary>
-        /// 测试分页查询 - 带列选择
+        /// Tests a paginated query with column selection.
         /// </summary>
         [TestMethod]
         public void PageSelect_WithColumnSelection_Should_Succeed()
         {
 
-                // 准备测试数据 - 插入3条记录
+                // Prepare three test records.
                 var entities = new List<User>();
                 for (int i = 1; i <= 3; i++)
                 {
@@ -285,7 +285,7 @@ namespace CoddLoom.Tests.DbTest
                 }
                 DbEngine.Insert(entities, 5);
 
-                // 测试分页查询 - 只选择特定列
+                // Query only selected columns.
                 var pageParam = new PageParam { PageNumber = 1, PageSize = 2 };
                 var where = new WhereConditions();
                 where.Add(UserTable.UnionId, "ColumnUser%", WhereOperator.Like);
@@ -296,14 +296,14 @@ namespace CoddLoom.Tests.DbTest
 
                 var result = DbEngine.PageSelect<User>(where, orderBy, columns, pageParam, out var totalPages, out var totalCount);
 
-                // 验证结果
-                Assert.AreEqual(3, totalCount, "总记录数应该是3");
-                Assert.AreEqual(2, totalPages, "总页数应该是2");
-                Assert.AreEqual(2, result.Count, "第1页应该返回2条记录");
-                Assert.AreEqual("ColumnUser1", result[0].UnionId, "第1条记录的UnionId应该是ColumnUser1");
-                Assert.AreEqual(1, result[0].IntData, "第1条记录的IntData应该是1");
-                Assert.AreEqual("ColumnUser2", result[1].UnionId, "第2条记录的UnionId应该是ColumnUser2");
-                Assert.AreEqual(2, result[1].IntData, "第2条记录的IntData应该是2");
+                // Verify the result.
+                Assert.AreEqual(3, totalCount, "The total record count should be three.");
+                Assert.AreEqual(2, totalPages, "The total page count should be two.");
+                Assert.AreEqual(2, result.Count, "The first page should contain two records.");
+                Assert.AreEqual("ColumnUser1", result[0].UnionId, "The first record's UnionId should be ColumnUser1.");
+                Assert.AreEqual(1, result[0].IntData, "The first record's IntData should be one.");
+                Assert.AreEqual("ColumnUser2", result[1].UnionId, "The second record's UnionId should be ColumnUser2.");
+                Assert.AreEqual(2, result[1].IntData, "The second record's IntData should be two.");
         }
     }
 }

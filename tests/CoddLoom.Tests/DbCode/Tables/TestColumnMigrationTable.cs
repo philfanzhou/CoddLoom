@@ -17,7 +17,7 @@ namespace CoddLoom.Tests.DbCode.Tables
         [DbColumn(Type = DbType.DateTime, AllowEmpty = true)]
         public const string CreatedDate = "createdDate";
 
-        // 这些列将在后续添加，用于测试列改动功能
+        // These columns are added later to test column migration.
         [DbColumn(Type = DbType.String, AllowEmpty = true)]
         public const string NewColumn1 = "newColumn1";
 

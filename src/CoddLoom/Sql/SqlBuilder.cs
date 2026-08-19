@@ -77,7 +77,7 @@ public partial class SqlBuilder
         var column = "*";
         if (where?.Parameters.FirstOrDefault() != null)
         {
-            // 只查询where条件的第一个column，提高性能
+            // Query only the first column in the WHERE clause for better performance.
             column = where.Parameters.First().Column;
         }
         else if (columns?.Select.FirstOrDefault() != null)

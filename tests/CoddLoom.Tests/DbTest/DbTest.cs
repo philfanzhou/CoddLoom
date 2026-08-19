@@ -9,16 +9,16 @@ using CoddLoom.Tests.DbCode.Tables;
 namespace CoddLoom.Tests.DbTest
 {
     /// <summary>
-    /// DbEngine集成测试类
-    /// 测试复杂的数据类型、关联查询和集成场景
+    /// DbEngine integration tests.
+    /// Covers complex data types, joins, and integration scenarios.
     /// </summary>
     [TestClass]
     public class DbTest : TestBase
     {
 
         /// <summary>
-        /// 集成测试：复杂数据类型和关联查询
-        /// 测试各种数据类型的插入、查询和关联操作
+        /// Integrates complex data types and joined queries.
+        /// Tests inserts, queries, and joins across multiple data types.
         /// </summary>
         [TestMethod]
         public void IntegrationTest_ComplexDataTypesAndJoins_Should_Succeed()
@@ -26,17 +26,17 @@ namespace CoddLoom.Tests.DbTest
                 using var con = DbEngine.Executor.GetConnection();
                 con.Open();
 
-                // 测试复杂数据类型
+                // Test complex data types.
                 TestComplexDataTypes(con);
 
-                // 测试关联查询
+                // Test joined queries.
                 TestJoinOperations(con);
 
                 con.Close();
         }
 
         /// <summary>
-        /// 测试复杂数据类型
+        /// Tests complex data types.
         /// </summary>
         private void TestComplexDataTypes(IDbConnection con)
         {
@@ -64,11 +64,11 @@ namespace CoddLoom.Tests.DbTest
                 DbEngine.Insert(user, con);
             }
 
-            // 验证数据插入
+            // Verify the inserted data.
             var allUser = DbEngine.Select<User>(null, null);
             Assert.IsTrue(allUser.Count == count);
 
-            // 验证复杂数据类型
+            // Verify complex data types.
             flag = false;
             for (var i = 0; i < count; i++)
             {
@@ -77,14 +77,14 @@ namespace CoddLoom.Tests.DbTest
                 Assert.AreEqual((i * 5).ToString(), user.UnionId);
                 AssertDateTime(now, user.RegistrationDate);
                 
-                // 验证字节数组
+                // Verify the byte array.
                 var data = Encoding.UTF8.GetBytes(i.ToString());
                 for (var j = 0; j < data.Length; j++)
                 {
                     Assert.AreEqual(data[j], user.Data[j]);
                 }
                 
-                // 验证数值类型
+                // Verify numeric types.
                 Assert.IsTrue(i * 0.0001 - user.DoubleData < 0.0001);
                 Assert.IsTrue((decimal)(i * 0.00001) - user.DecimalData < (decimal)0.00001);
                 Assert.AreEqual((short)i, user.ShortData);
@@ -96,18 +96,18 @@ namespace CoddLoom.Tests.DbTest
         }
 
         /// <summary>
-        /// 测试关联查询操作
-        /// 注意：由于PasswordUser和PasswordUserTable已被删除，此方法已简化
+        /// Tests joined-query operations.
+        /// This method is simplified because PasswordUser and PasswordUserTable were removed.
         /// </summary>
         private void TestJoinOperations(IDbConnection con)
         {
-            // 简化的关联查询测试，只使用UserTable
+            // Simplified joined-query test using only UserTable.
             var users = DbEngine.Select<User>(null, null, con);
-            Assert.IsTrue(users.Count == 10, "应该返回10条记录");
+            Assert.IsTrue(users.Count == 10, "Ten records should be returned.");
         }
 
         /// <summary>
-        /// 测试排序功能
+        /// Tests ordering.
         /// </summary>
         [TestMethod]
         public void Test_OrderByFunctionality_Should_Succeed()
@@ -115,22 +115,22 @@ namespace CoddLoom.Tests.DbTest
                 using var con = DbEngine.Executor.GetConnection();
                 con.Open();
 
-                // 插入测试数据
+                // Insert test data.
                 InsertTestData(con);
 
-                // 测试默认排序（升序）
+                // Test the default ascending order.
                 var firstUser = DbEngine.First<User>(null, null, con);
-                Assert.IsTrue(firstUser.Id.Trim() == "0", "默认排序应该返回ID为0的记录");
+                Assert.IsTrue(firstUser.Id.Trim() == "0", "Default ordering should return the record with ID 0.");
 
-                // 测试降序排序
+                // Test descending order.
                 firstUser = DbEngine.First<User>(null, new OrderByCondition(UserTable.Id, true), con);
-                Assert.IsTrue(firstUser.Id.Trim() == "99", "降序排序应该返回ID为99的记录");
+                Assert.IsTrue(firstUser.Id.Trim() == "99", "Descending order should return the record with ID 99.");
 
                 con.Close();
         }
 
         /// <summary>
-        /// 插入测试数据
+        /// Inserts test data.
         /// </summary>
         private void InsertTestData(IDbConnection con)
         {
@@ -154,7 +154,7 @@ namespace CoddLoom.Tests.DbTest
         }
 
         /// <summary>
-        /// 日期时间断言辅助方法
+        /// Helper for date-and-time assertions.
         /// </summary>
         private static void AssertDateTime(DateTime time1, DateTime time2)
         {
@@ -164,7 +164,7 @@ namespace CoddLoom.Tests.DbTest
             Assert.AreEqual(time1.Hour, time2.Hour);
             Assert.AreEqual(time1.Minute, time2.Minute);
             Assert.AreEqual(time1.Second, time2.Second);
-            // 不比较毫秒，因为数据库精度可能不同
+            // Do not compare milliseconds because database precision varies.
         }
     }
 }

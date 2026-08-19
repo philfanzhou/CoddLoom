@@ -9,14 +9,14 @@ namespace CoddLoom;
 partial class DbEngine
 {
     /// <summary>
-    /// 批量插入数据，如果任何一条数据插入失败，则抛出异常
+    /// Inserts data in batches and throws when any record cannot be inserted.
     /// </summary>
-    /// <param name="table">表名</param>
-    /// <param name="inputs">要插入的数据</param>
-    /// <param name="batchSize">批次大小</param>
-    /// <param name="transaction">事务</param>
-    /// <returns>成功插入的记录数</returns>
-    /// <exception cref="InvalidOperationException">当任何一条数据插入失败时抛出，包含具体的失败索引和错误信息</exception>
+    /// <param name="table">The table name.</param>
+    /// <param name="inputs">The records to insert.</param>
+    /// <param name="batchSize">The batch size.</param>
+    /// <param name="transaction">The transaction.</param>
+    /// <returns>The number of successfully inserted records.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when a record cannot be inserted; includes its index and error details.</exception>
     private int InsertWithTransaction(string table, IEnumerable<InputValues> inputs, int batchSize, IDbTransaction transaction)
     {
         if (table == null) throw new ArgumentNullException(nameof(table));
@@ -47,7 +47,7 @@ partial class DbEngine
     }
 
     /// <summary>
-    /// 插入单个批次，如果失败则使用二分查找确定具体失败的记录
+    /// Inserts one batch and uses binary search to identify a failed record.
     /// </summary>
     private int InsertChunk(IReadOnlyList<InputValues> chunk, string table, IDbTransaction transaction, int startIndex)
     {
@@ -57,59 +57,59 @@ partial class DbEngine
         }
         catch (Exception)
         {
-            // 如果批次失败，使用二分查找确定具体失败的记录
+            // Use binary search to identify the failed record when the batch fails.
             var failedIndex = BinarySearchFailedRecord(chunk, table, transaction, 0, chunk.Count - 1);
             throw BuildRowException(new Exception("Record insertion failed"), chunk[failedIndex], startIndex + failedIndex);
         }
     }
 
     /// <summary>
-    /// 使用二分查找定位失败的记录
+    /// Locates a failed record with binary search.
     /// </summary>
     private int BinarySearchFailedRecord(IReadOnlyList<InputValues> chunk, string table, IDbTransaction transaction, int left, int right)
     {
-        // 如果只有一个元素，直接返回
+        // Return immediately when only one element remains.
         if (left == right)
         {
             return left;
         }
 
-        // 如果只有两个元素，先尝试第一个
+        // When two elements remain, try the first one.
         if (right - left == 1)
         {
             try
             {
                 ExecuteChunk(new List<InputValues> { chunk[left] }, table, transaction);
-                return right; // 第一个成功，第二个失败
+                return right; // The first succeeded, so the second failed.
             }
             catch
             {
-                return left; // 第一个失败
+                return left; // The first record failed.
             }
         }
 
-        // 二分查找
+        // Binary search.
         var mid = (left + right) / 2;
         
         try
         {
-            // 尝试插入左半部分
+            // Try to insert the left half.
             var leftChunk = chunk.Skip(left).Take(mid - left + 1).ToList();
             ExecuteChunk(leftChunk, table, transaction);
             
-            // 左半部分成功，问题在右半部分
+            // The left half succeeded, so the problem is in the right half.
             return BinarySearchFailedRecord(chunk, table, transaction, mid + 1, right);
         }
         catch
         {
-            // 左半部分失败，问题在左半部分
+            // The left half failed, so the problem is there.
             return BinarySearchFailedRecord(chunk, table, transaction, left, mid);
         }
     }
 
 
     /// <summary>
-    /// 构建批次失败的异常
+    /// Builds an exception for a failed batch.
     /// </summary>
     private static InvalidOperationException BuildBatchException(Exception ex, IReadOnlyList<InputValues> batch, int startIndex, string batchLabel)
     {
@@ -119,7 +119,7 @@ partial class DbEngine
     }
 
     /// <summary>
-    /// 构建单条记录失败的异常
+    /// Builds an exception for a failed record.
     /// </summary>
     private static InvalidOperationException BuildRowException(Exception ex, InputValues row, int index)
     {
@@ -140,7 +140,7 @@ partial class DbEngine
     }
 
     /// <summary>
-    /// 执行批次插入
+    /// Executes a batch insert.
     /// </summary>
     private int ExecuteChunk(IReadOnlyList<InputValues> chunk, string table, IDbTransaction transaction)
     {
@@ -149,16 +149,16 @@ partial class DbEngine
             return 0;
         }
 
-        // 计算参数数量，用于判断是否使用参数化查询
-        // 如果所有记录都有相同的列数，使用乘法优化计算
-        // 否则需要遍历所有记录求和
+        // Count parameters to decide whether to use a parameterized query.
+        // When every record has the same number of columns, multiplication avoids an extra traversal;
+        // otherwise, sum the column counts for all records.
         var firstItemCount = chunk[0].Items.Count;
         var allSameCount = chunk.All(input => input.Items.Count == firstItemCount);
         var valuesCount = allSameCount
             ? chunk.Count * firstItemCount
             : chunk.Sum(input => input.Items.Count);
 
-        // SQL Server 默认参数限制为 2100 个，超过则使用字符串拼接
+        // SQL Server has a default limit of 2,100 parameters; use literal values above that limit.
         var forceUseParameter = valuesCount < 2100;
 
         var sql = Executor.SqlBuilder.Insert(table, chunk, out var dbParams, forceUseParameter);
@@ -166,7 +166,7 @@ partial class DbEngine
     }
 
     /// <summary>
-    /// 将集合分块
+    /// Splits a collection into chunks.
     /// </summary>
     private static IEnumerable<IReadOnlyList<T>> Chunk<T>(IEnumerable<T> source, int size)
     {

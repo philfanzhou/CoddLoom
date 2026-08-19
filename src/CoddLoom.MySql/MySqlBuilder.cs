@@ -17,19 +17,19 @@ public class MySqlBuilder : SqlBuilder
         switch (type)
         {
             case DbType.AnsiString:
-                return "VARCHAR(255) CHARACTER SET latin1";  // ANSI 字符串，使用单字节字符集
+                return "VARCHAR(255) CHARACTER SET latin1";  // ANSI string using a single-byte character set
             case DbType.String:
-                return "NVARCHAR(255)";  // Unicode 字符串，默认使用 utf8mb4 字符集
+                return "NVARCHAR(255)";  // Unicode string using the utf8mb4 character set by default
             case DbType.StringFixedLength:
-                return "CHAR(255) CHARACTER SET utf8mb4";   // 固定长度 Unicode 字符串
+                return "CHAR(255) CHARACTER SET utf8mb4";   // Fixed-length Unicode string
             case DbType.AnsiStringFixedLength:
-                return "CHAR(255) CHARACTER SET latin1";    // 固定长度 ANSI 字符串
+                return "CHAR(255) CHARACTER SET latin1";    // Fixed-length ANSI string
             case DbType.Binary:
-                return "BLOB";  // 二进制大对象
+                return "BLOB";  // Binary large object
             case DbType.Object:
-                return "BLOB";  // 对象可以序列化后存储为 BLOB
+                return "BLOB";  // Objects can be serialized and stored as BLOBs
             case DbType.Boolean:
-                return "TINYINT(1)";  // MySQL 中布尔值通常用 TINYINT(1) 表示
+                return "TINYINT(1)";  // MySQL commonly represents Boolean values as TINYINT(1)
             case DbType.Byte:
             case DbType.Int16:
             case DbType.Int32:
@@ -38,31 +38,31 @@ public class MySqlBuilder : SqlBuilder
             case DbType.UInt16:
             case DbType.UInt32:
             case DbType.UInt64:
-                return "BIGINT"; // MySQL 支持 BIGINT, INT, SMALLINT, TINYINT 等
+                return "BIGINT"; // MySQL supports BIGINT, INT, SMALLINT, TINYINT, and others
             case DbType.Currency:
-                return "DECIMAL(19,4)"; // 货币类型
+                return "DECIMAL(19,4)"; // Currency type
             case DbType.Decimal:
-                return "DECIMAL(19,4)"; // 可以根据精度和小数位数调整
+                return "DECIMAL(19,4)"; // Adjust precision and scale as needed
             case DbType.Double:
                 return "DOUBLE";
             case DbType.Single:
                 return "FLOAT";
             case DbType.VarNumeric:
-                return "DECIMAL(19,4)"; // VarNumeric 映射到 DECIMAL
+                return "DECIMAL(19,4)"; // Map VarNumeric to DECIMAL
             case DbType.Date:
                 return "DATE";
             case DbType.DateTime:
                 return "DATETIME";
             case DbType.DateTime2:
-                return "DATETIME(6)"; // 高精度时间
+                return "DATETIME(6)"; // High-precision date and time
             case DbType.DateTimeOffset:
-                return "DATETIME(6)"; // 或者使用 TIMESTAMP(6)
+                return "DATETIME(6)"; // TIMESTAMP(6) is an alternative
             case DbType.Time:
                 return "TIME";
             case DbType.Guid:
-                return "CHAR(36)"; // GUID 通常作为固定长度的字符串存储
+                return "CHAR(36)"; // GUIDs are commonly stored as fixed-length strings
             case DbType.Xml:
-                return "LONGTEXT"; // XML 数据可以作为文本存储
+                return "LONGTEXT"; // XML data can be stored as text
             default:
                 throw new NotSupportedException($"{type} not support for column.");
         }

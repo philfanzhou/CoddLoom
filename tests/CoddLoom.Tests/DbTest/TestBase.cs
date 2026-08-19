@@ -6,7 +6,7 @@ using CoddLoom.Tests.DbCode;
 namespace CoddLoom.Tests.DbTest
 {
     /// <summary>
-    /// 测试基类，提供统一的数据库执行器管理和清理
+    /// Base class that provides consistent database-executor management and cleanup.
     /// </summary>
     [TestClass]
     public abstract class TestBase
@@ -15,17 +15,17 @@ namespace CoddLoom.Tests.DbTest
         private TestDbEngine _dbEngine;
 
         /// <summary>
-        /// 数据库执行器
+        /// The database executor.
         /// </summary>
         protected DbExecutor Executor => _executor;
 
         /// <summary>
-        /// 数据库引擎
+        /// The database engine.
         /// </summary>
         protected TestDbEngine DbEngine => _dbEngine;
 
         /// <summary>
-        /// 测试初始化，在每个测试方法执行前调用
+        /// Initializes each test before its test method runs.
         /// </summary>
         [TestInitialize]
         public virtual void TestInitialize()
@@ -35,7 +35,7 @@ namespace CoddLoom.Tests.DbTest
         }
 
         /// <summary>
-        /// 测试清理，在每个测试方法执行后调用
+        /// Cleans up after each test method.
         /// </summary>
         [TestCleanup]
         public virtual void TestCleanup()
@@ -49,10 +49,10 @@ namespace CoddLoom.Tests.DbTest
         }
 
         /// <summary>
-        /// 执行测试操作，自动处理异常和清理
+        /// Executes a test action with automatic exception handling and cleanup.
         /// </summary>
-        /// <param name="testAction">测试操作</param>
-        /// <param name="cleanupAction">可选的额外清理操作</param>
+        /// <param name="testAction">The test action.</param>
+        /// <param name="cleanupAction">An optional additional cleanup action.</param>
         protected void ExecuteTest(Action<TestDbEngine> testAction, Action<TestDbEngine> cleanupAction = null)
         {
             try

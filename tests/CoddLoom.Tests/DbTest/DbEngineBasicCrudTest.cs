@@ -15,15 +15,15 @@ using CoddLoom.Tests.DbTest;
 namespace CoddLoom.Tests.DbTest
 {
     /// <summary>
-    /// DbEngine基础CRUD操作测试类
-    /// 测试DbEngine的基本增删改查功能（使用Entity操作）
+    /// Tests basic DbEngine CRUD operations.
+    /// Covers entity-based create, read, update, and delete operations.
     /// </summary>
     [TestClass]
     public class DbEngineBasicCrudTest : TestBase
     {
 
         /// <summary>
-        /// 创建测试用户实体
+        /// Creates a test user entity.
         /// </summary>
         private static User CreateTestUser(string id, string unionId, int intData, string specialString)
         {
@@ -43,121 +43,121 @@ namespace CoddLoom.Tests.DbTest
         }
 
         /// <summary>
-        /// 测试单条记录插入（使用Entity）
+        /// Tests inserting a single entity.
         /// </summary>
         [TestMethod]
         public void Insert_SingleRecord_Should_Succeed()
         {
-            // 准备测试实体
+            // Prepare the test entity.
             var entity = CreateTestUser("1", "TestUser", 123, "SingleTest");
 
-            // 执行插入
+            // Perform the insert.
             var affected = DbEngine.Insert(entity);
 
-            // 验证结果
-            Assert.AreEqual(1, affected, "应该插入1条记录");
+            // Verify the result.
+            Assert.AreEqual(1, affected, "One record should be inserted.");
 
-            // 验证数据是否正确插入
+            // Verify that the data was inserted correctly.
             var where = new WhereConditions();
             where.Add(UserTable.UnionId, "TestUser");
             var count = DbEngine.Count(UserTable.TableName, where);
-            Assert.AreEqual(1, count, "应该查询到1条记录");
+            Assert.AreEqual(1, count, "One record should be returned.");
         }
 
         /// <summary>
-        /// 测试批量记录插入（使用Entity）
+        /// Tests inserting multiple entities.
         /// </summary>
         [TestMethod]
         public void Insert_BatchRecords_Should_Succeed()
         {
-            // 准备批量测试实体
+            // Prepare the test entities.
             var entities = new List<User>();
             for (int i = 1; i <= 3; i++)
             {
                 entities.Add(CreateTestUser(i.ToString(), $"BatchUser{i}", i * 100, $"Batch{i}"));
             }
 
-            // 执行批量插入
+            // Perform the batch insert.
             var affected = DbEngine.Insert(entities, 2);
 
-            // 验证结果
-            Assert.AreEqual(3, affected, "应该插入3条记录");
+            // Verify the result.
+            Assert.AreEqual(3, affected, "Three records should be inserted.");
 
-            // 验证数据是否正确插入
+            // Verify that the data was inserted correctly.
             var where = new WhereConditions();
             where.Add(UserTable.UnionId, "BatchUser%", WhereOperator.Like);
             var count = DbEngine.Count(UserTable.TableName, where);
-            Assert.AreEqual(3, count, "应该查询到3条记录");
+            Assert.AreEqual(3, count, "Three records should be returned.");
         }
 
         /// <summary>
-        /// 测试记录更新（使用Entity）
+        /// Tests updating an entity.
         /// </summary>
         [TestMethod]
         public void Update_Record_Should_Succeed()
         {
-            // 先插入测试数据
+            // Insert the test data first.
             var originalEntity = CreateTestUser("1", "OriginalUser", 100, "Original");
             DbEngine.Insert(originalEntity);
 
-            // 准备更新实体
+            // Prepare the updated entity.
             var updatedEntity = CreateTestUser("1", "UpdatedUser", 200, "Updated");
             updatedEntity.RegistrationDate = DateTime.Now.AddDays(1);
 
-            // 执行更新
+            // Perform the update.
             var affected = DbEngine.Update(updatedEntity);
 
-            // 验证结果
-            Assert.AreEqual(1, affected, "应该更新1条记录");
+            // Verify the result.
+            Assert.AreEqual(1, affected, "One record should be updated.");
 
-            // 验证数据是否正确更新
+            // Verify that the data was updated correctly.
             var retrievedEntity = DbEngine.SelectById<User>("1");
-            Assert.IsNotNull(retrievedEntity, "应该查询到更新后的实体");
-            Assert.AreEqual("UpdatedUser", retrievedEntity.UnionId, "UnionId应该已更新");
-            Assert.AreEqual(200, retrievedEntity.IntData, "IntData应该已更新");
-            Assert.AreEqual("Updated", retrievedEntity.SpecialString, "SpecialString应该已更新");
+            Assert.IsNotNull(retrievedEntity, "The updated entity should be returned.");
+            Assert.AreEqual("UpdatedUser", retrievedEntity.UnionId, "UnionId should be updated.");
+            Assert.AreEqual(200, retrievedEntity.IntData, "IntData should be updated.");
+            Assert.AreEqual("Updated", retrievedEntity.SpecialString, "SpecialString should be updated.");
         }
 
         /// <summary>
-        /// 测试记录删除（使用Entity）
+        /// Tests deleting an entity.
         /// </summary>
         [TestMethod]
         public void Delete_Record_Should_Succeed()
         {
-            // 先插入测试数据
+            // Insert the test data first.
             var entity = CreateTestUser("1", "ToBeDeleted", 300, "DeleteTest");
             DbEngine.Insert(entity);
 
-            // 验证数据已插入
+            // Verify that the data was inserted.
             var beforeWhere = new WhereConditions();
             beforeWhere.Add(UserTable.UnionId, "ToBeDeleted");
             var beforeCount = DbEngine.Count(UserTable.TableName, beforeWhere);
-            Assert.AreEqual(1, beforeCount, "删除前应该有1条记录");
+            Assert.AreEqual(1, beforeCount, "One record should exist before deletion.");
 
-            // 执行删除
+            // Perform the deletion.
             var affected = DbEngine.Delete<User>("1");
 
-            // 验证结果
-            Assert.AreEqual(1, affected, "应该删除1条记录");
+            // Verify the result.
+            Assert.AreEqual(1, affected, "One record should be deleted.");
 
-            // 验证数据已删除
+            // Verify that the data was deleted.
             var afterCount = DbEngine.Count(UserTable.TableName, beforeWhere);
-            Assert.AreEqual(0, afterCount, "删除后应该没有记录");
+            Assert.AreEqual(0, afterCount, "No records should remain after deletion.");
        }
 
         /// <summary>
-        /// 测试记录查询（使用Entity）
+        /// Tests querying entities.
         /// </summary>
         [TestMethod]
         public void Select_Records_Should_Succeed()
         {
-            // 先插入测试数据
+            // Insert the test data first.
             var entity1 = CreateTestUser("1", "SelectUser1", 100, "Select1");
             var entity2 = CreateTestUser("2", "SelectUser2", 200, "Select2");
             DbEngine.Insert(entity1);
             DbEngine.Insert(entity2);
 
-            // 执行查询
+            // Perform the query.
             var where = new WhereConditions();
             where.Add(UserTable.UnionId, "SelectUser%", WhereOperator.Like);
             var orderBy = new OrderByCondition(UserTable.UnionId, false); // ASC
@@ -167,9 +167,9 @@ namespace CoddLoom.Tests.DbTest
 
             var results = DbEngine.Select<User>(where, orderBy, columns);
 
-            // 验证结果
-            Assert.IsNotNull(results, "查询结果不应为null");
-            Assert.AreEqual(2, results.Count, "应该查询到2条记录");
+            // Verify the result.
+            Assert.IsNotNull(results, "The query result should not be null.");
+            Assert.AreEqual(2, results.Count, "Two records should be returned.");
             Assert.AreEqual("SelectUser1", results[0].UnionId);
             Assert.AreEqual(100, results[0].IntData);
             Assert.AreEqual("SelectUser2", results[1].UnionId);
@@ -177,31 +177,31 @@ namespace CoddLoom.Tests.DbTest
         }
 
         /// <summary>
-        /// 测试通过ID查询（使用Entity）
+        /// Tests querying an entity by ID.
         /// </summary>
         [TestMethod]
         public void SelectById_Record_Should_Succeed()
         {
-            // 先插入测试数据
+            // Insert the test data first.
             var entity = CreateTestUser("1", "SelectByIdUser", 400, "SelectById");
             DbEngine.Insert(entity);
 
-            // 执行通过ID查询
+            // Query by ID.
             var result = DbEngine.SelectById<User>("1");
 
-            // 验证结果
-            Assert.IsNotNull(result, "应该查询到实体");
-            Assert.AreEqual("SelectByIdUser", result.UnionId, "UnionId应该匹配");
-            Assert.AreEqual(400, result.IntData, "IntData应该匹配");
+            // Verify the result.
+            Assert.IsNotNull(result, "The entity should be returned.");
+            Assert.AreEqual("SelectByIdUser", result.UnionId, "UnionId should match.");
+            Assert.AreEqual(400, result.IntData, "IntData should match.");
        }
 
         /// <summary>
-        /// 测试记录计数（使用Entity）
+        /// Tests counting entities.
         /// </summary>
         [TestMethod]
         public void Count_Records_Should_Succeed()
         {
-            // 先插入测试数据
+            // Insert the test data first.
             var entity1 = CreateTestUser("1", "CountUser1", 100, "Count1");
             var entity2 = CreateTestUser("2", "CountUser2", 200, "Count2");
             var entity3 = CreateTestUser("3", "OtherUser", 300, "Other");
@@ -209,80 +209,80 @@ namespace CoddLoom.Tests.DbTest
             DbEngine.Insert(entity2);
             DbEngine.Insert(entity3);
 
-            // 测试总计数
+            // Test the total count.
             var totalCount = DbEngine.Count(UserTable.TableName, new WhereConditions());
-            Assert.AreEqual(3, totalCount, "总记录数应该是3");
+            Assert.AreEqual(3, totalCount, "The total record count should be three.");
 
-            // 测试条件计数
+            // Test a filtered count.
             var where = new WhereConditions();
             where.Add(UserTable.UnionId, "CountUser%", WhereOperator.Like);
             var filteredCount = DbEngine.Count(UserTable.TableName, where);
-            Assert.AreEqual(2, filteredCount, "符合条件的记录数应该是2");
+            Assert.AreEqual(2, filteredCount, "Two records should match the condition.");
        }
 
         /// <summary>
-        /// 测试记录存在性检查（使用Entity）
+        /// Tests checking whether an entity exists.
         /// </summary>
         [TestMethod]
         public void Exist_Record_Should_Succeed()
         {
-            // 先插入测试数据
+            // Insert the test data first.
             var entity = CreateTestUser("1", "ExistUser", 500, "ExistTest");
             DbEngine.Insert(entity);
 
-            // 测试存在性检查
+            // Test the existence check.
             var existsWhere = new WhereConditions();
             existsWhere.Add(UserTable.UnionId, "ExistUser");
             var exists = DbEngine.Exist(UserTable.TableName, existsWhere);
 
-            // 验证结果
-            Assert.IsTrue(exists, "记录应该存在");
+            // Verify the result.
+            Assert.IsTrue(exists, "The record should exist.");
 
-            // 测试不存在的记录
+            // Test a nonexistent record.
             var notExistsWhere = new WhereConditions();
             notExistsWhere.Add(UserTable.UnionId, "NonExistentUser");
             var notExists = DbEngine.Exist(UserTable.TableName, notExistsWhere);
-            Assert.IsFalse(notExists, "记录不应该存在");
+            Assert.IsFalse(notExists, "The record should not exist.");
         }
 
         /// <summary>
-        /// 测试表删除（使用Entity）
+        /// Tests dropping an entity table.
         /// </summary>
         [TestMethod]
         public void Drop_Table_Should_Succeed()
         {
-            // 先插入测试数据
+            // Insert the test data first.
             var entity = CreateTestUser("1", "DropUser", 600, "DropTest");
             DbEngine.Insert(entity);
 
-            // 验证表存在
+            // Verify that the table exists.
             var beforeCount = DbEngine.Count(UserTable.TableName, new WhereConditions());
-            Assert.AreEqual(1, beforeCount, "删除表前应该有1条记录");
+            Assert.AreEqual(1, beforeCount, "One record should exist before dropping the table.");
 
-            // 执行删除表
+            // Drop the table.
             DbEngine.Drop(UserTable.TableName);
 
-            // 验证表已删除（尝试查询应该抛出异常）
+            // Verify that the table was dropped by expecting the query to throw.
             try
             {
                 DbEngine.Count(UserTable.TableName, new WhereConditions());
-                Assert.Fail("删除表后查询应该抛出异常");
+                Assert.Fail("Querying a dropped table should throw.");
             }
             catch (Exception ex)
             {
-                // 预期会抛出异常，因为表已被删除
+                // An exception is expected because the table was dropped.
                 Assert.IsTrue(ex.Message.Contains("no such table") || ex.Message.Contains("table"), 
-                    $"应该抛出表不存在的异常，但实际异常是: {ex.Message}");
+                    $"A missing-table exception was expected, but the actual exception was: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// 测试复杂查询条件（使用Entity）
+        /// Tests a complex entity query condition.
         /// </summary>
         [TestMethod]
         public void Select_WithComplexConditions_Should_Succeed()
         {
-            // 先插入测试数据
+            // Insert the test data first.
             var entity1 = CreateTestUser("1", "ComplexUser1", 100, "Complex1");
             var entity2 = CreateTestUser("2", "ComplexUser2", 200, "Complex2");
             var entity3 = CreateTestUser("3", "OtherUser", 300, "Other");
@@ -290,7 +290,7 @@ namespace CoddLoom.Tests.DbTest
             DbEngine.Insert(entity2);
             DbEngine.Insert(entity3);
 
-            // 测试复杂查询条件
+            // Test the complex query condition.
             var where = new WhereConditions();
             where.Add(UserTable.UnionId, "ComplexUser%", WhereOperator.Like);
             where.Add(UserTable.IntData, 150, WhereOperator.GreaterThan);
@@ -298,9 +298,9 @@ namespace CoddLoom.Tests.DbTest
 
             var results = DbEngine.Select<User>(where, orderBy);
 
-            // 验证结果
-            Assert.IsNotNull(results, "查询结果不应为null");
-            Assert.AreEqual(1, results.Count, "应该查询到1条记录");
+            // Verify the result.
+            Assert.IsNotNull(results, "The query result should not be null.");
+            Assert.AreEqual(1, results.Count, "One record should be returned.");
             Assert.AreEqual("ComplexUser2", results[0].UnionId);
             Assert.AreEqual(200, results[0].IntData);
         }

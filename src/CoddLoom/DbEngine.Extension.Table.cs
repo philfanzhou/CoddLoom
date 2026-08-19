@@ -22,13 +22,13 @@ partial class DbEngine
             {
                 if (!ExistTable(table, con))
                 {
-                    // 表不存在，创建表
+                    // Create the table when it does not exist.
                     var sql = Executor.SqlBuilder.GetCreateTableSql(table);
                     Executor.NonQuery(sql, null, con);
                 }
                 else
                 {
-                    // 表存在，检查并添加缺失的列
+                    // Add any missing columns when the table already exists.
                     CheckAndAddMissingColumns(table, con);
                 }
             }

@@ -45,7 +45,7 @@ public class SqlServerBuilder : SqlBuilder
         switch (type)
         {
             case DbType.Object:
-                return "VARBINARY(MAX)"; // 或 BINARY, IMAGE
+                return "VARBINARY(MAX)"; // BINARY and IMAGE are alternatives
             case DbType.Boolean:
                 return "BIT";
             case DbType.Byte:
@@ -56,9 +56,9 @@ public class SqlServerBuilder : SqlBuilder
             case DbType.UInt16:
             case DbType.UInt32:
             case DbType.UInt64:
-                return "BIGINT"; // SQL Server 支持 BIGINT, INT, SMALLINT, TINYINT 等
+                return "BIGINT"; // SQL Server supports BIGINT, INT, SMALLINT, TINYINT, and others
             case DbType.Currency:
-                return "MONEY"; // 或者使用 DECIMAL/PRECISION
+                return "MONEY"; // DECIMAL or PRECISION are alternatives
             case DbType.Double:
                 return "FLOAT";
             case DbType.Single:
