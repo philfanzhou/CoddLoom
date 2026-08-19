@@ -40,6 +40,10 @@ internal class EntityMap
                     // TableDefine declares the primary key and this entity property maps to that column.
                     PrimaryKey = attribute.Name;
                 }
+                else if (primaryKeyFromTable == null && attribute.PrimaryKey)
+                {
+                    PrimaryKey = attribute.Name;
+                }
             }
         }
 

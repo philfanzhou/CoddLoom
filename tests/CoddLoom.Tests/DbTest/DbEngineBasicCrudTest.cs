@@ -169,7 +169,7 @@ namespace CoddLoom.Tests.DbTest
 
             // Verify the result.
             Assert.IsNotNull(results, "The query result should not be null.");
-            Assert.AreEqual(2, results.Count, "Two records should be returned.");
+            Assert.HasCount(2, results, "Two records should be returned.");
             Assert.AreEqual("SelectUser1", results[0].UnionId);
             Assert.AreEqual(100, results[0].IntData);
             Assert.AreEqual("SelectUser2", results[1].UnionId);
@@ -262,18 +262,10 @@ namespace CoddLoom.Tests.DbTest
             // Drop the table.
             DbEngine.Drop(UserTable.TableName);
 
-            // Verify that the table was dropped by expecting the query to throw.
-            try
-            {
-                DbEngine.Count(UserTable.TableName, new WhereConditions());
-                Assert.Fail("Querying a dropped table should throw.");
-            }
-            catch (Exception ex)
-            {
-                // An exception is expected because the table was dropped.
-                Assert.IsTrue(ex.Message.Contains("no such table") || ex.Message.Contains("table"), 
-                    $"A missing-table exception was expected, but the actual exception was: {ex.Message}");
-            }
+            // Provider exception messages and casing differ; the portable contract
+            // is that querying the dropped table fails.
+            Assert.Throws<Exception>(() =>
+                DbEngine.Count(UserTable.TableName, new WhereConditions()));
         }
 
         /// <summary>
@@ -300,7 +292,7 @@ namespace CoddLoom.Tests.DbTest
 
             // Verify the result.
             Assert.IsNotNull(results, "The query result should not be null.");
-            Assert.AreEqual(1, results.Count, "One record should be returned.");
+            Assert.HasCount(1, results, "One record should be returned.");
             Assert.AreEqual("ComplexUser2", results[0].UnionId);
             Assert.AreEqual(200, results[0].IntData);
         }

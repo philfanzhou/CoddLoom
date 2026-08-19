@@ -4,6 +4,7 @@ using CoddLoom.Table;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using CoddLoom.Table.Base;
 
 namespace CoddLoom.MariaDb;
 
@@ -12,6 +13,32 @@ public class MariaDbBuilder : SqlBuilder
     protected override string GetCreateTableSql(TableDefine table)
     {
         return $"CREATE TABLE IF NOT EXISTS {table.Name}({GetCreateColumnsSql(table.Columns, table.PrimaryKey)})";
+    }
+
+    protected override string GetPrimaryKeySql(DbPrimaryKeyBaseAttribute primaryKey)
+    {
+        return $"{primaryKey.Name} {GetColumnTypeSql(primaryKey)} PRIMARY KEY NOT NULL";
+    }
+
+    protected override string GetStringColumnType(IStringColumn column)
+    {
+        var type = column.FixedLength ? "CHAR" : "VARCHAR";
+        var characterSet = column.AllowUnicode ? "utf8mb4" : "latin1";
+        return $"{type}({column.Length}) CHARACTER SET {characterSet}";
+    }
+
+    protected override string GetBinaryColumnType(DbColumnBinaryAttribute binaryColumn) => "BLOB";
+
+    protected override string GetIdentityColumnType(DbPrimaryKeyIdentityAttribute column) => "BIGINT AUTO_INCREMENT";
+
+    protected override string GetDecimalColumnType(DbColumnDecimalAttribute decimalColumn)
+        => $"DECIMAL({decimalColumn.Length},{decimalColumn.PointLength})";
+
+    protected override string GetCastColumn(string column, DbType dbType)
+    {
+        return dbType == DbType.DateTime
+            ? $"CAST({column} AS DATETIME)"
+            : base.GetCastColumn(column, dbType);
     }
 
     protected override string GetColumnType(DbType type)
@@ -39,8 +66,9 @@ public class MariaDbBuilder : SqlBuilder
             case DbType.SByte:
             case DbType.UInt16:
             case DbType.UInt32:
-            case DbType.UInt64:
                 return "BIGINT"; // MySQL supports BIGINT, INT, SMALLINT, TINYINT, and others
+            case DbType.UInt64:
+                return "BIGINT UNSIGNED";
             case DbType.Currency:
                 return "DECIMAL(19,4)"; // Currency type
             case DbType.Decimal:

@@ -54,6 +54,23 @@ dotnet build CoddLoom.sln --configuration Release
 dotnet test CoddLoom.sln --configuration Release --no-build
 ```
 
+The default test run uses an isolated SQLite database and includes the complete
+unit and integration suite. CI also runs the database integration category
+against PostgreSQL 16, MySQL 8.4, MariaDB 11.4, and SQL Server 2022. Provider SQL
+contract tests run for all six database providers, including Oracle, on every build.
+
+To run the integration category against a local server, set the provider and its
+connection string before invoking the filtered suite. Oracle is intentionally an
+opt-in real-server test because its image and licensing requirements do not fit
+the public CI runner; its SQL dialect remains covered by the provider contract
+suite.
+
+```bash
+TEST_DATABASE_TYPE=Oracle \
+TEST_DB_CONNECTION_ORACLE="Data Source=localhost:1521/FREEPDB1;User Id=test;Password=password;" \
+dotnet test tests/CoddLoom.Tests/CoddLoom.Tests.csproj --filter "TestCategory=Database"
+```
+
 ## Releasing
 
 Repository maintainers configure a NuGet.org Trusted Publishing policy for

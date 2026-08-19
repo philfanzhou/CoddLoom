@@ -66,7 +66,7 @@ namespace CoddLoom.Tests.DbTest
 
             // Verify the inserted data.
             var allUser = DbEngine.Select<User>(null, null);
-            Assert.IsTrue(allUser.Count == count);
+            Assert.HasCount(count, allUser);
 
             // Verify complex data types.
             flag = false;
@@ -85,8 +85,8 @@ namespace CoddLoom.Tests.DbTest
                 }
                 
                 // Verify numeric types.
-                Assert.IsTrue(i * 0.0001 - user.DoubleData < 0.0001);
-                Assert.IsTrue((decimal)(i * 0.00001) - user.DecimalData < (decimal)0.00001);
+                Assert.IsLessThan(0.0001, i * 0.0001 - user.DoubleData);
+                Assert.IsLessThan((decimal)0.00001, (decimal)(i * 0.00001) - user.DecimalData);
                 Assert.AreEqual((short)i, user.ShortData);
                 Assert.AreEqual(i, user.IntData);
                 Assert.AreEqual(flag, user.BoolData);
@@ -103,7 +103,7 @@ namespace CoddLoom.Tests.DbTest
         {
             // Simplified joined-query test using only UserTable.
             var users = DbEngine.Select<User>(null, null, con);
-            Assert.IsTrue(users.Count == 10, "Ten records should be returned.");
+            Assert.HasCount(10, users, "Ten records should be returned.");
         }
 
         /// <summary>
@@ -120,11 +120,11 @@ namespace CoddLoom.Tests.DbTest
 
                 // Test the default ascending order.
                 var firstUser = DbEngine.First<User>(null, null, con);
-                Assert.IsTrue(firstUser.Id.Trim() == "0", "Default ordering should return the record with ID 0.");
+                Assert.AreEqual("0", firstUser.Id.Trim(), "Default ordering should return the record with ID 0.");
 
                 // Test descending order.
                 firstUser = DbEngine.First<User>(null, new OrderByCondition(UserTable.Id, true), con);
-                Assert.IsTrue(firstUser.Id.Trim() == "99", "Descending order should return the record with ID 99.");
+                Assert.AreEqual("99", firstUser.Id.Trim(), "Descending order should return the record with ID 99.");
 
                 con.Close();
         }
@@ -158,13 +158,10 @@ namespace CoddLoom.Tests.DbTest
         /// </summary>
         private static void AssertDateTime(DateTime time1, DateTime time2)
         {
-            Assert.AreEqual(time1.Year, time2.Year);
-            Assert.AreEqual(time1.Month, time2.Month);
-            Assert.AreEqual(time1.Day, time2.Day);
-            Assert.AreEqual(time1.Hour, time2.Hour);
-            Assert.AreEqual(time1.Minute, time2.Minute);
-            Assert.AreEqual(time1.Second, time2.Second);
-            // Do not compare milliseconds because database precision varies.
+            // Providers differ in fractional-second precision and some round to the
+            // nearest second. Compare elapsed time so rollover at a minute/day boundary
+            // does not make an equivalent stored value fail component-wise.
+            Assert.IsLessThanOrEqualTo(TimeSpan.FromSeconds(1), (time1 - time2).Duration());
         }
     }
 }

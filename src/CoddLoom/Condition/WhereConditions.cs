@@ -108,6 +108,11 @@ public class WhereConditions
     public WhereConditions Add(WhereConditions where,
         WhereConnector connector = WhereConnector.And)
     {
+        if (where == null || where.IsEmpty())
+        {
+            return this;
+        }
+
         RefreshParamName(where, _parameterNameGenerator);
         _partialConditions.Add(new PartialWhereConditions
         {
@@ -154,12 +159,12 @@ public class WhereConditions
 
     private static void RefreshParamName(WhereConditions where, ParameterNameGenerator nameGenerator)
     {
-        foreach (var item in where._conditionsItemList)
+        // Rename the values rather than only normal-condition items. IN conditions
+        // keep their own ValueParam list and previously retained colliding names
+        // when nested under a condition using the same column.
+        foreach (var parameter in where._valueParamList)
         {
-            if (item is WhereConditionsNormalItem condition)
-            {
-                condition.Parameter.ParamName = nameGenerator.Get(condition.Column);
-            }
+            parameter.ParamName = nameGenerator.Get(parameter.Column);
         }
 
         foreach(var item in where._partialConditions)
