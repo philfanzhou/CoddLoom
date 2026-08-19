@@ -25,6 +25,20 @@ jobs:
     name: Build, test, and pack
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: coddloom
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d coddloom"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       PACKAGE_VERSION: 0.0.0-ci.${{ github.run_number }}.${{ github.run_attempt }}
     steps:
@@ -47,13 +61,25 @@ jobs:
           -p:Version=$PACKAGE_VERSION
           -p:RepositoryCommit=${{ github.sha }}
 
-      - name: Test
+      - name: Test with SQLite
         run: >-
           dotnet test CoddLoom.sln
           --configuration Release
           --no-build
           --no-restore
-          --logger "trx"
+          --logger "trx;LogFileName=sqlite.trx"
+          --results-directory artifacts/test-results
+
+      - name: Test with PostgreSQL
+        env:
+          TEST_DATABASE_TYPE: PostgreSql
+          TEST_DB_CONNECTION_POSTGRESQL: Host=localhost;Port=5432;Database=coddloom;Username=postgres;Password=postgres
+        run: >-
+          dotnet test CoddLoom.sln
+          --configuration Release
+          --no-build
+          --no-restore
+          --logger "trx;LogFileName=postgresql.trx"
           --results-directory artifacts/test-results
 
       - name: Pack all public projects
@@ -74,6 +100,7 @@ jobs:
         run: |
           dotnet new classlib --framework net8.0 --output artifacts/package-consumer --no-restore
           dotnet add artifacts/package-consumer package CoddLoom.Sqlite --version "$PACKAGE_VERSION" --no-restore
+          dotnet add artifacts/package-consumer package CoddLoom.PostgreSql --version "$PACKAGE_VERSION" --no-restore
           dotnet restore artifacts/package-consumer \
             --source artifacts/packages \
             --source https://api.nuget.org/v3/index.json

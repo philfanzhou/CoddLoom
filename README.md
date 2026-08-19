@@ -14,6 +14,7 @@ It keeps SQL visible and the data-access model small: there is no LINQ provider,
 | `CoddLoom.MySql` | MySQL |
 | `CoddLoom.MariaDb` | MariaDB |
 | `CoddLoom.Oracle` | Oracle Database |
+| `CoddLoom.PostgreSql` | PostgreSQL |
 
 Stable versions are published to [NuGet.org](https://www.nuget.org/) from `vX.Y.Z`
 tags. Every successful push to `main` also publishes a uniquely versioned
@@ -41,6 +42,9 @@ var users = engine.Select<User>(
     new OrderByCondition(UserTable.Id));
 ```
 
+For PostgreSQL, install `CoddLoom.PostgreSql` and construct the engine with a
+`PostgreSqlExecutor` using an Npgsql-compatible connection string.
+
 Tables and entities are defined independently: table constants describe schema and reusable SQL identifiers, while mapping attributes connect entity members to those columns.
 
 ## Build and test
@@ -52,10 +56,10 @@ dotnet test CoddLoom.sln --configuration Release --no-build
 
 ## Releasing
 
-Repository maintainers configure a `NUGET_API_KEY` Actions secret once, then push a
-semantic-version tag. The release workflow verifies the repository, publishes all
-six packages and their symbol packages, and creates a GitHub Release containing the
-same artifacts.
+Repository maintainers configure a NuGet.org Trusted Publishing policy for
+`.github/workflows/release.yml`, then push a semantic-version tag. The release
+workflow verifies the repository, publishes all seven packages and their symbol
+packages, and creates a GitHub Release containing the same artifacts.
 
 ```bash
 git tag v1.2.3

@@ -2,6 +2,7 @@ using CoddLoom;
 using CoddLoom.MariaDb;
 using CoddLoom.MySql;
 using CoddLoom.Oracle;
+using CoddLoom.PostgreSql;
 using CoddLoom.Sqlite;
 using CoddLoom.SqlServer;
 using System;
@@ -25,7 +26,8 @@ namespace CoddLoom.Tests.DbTest
             MySql,
             SqlServer,
             MariaDB,
-            Oracle
+            Oracle,
+            PostgreSql
         }
 
         /// <summary>
@@ -42,13 +44,14 @@ namespace CoddLoom.Tests.DbTest
             { DatabaseType.MySql, "Server=localhost;Database=test_db;Uid=root;Pwd=password;" },
             { DatabaseType.SqlServer, "Server=localhost;Database=test_db;Trusted_Connection=true;" },
             { DatabaseType.MariaDB, "Server=localhost;Database=test_db;Uid=root;Pwd=password;" },
-            { DatabaseType.Oracle, "Data Source=localhost:1521/XE;User Id=test;Password=password;" }
+            { DatabaseType.Oracle, "Data Source=localhost:1521/XE;User Id=test;Password=password;" },
+            { DatabaseType.PostgreSql, "Host=localhost;Port=5432;Database=coddloom;Username=postgres;Password=postgres;" }
         };
 
         /// <summary>
         /// The active database type, configurable through an environment variable or configuration file.
         /// </summary>
-        public static DatabaseType CurrentDatabaseType { get; set; } = DatabaseType.SQLite;
+        public static DatabaseType CurrentDatabaseType { get; set; } = GetConfiguredDatabaseType();
 
         /// <summary>
         /// Creates a database executor.
@@ -88,6 +91,8 @@ namespace CoddLoom.Tests.DbTest
                     return new MariaDbExecutor(connectionString);
                 case DatabaseType.Oracle:
                     return new OracleExecutor(connectionString);
+                case DatabaseType.PostgreSql:
+                    return new PostgreSqlExecutor(connectionString);
                 default:
                     throw new ArgumentException($"Unsupported database type: {dbType}");
             }
@@ -115,6 +120,23 @@ namespace CoddLoom.Tests.DbTest
             }
 
             throw new ArgumentException($"No connection string is configured for database type {dbType}.");
+        }
+
+        private static DatabaseType GetConfiguredDatabaseType()
+        {
+            var configuredType = Environment.GetEnvironmentVariable("TEST_DATABASE_TYPE");
+            if (string.IsNullOrWhiteSpace(configuredType))
+            {
+                return DatabaseType.SQLite;
+            }
+
+            if (Enum.TryParse(configuredType, true, out DatabaseType databaseType))
+            {
+                return databaseType;
+            }
+
+            throw new InvalidOperationException(
+                $"Unsupported TEST_DATABASE_TYPE value '{configuredType}'.");
         }
 
         /// <summary>

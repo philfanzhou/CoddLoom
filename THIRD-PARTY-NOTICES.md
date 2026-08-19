@@ -9,6 +9,7 @@ CoddLoom is licensed under the MIT License. Its database-provider packages refer
 | `MySql.Data` 9.5.0 | `CoddLoom.MySql` | GPL-2.0-only WITH Universal-FOSS-exception-1.0 |
 | `MySqlConnector` 2.4.0 | `CoddLoom.MariaDb` | MIT |
 | `Oracle.ManagedDataAccess.Core` 23.26.0 | `CoddLoom.Oracle` | Oracle Free Distribution, Hosting, and Use Terms and Conditions |
+| `Npgsql` 8.0.9 | `CoddLoom.PostgreSql` | PostgreSQL License |
 
 License references:
 
@@ -17,5 +18,6 @@ License references:
 - [MySQL Connector/NET 9.5 licensing information](https://downloads.mysql.com/docs/licenses/connector-net-9.5-gpl-en.pdf)
 - [MySqlConnector license](https://github.com/mysql-net/MySqlConnector/blob/master/LICENSE)
 - [Oracle Free Distribution, Hosting, and Use Terms and Conditions](https://www.oracle.com/downloads/licenses/oracle-free-license.html)
+- [Npgsql license](https://github.com/npgsql/npgsql/blob/main/LICENSE)
 
 The dependency versions above describe the initial CoddLoom migration. Consumers should also review the license metadata of the exact dependency versions resolved by their build.

@@ -1,6 +1,7 @@
 using CoddLoom.MariaDb;
 using CoddLoom.MySql;
 using CoddLoom.Oracle;
+using CoddLoom.PostgreSql;
 using CoddLoom.Condition;
 using CoddLoom.Params;
 using CoddLoom.Sql;
@@ -29,6 +30,7 @@ public class SchemaQueryBuilderTest
         AssertSchemaQueries(new ExposedMariaDbBuilder(), table, "DATABASE()", table.Name);
         AssertSchemaQueries(new ExposedSqlServerBuilder(), table, "SCHEMA_NAME()", table.Name);
         AssertSchemaQueries(new ExposedOracleBuilder(), table, "USER_TABLES", table.Name.ToUpperInvariant());
+        AssertSchemaQueries(new ExposedPostgreSqlBuilder(), table, "current_schema()", table.Name.ToLowerInvariant());
     }
 
     [TestMethod]
@@ -116,6 +118,15 @@ public class SchemaQueryBuilderTest
     }
 
     private sealed class ExposedOracleBuilder : OracleBuilder, ISchemaQueryBuilder
+    {
+        string ISchemaQueryBuilder.GetTableExistsSql(TableDefine table, out List<ValueParam> dbParams)
+            => base.GetTableExistsSql(table, out dbParams);
+
+        string ISchemaQueryBuilder.GetTableColumnsSql(TableDefine table, out List<ValueParam> dbParams)
+            => base.GetTableColumnsSql(table, out dbParams);
+    }
+
+    private sealed class ExposedPostgreSqlBuilder : PostgreSqlBuilder, ISchemaQueryBuilder
     {
         string ISchemaQueryBuilder.GetTableExistsSql(TableDefine table, out List<ValueParam> dbParams)
             => base.GetTableExistsSql(table, out dbParams);
