@@ -1,7 +1,5 @@
 using Microsoft.Data.SqlClient;
-using CoddLoom.Condition;
 using CoddLoom.Sql;
-using CoddLoom.Table;
 using System;
 using System.Data;
 
@@ -19,6 +17,8 @@ public class SqlServerExecutor : DbExecutor
     }
 
     public override SqlBuilder SqlBuilder { get; } = new SqlServerBuilder();
+
+    public override int MaxParametersPerCommand => 2100;
 
     public override IDbConnection GetConnection()
     {
@@ -57,11 +57,4 @@ public class SqlServerExecutor : DbExecutor
         return adapter;
     }
 
-    protected override void GetExistTableParam(TableDefine table, out string checkTable, out WhereConditions where)
-    {
-        where = new WhereConditions();
-        where.Add("xtype", "U");
-        where.Add("name", table.Name);
-        checkTable = "sysobjects";
-    }
 }

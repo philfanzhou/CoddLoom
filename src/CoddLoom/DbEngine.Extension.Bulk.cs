@@ -26,20 +26,20 @@ partial class DbEngine
 
         var affected = 0;
         var batchIndex = 0;
+        var startIndex = 0;
 
-        foreach (var batch in Chunk(inputs, batchSize))
+        foreach (var batch in Chunk(inputs, batchSize, Executor.MaxParametersPerCommand))
         {
             try
             {
-                affected += InsertChunk(batch, table, transaction, batchIndex * batchSize);
+                affected += InsertChunk(batch, table, transaction, startIndex);
             }
             catch (Exception ex)
             {
-                var isLastBatch = batch.Count < batchSize;
-                var batchLabel = isLastBatch ? "final batch" : $"batch {batchIndex + 1}";
-                throw BuildBatchException(ex, batch, batchIndex * batchSize, batchLabel);
+                throw BuildBatchException(ex, batch, startIndex, $"batch {batchIndex + 1}");
             }
 
+            startIndex += batch.Count;
             batchIndex++;
         }
 
@@ -55,11 +55,16 @@ partial class DbEngine
         {
             return ExecuteChunk(chunk, table, transaction);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            if (!Executor.CanContinueTransactionAfterCommandFailure)
+            {
+                throw;
+            }
+
             // Use binary search to identify the failed record when the batch fails.
             var failedIndex = BinarySearchFailedRecord(chunk, table, transaction, 0, chunk.Count - 1);
-            throw BuildRowException(new Exception("Record insertion failed"), chunk[failedIndex], startIndex + failedIndex);
+            throw BuildRowException(ex, chunk[failedIndex], startIndex + failedIndex);
         }
     }
 
@@ -149,39 +154,51 @@ partial class DbEngine
             return 0;
         }
 
-        // Count parameters to decide whether to use a parameterized query.
-        // When every record has the same number of columns, multiplication avoids an extra traversal;
-        // otherwise, sum the column counts for all records.
-        var firstItemCount = chunk[0].Items.Count;
-        var allSameCount = chunk.All(input => input.Items.Count == firstItemCount);
-        var valuesCount = allSameCount
-            ? chunk.Count * firstItemCount
-            : chunk.Sum(input => input.Items.Count);
-
-        // SQL Server has a default limit of 2,100 parameters; use literal values above that limit.
-        var forceUseParameter = valuesCount < 2100;
-
-        var sql = Executor.SqlBuilder.Insert(table, chunk, out var dbParams, forceUseParameter);
+        var sql = Executor.SqlBuilder.Insert(table, chunk, out var dbParams);
         return Executor.NonQuery(sql, dbParams, null, transaction);
     }
 
     /// <summary>
-    /// Splits a collection into chunks.
+    /// Splits input rows by both the requested batch size and the provider parameter limit.
     /// </summary>
-    private static IEnumerable<IReadOnlyList<T>> Chunk<T>(IEnumerable<T> source, int size)
+    private static IEnumerable<IReadOnlyList<InputValues>> Chunk(
+        IEnumerable<InputValues> source, int size, int maxParameters)
     {
         if (source == null) throw new ArgumentNullException(nameof(source));
         if (size < 1) throw new ArgumentOutOfRangeException(nameof(size), "Batch size must be greater than 0.");
-
-        using var enumerator = source.GetEnumerator();
-        while (enumerator.MoveNext())
+        if (maxParameters < 1)
         {
-            var batch = new List<T>(size) { enumerator.Current };
-            for (var i = 1; i < size && enumerator.MoveNext(); i++)
+            throw new InvalidOperationException("The provider parameter limit must be greater than 0.");
+        }
+
+        var batch = new List<InputValues>(size);
+        var parameterCount = 0;
+
+        foreach (var input in source)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(source), "Input rows cannot contain null values.");
+
+            var rowParameterCount = input.Items.Count;
+            if (rowParameterCount > maxParameters)
             {
-                batch.Add(enumerator.Current);
+                throw new InvalidOperationException(
+                    $"One input row requires {rowParameterCount} parameters, exceeding the provider limit of {maxParameters}.");
             }
 
+            if (batch.Count > 0
+                && (batch.Count >= size || parameterCount > maxParameters - rowParameterCount))
+            {
+                yield return batch;
+                batch = new List<InputValues>(size);
+                parameterCount = 0;
+            }
+
+            batch.Add(input);
+            parameterCount += rowParameterCount;
+        }
+
+        if (batch.Count > 0)
+        {
             yield return batch;
         }
     }

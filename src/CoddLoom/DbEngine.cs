@@ -113,12 +113,8 @@ public partial class DbEngine
 
     private bool ExistTable(TableDefine tableDefine, IDbConnection con)
     {
-        Executor.GetExistTableParam(tableDefine, out var table, out var where);
-        if (string.IsNullOrEmpty(table) || where == null)
-        {
-            return false;
-        }
-        return Count(table, where, con) > 0;
+        var sql = Executor.SqlBuilder.GetTableExistsSql(tableDefine, out var dbParams);
+        return Executor.Scalar(sql, System.Convert.ToInt32, dbParams, con) > 0;
     }
 
 }

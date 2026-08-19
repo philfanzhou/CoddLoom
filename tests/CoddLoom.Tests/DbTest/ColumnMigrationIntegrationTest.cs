@@ -1,8 +1,6 @@
-using CoddLoom;
-using CoddLoom.Sqlite;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using CoddLoom.Input;
 using CoddLoom.Table;
-using System;
-using System.Collections.Generic;
 using CoddLoom.Tests.DbCode.Tables;
 
 namespace CoddLoom.Tests.DbTest
@@ -10,39 +8,39 @@ namespace CoddLoom.Tests.DbTest
     /// <summary>
     /// Integration tests for column migration.
     /// </summary>
-    public class ColumnMigrationIntegrationTest
+    [TestClass]
+    public class ColumnMigrationIntegrationTest : TestBase
     {
-        public static void RunTest()
+        [TestMethod]
+        public void InitializeTable_AddsMissingColumns_AndRemainsIdempotent()
         {
-            // Use SQLite so the test requires no additional configuration.
-            var executor = new SqliteExecutor("test_column_migration.db");
-            var dbEngine = new DbEngine(executor);
+            var dbEngine = new DbEngine(Executor);
 
             try
             {
-                // Test 1: Create the base table.
-                Console.WriteLine("Test 1: Creating the base table...");
                 var basicTable = new TableDefine(typeof(BasicTestTable));
                 dbEngine.InitializeTable(new[] { basicTable });
-                Console.WriteLine("Base table created successfully.");
 
-                // Test 2: Add new columns.
-                Console.WriteLine("Test 2: Adding new columns...");
                 var fullTable = new TableDefine(typeof(TestColumnMigrationTable));
                 dbEngine.InitializeTable(new[] { fullTable });
-                Console.WriteLine("New columns added successfully.");
-
-                // Test 3: Run again and skip existing columns.
-                Console.WriteLine("Test 3: Repeating the column check...");
                 dbEngine.InitializeTable(new[] { fullTable });
-                Console.WriteLine("Repeated run succeeded and skipped existing columns.");
 
-                Console.WriteLine("All tests passed.");
+                var values = new InputValues()
+                    .Add(TestColumnMigrationTable.Id, "migration-1")
+                    .Add(TestColumnMigrationTable.Name, "migration")
+                    .Add(TestColumnMigrationTable.NewColumn1, "added")
+                    .Add(TestColumnMigrationTable.NewColumn2, 2)
+                    .Add(TestColumnMigrationTable.NewColumn3, true);
+
+                Assert.AreEqual(1, dbEngine.Insert(TestColumnMigrationTable.TableName, values));
+                var addedValue = Executor.Scalar(
+                    $"SELECT {TestColumnMigrationTable.NewColumn1} FROM {TestColumnMigrationTable.TableName}",
+                    value => value.ToString());
+                Assert.AreEqual("added", addedValue);
             }
-            catch (Exception ex)
+            finally
             {
-                Console.WriteLine($"Test failed: {ex.Message}");
-                throw;
+                dbEngine.Drop(TestColumnMigrationTable.TableName);
             }
         }
     }

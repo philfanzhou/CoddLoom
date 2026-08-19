@@ -1,7 +1,5 @@
 using MySqlConnector;
-using CoddLoom.Condition;
 using CoddLoom.Sql;
-using CoddLoom.Table;
 using System;
 using System.Data;
 
@@ -20,13 +18,6 @@ public class MariaDbExecutor(string connectionString)
     public override IDbConnection GetConnection()
     {
         return new MySqlConnection(ConnectionString);
-    }
-
-    protected override void GetExistTableParam(TableDefine table, out string checkTable, out WhereConditions where)
-    {
-        // use create table sql to check exist, not here
-        checkTable = null;
-        where = null;
     }
 
     protected override Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command)

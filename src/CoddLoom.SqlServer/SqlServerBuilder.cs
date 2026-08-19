@@ -5,6 +5,7 @@ using CoddLoom.Table;
 using CoddLoom.Table.Base;
 using System;
 using System.Data;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CoddLoom.SqlServer;
@@ -115,9 +116,22 @@ public class SqlServerBuilder : SqlBuilder
         return $"DECIMAL({decimalColumn.Length},{decimalColumn.PointLength})";
     }
 
-    protected override string GetTableColumnsSql(string tableName)
+    protected override string GetTableExistsSql(TableDefine table, out List<ValueParam> dbParams)
     {
-        return $"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{tableName}'";
+        var tableNameParam = new ValueParam(table.Name, "schema_table_name");
+        dbParams = new List<ValueParam> { tableNameParam };
+        return "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES "
+            + $"WHERE TABLE_SCHEMA = SCHEMA_NAME() AND TABLE_TYPE = 'BASE TABLE' "
+            + $"AND TABLE_NAME = {GetParamName(tableNameParam)}";
+    }
+
+    protected override string GetTableColumnsSql(TableDefine table, out List<ValueParam> dbParams)
+    {
+        var tableNameParam = new ValueParam(table.Name, "schema_table_name");
+        dbParams = new List<ValueParam> { tableNameParam };
+        return "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS "
+            + $"WHERE TABLE_SCHEMA = SCHEMA_NAME() AND TABLE_NAME = {GetParamName(tableNameParam)} "
+            + "ORDER BY ORDINAL_POSITION";
     }
 
     #endregion

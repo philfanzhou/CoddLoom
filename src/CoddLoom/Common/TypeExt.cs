@@ -90,7 +90,7 @@ internal static class TypeExt
 
         if (memberInfo is FieldInfo field)
         {
-            var setValue = System.Convert.ChangeType(value, field.FieldType.GetRealDataType());
+            var setValue = ConvertValue(value, field.FieldType.GetRealDataType());
             if (setValue != null)
             {
                 field.SetValue(obj, setValue);
@@ -98,11 +98,41 @@ internal static class TypeExt
         }
         else if (memberInfo is PropertyInfo property)
         {
-            var setValue = System.Convert.ChangeType(value, property.PropertyType.GetRealDataType());
+            var setValue = ConvertValue(value, property.PropertyType.GetRealDataType());
             if (setValue != null)
             {
                 property.SetValue(obj, setValue);
             }
         }
+    }
+
+    private static object ConvertValue(object value, Type targetType)
+    {
+        if (targetType.IsInstanceOfType(value))
+        {
+            return value;
+        }
+
+        if (targetType == typeof(Guid))
+        {
+            if (value is string stringValue)
+            {
+                return Guid.Parse(stringValue);
+            }
+
+            if (value is byte[] bytes)
+            {
+                return new Guid(bytes);
+            }
+        }
+
+        if (targetType.IsEnum)
+        {
+            return value is string enumName
+                ? Enum.Parse(targetType, enumName, true)
+                : Enum.ToObject(targetType, value);
+        }
+
+        return System.Convert.ChangeType(value, targetType);
     }
 }

@@ -1,7 +1,5 @@
 using Oracle.ManagedDataAccess.Client;
-using CoddLoom.Condition;
 using CoddLoom.Sql;
-using CoddLoom.Table;
 using System;
 using System.Data;
 
@@ -43,10 +41,4 @@ public class OracleExecutor : DbExecutor
         return adapter;
     }
 
-    protected override void GetExistTableParam(TableDefine table, out string checkTable, out WhereConditions where)
-    {
-        where = new WhereConditions();
-        where.Add("TABLE_NAME", table.Name.ToUpper());
-        checkTable = "USER_TABLES";
-    }
 }

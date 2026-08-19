@@ -29,6 +29,18 @@ public abstract class DbExecutor
 
     public virtual SqlBuilder SqlBuilder { get; } = new();
 
+    /// <summary>
+    /// Gets the maximum number of parameters supported by one command.
+    /// Providers with a lower limit should override this value.
+    /// </summary>
+    public virtual int MaxParametersPerCommand => int.MaxValue;
+
+    /// <summary>
+    /// Gets whether commands may continue in a transaction after a command fails.
+    /// Providers which abort the transaction on statement failure should return false.
+    /// </summary>
+    public virtual bool CanContinueTransactionAfterCommandFailure => true;
+
     public abstract IDbConnection GetConnection();
 
     public void Transaction(Action<IDbTransaction> action)
@@ -113,8 +125,15 @@ public abstract class DbExecutor
         }
     }
 
-    protected internal abstract void GetExistTableParam(TableDefine table, 
-        out string checkTable, out WhereConditions where);
+    [Obsolete("Schema inspection is now provided by SqlBuilder schema query methods.")]
+    protected internal virtual void GetExistTableParam(TableDefine table,
+        out string checkTable, out WhereConditions where)
+    {
+        where = new WhereConditions();
+        where.Add("type", "table");
+        where.Add("name", table.Name);
+        checkTable = "sqlite_master";
+    }
 
     protected abstract Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command);
 

@@ -37,7 +37,7 @@ partial class DbEngine
 
     private void CheckAndAddMissingColumns(TableDefine table, IDbConnection con)
     {
-        var existingColumns = GetExistingColumns(table.Name, con);
+        var existingColumns = GetExistingColumns(table, con);
         
         foreach (var column in table.Columns)
         {
@@ -49,9 +49,9 @@ partial class DbEngine
         }
     }
 
-    private List<string> GetExistingColumns(string tableName, IDbConnection con)
+    private List<string> GetExistingColumns(TableDefine table, IDbConnection con)
     {
-        var sql = Executor.SqlBuilder.GetTableColumnsSql(tableName);
-        return Executor.Reader(sql, reader => reader.GetString(0), null, con);
+        var sql = Executor.SqlBuilder.GetTableColumnsSql(table, out var dbParams);
+        return Executor.Reader(sql, reader => reader.GetString(0), dbParams, con);
     }
 }
