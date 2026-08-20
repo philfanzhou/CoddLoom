@@ -1,4 +1,5 @@
 using CoddLoom.Sql;
+using CoddLoom.Input;
 using CoddLoom.Params;
 using CoddLoom.Table;
 using System;
@@ -10,6 +11,31 @@ namespace CoddLoom.Oracle;
 
 public class OracleBuilder : SqlBuilder
 {
+    public override string Insert(string tableName, IEnumerable<InputValues> inputs,
+        out List<ValueParam> dbParams, bool useParameter = true)
+    {
+        var inputRows = PrepareInsertRows(tableName, inputs);
+        var columnSql = GetInsertColumns(inputRows[0]);
+        dbParams = new List<ValueParam>();
+
+        if (inputRows.Count == 1)
+        {
+            var values = GetInsertValues(inputRows[0], out var rowParams, useParameter);
+            dbParams.AddRange(rowParams);
+            return $"INSERT INTO {tableName} {columnSql} VALUES {values}";
+        }
+
+        var clauses = new List<string>();
+        foreach (var inputRow in inputRows)
+        {
+            var values = GetInsertValues(inputRow, out var rowParams, useParameter);
+            clauses.Add($"INTO {tableName} {columnSql} VALUES {values}");
+            dbParams.AddRange(rowParams);
+        }
+
+        return $"INSERT ALL {string.Join(" ", clauses)} SELECT 1 FROM DUAL";
+    }
+
     protected override string AppendLimit(string sql, PageParam pageParam = null)
     {
         if (pageParam == null) return sql;

@@ -15,7 +15,6 @@ partial class DbEngine
         var tableList = tables.ToList();
         if(tableList.Count < 1) return;
 
-        TableColumnsCache.Initialize(tableList);
         Executor.Execute(con =>
         {
             foreach (var table in tableList)
@@ -33,6 +32,7 @@ partial class DbEngine
                 }
             }
         });
+        _tableColumnsCache.Initialize(tableList);
     }
 
     private void CheckAndAddMissingColumns(TableDefine table, IDbConnection con)

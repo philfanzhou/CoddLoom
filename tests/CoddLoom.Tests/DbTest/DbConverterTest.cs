@@ -65,6 +65,27 @@ public class DbConverterTest
     }
 
     [TestMethod]
+    public void ToEntity_DistinguishesTypesWithTheSameSimpleName()
+    {
+        var firstTable = new DataTable();
+        firstTable.Columns.Add("first", typeof(string));
+        firstTable.Rows.Add("first-value");
+        using (var firstReader = firstTable.CreateDataReader())
+        {
+            Assert.IsTrue(firstReader.Read());
+            Assert.AreEqual("first-value", firstReader.ToEntity<FirstModels.Projection>().Value);
+        }
+
+        var secondTable = new DataTable();
+        secondTable.Columns.Add("second", typeof(string));
+        secondTable.Rows.Add("second-value");
+        using var secondReader = secondTable.CreateDataReader();
+        Assert.IsTrue(secondReader.Read());
+
+        Assert.AreEqual("second-value", secondReader.ToEntity<SecondModels.Projection>().Value);
+    }
+
+    [TestMethod]
     public void CreateTable_PreservesNullableTypesAndNullValues()
     {
         var table = DbConverter.CreateTable(new List<TableProjection>
@@ -132,4 +153,22 @@ public class DbConverterTest
     }
 
     private enum ProjectionState { Inactive, Active }
+
+    private static class FirstModels
+    {
+        [MapTable(Name = "first_projection")]
+        internal sealed class Projection
+        {
+            [MapColumn(Name = "first")] public string Value { get; set; }
+        }
+    }
+
+    private static class SecondModels
+    {
+        [MapTable(Name = "second_projection")]
+        internal sealed class Projection
+        {
+            [MapColumn(Name = "second")] public string Value { get; set; }
+        }
+    }
 }

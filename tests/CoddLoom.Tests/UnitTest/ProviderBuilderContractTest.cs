@@ -1,4 +1,5 @@
 using CoddLoom.Condition;
+using CoddLoom.Input;
 using CoddLoom.MariaDb;
 using CoddLoom.MySql;
 using CoddLoom.Oracle;
@@ -10,6 +11,7 @@ using CoddLoom.Table;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Data;
+using System.Linq;
 
 namespace CoddLoom.Tests.UnitTest;
 
@@ -96,6 +98,16 @@ public class ProviderBuilderContractTest
     }
 
     [TestMethod]
+    public void SqlServerGroupedCount_NamesTheDerivedTableProjection()
+    {
+        var columns = new ColumnParam().AddSelect("tenantId", groupBy: true);
+
+        Assert.AreEqual(
+            "SELECT COUNT(*) FROM (SELECT 1 AS CoddLoomGroup FROM sample GROUP BY tenantId) CoddLoomCount",
+            new SqlServerBuilder().Count("sample", columns: columns));
+    }
+
+    [TestMethod]
     public void DropTable_UsesProviderCompatibleSyntax()
     {
         foreach (var provider in Enum.GetValues<Provider>())
@@ -131,6 +143,26 @@ public class ProviderBuilderContractTest
             var expected = provider == Provider.Oracle ? ":value" : "@value";
             Assert.AreEqual(expected, CreateBuilder(provider).ParameterName(new ValueParam(1, "value")));
         }
+    }
+
+    [TestMethod]
+    public void OracleBatchInsert_UsesPre23CompatibleInsertAllSyntax()
+    {
+        var rows = new[]
+        {
+            new InputValues().Add("id", 1).Add("name", "one"),
+            new InputValues().Add("name", "two").Add("id", 2)
+        };
+
+        var sql = new OracleBuilder().Insert("sample", rows, out var parameters);
+
+        Assert.AreEqual(
+            "INSERT ALL INTO sample (id,name) VALUES (:V0_id,:V0_name) "
+            + "INTO sample (id,name) VALUES (:V1_id,:V1_name) SELECT 1 FROM DUAL",
+            sql);
+        CollectionAssert.AreEqual(
+            new object[] { 1, "one", 2, "two" },
+            parameters.Select(parameter => parameter.Value).ToArray());
     }
 
     private static readonly DbType[] SupportedDbTypes =

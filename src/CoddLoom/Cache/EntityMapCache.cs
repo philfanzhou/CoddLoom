@@ -2,23 +2,17 @@ using CoddLoom.Common;
 using CoddLoom.Entity;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 
 namespace CoddLoom.Cache;
 
 internal static class EntityMapCache
 {
-    private static readonly ConcurrentDictionary<string, EntityMap> MapCache = new();
+    private static readonly ConcurrentDictionary<Type, EntityMap> MapCache = new();
 
     internal static EntityMap Get(Type type)
     {
-        var name = type.Name;
-        if (!MapCache.TryGetValue(name, out var entityMap))
-        {
-            entityMap = new EntityMap(name, type);
-            MapCache.TryAdd(name, entityMap);
-        }
-        return entityMap;
+        if (type == null) throw new ArgumentNullException(nameof(type));
+        return MapCache.GetOrAdd(type, currentType => new EntityMap(currentType.Name, currentType));
     }
 
     internal static EntityMap Get<T>()

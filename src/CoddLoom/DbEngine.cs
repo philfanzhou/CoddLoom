@@ -1,4 +1,5 @@
 using CoddLoom.Condition;
+using CoddLoom.Cache;
 using CoddLoom.Input;
 using CoddLoom.Params;
 using CoddLoom.Table;
@@ -10,6 +11,8 @@ namespace CoddLoom;
 
 public partial class DbEngine
 {
+    private readonly TableColumnsCache _tableColumnsCache = new();
+
     public DbEngine(DbExecutor executor, IEnumerable<TableDefine> tables)
     {
         Executor = executor;

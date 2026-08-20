@@ -16,16 +16,34 @@ public partial class SqlBuilder
     public virtual string Insert(string tableName, IEnumerable<InputValues> inputs, out List<ValueParam> dbParams,
         bool useParameter = true)
     {
+        var inputRows = PrepareInsertRows(tableName, inputs);
+        var columnSql = GetInsertColumns(inputRows[0]);
+
+        dbParams = new List<ValueParam>();
+        var valueList = new List<string>();
+        foreach (var inputParameters in inputRows)
+        {
+            var values = GetInsertValues(inputParameters, out var innerDbParams, useParameter);
+            valueList.Add(values);
+            dbParams.AddRange(innerDbParams);
+        }
+        var valueSql = $"{string.Join(",", valueList.Select(p => p))}";
+
+        return $"INSERT INTO {tableName} {columnSql} VALUES {valueSql}";
+    }
+
+    protected IReadOnlyList<IReadOnlyList<ValueParam>> PrepareInsertRows(
+        string tableName, IEnumerable<InputValues> inputs)
+    {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
         if (inputs == null) throw new ArgumentNullException(nameof(inputs));
 
         var inputList = inputs.ToList();
-        if (inputList.Count < 1 || inputList.Any(p => p == null || p.IsEmpty()))
+        if (inputList.Count < 1 || inputList.Any(input => input == null || input.IsEmpty()))
         {
             throw new ArgumentNullException(nameof(inputs));
         }
 
-        var columnSql = GetInsertColumns(inputList[0].Items);
         var expectedColumns = inputList[0].Items.Select(item => item.Column).ToArray();
         var rowsByColumn = inputList.Select(input =>
             input.Items.ToDictionary(item => item.Column, StringComparer.Ordinal)).ToList();
@@ -35,22 +53,18 @@ public partial class SqlBuilder
             throw new ArgumentException("Every input row must contain the same columns.", nameof(inputs));
         }
 
-        dbParams = new List<ValueParam>();
-        var valueList = new List<string>();
+        var rows = new List<IReadOnlyList<ValueParam>>();
         for (var inputIndex = 0; inputIndex < inputList.Count; inputIndex++)
         {
-            // InputValues can be created directly by callers, in which case each row
-            // starts with the same V0_ prefix. Normalize names here so a multi-row
-            // command cannot bind every row to the first row's values.
-            var inputParameters = expectedColumns.Select(column => rowsByColumn[inputIndex][column]).Select(item =>
-                new ValueParam(item.Column, item.Value, $"V{inputIndex}_{item.Column}", item.ForceParameter));
-            var values = GetInsertValues(inputParameters, out var innerDbParams, useParameter);
-            valueList.Add(values);
-            dbParams.AddRange(innerDbParams);
+            // Directly constructed InputValues instances all start with V0_. Normalize
+            // names so every row in a multi-row command has distinct parameters.
+            rows.Add(expectedColumns.Select(column => rowsByColumn[inputIndex][column])
+                .Select(item => new ValueParam(
+                    item.Column, item.Value, $"V{inputIndex}_{item.Column}", item.ForceParameter))
+                .ToList().AsReadOnly());
         }
-        var valueSql = $"{string.Join(",", valueList.Select(p => p))}";
 
-        return $"INSERT INTO {tableName} {columnSql} VALUES {valueSql}";
+        return rows.AsReadOnly();
     }
 
     public virtual string Delete(string tableName, WhereConditions where, bool force = false)
@@ -88,20 +102,14 @@ public partial class SqlBuilder
     {
         if (string.IsNullOrEmpty(tableName)) throw new ArgumentNullException(nameof(tableName));
 
-        var column = "*";
-        if (where?.Parameters.FirstOrDefault() != null)
+        if (columns?.GroupBy.Count > 0)
         {
-            // Query only the first column in the WHERE clause for better performance.
-            column = where.Parameters.First().Column;
-        }
-        else if (columns?.Select.FirstOrDefault() != null)
-        {
-            column = columns.Select.First().Column;
+            var groupedSql = AppendWhere($"SELECT 1 AS CoddLoomGroup FROM {tableName}", where);
+            groupedSql = AppendGroupBy(groupedSql, columns);
+            return $"SELECT COUNT(*) FROM ({groupedSql}) CoddLoomCount";
         }
 
-        var sql = $"SELECT COUNT({column}) FROM {tableName}";
-        sql = AppendWhere(sql, where);
-        return AppendGroupBy(sql, columns);
+        return AppendWhere($"SELECT COUNT(*) FROM {tableName}", where);
     }
 
     public virtual string Select(string tableName, 

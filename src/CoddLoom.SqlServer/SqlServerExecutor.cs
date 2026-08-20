@@ -7,10 +7,9 @@ namespace CoddLoom.SqlServer;
 
 public class SqlServerExecutor : DbExecutor
 {
-    private const string TrustServerConfig = "TrustServerCertificate";
     private readonly bool _trustServerCertificate;
 
-    public SqlServerExecutor(string connectionString, bool trustServer = true)
+    public SqlServerExecutor(string connectionString, bool trustServer = false)
         : base(connectionString, CreateConnection(connectionString, trustServer))
     {
         _trustServerCertificate = trustServer;
@@ -27,12 +26,19 @@ public class SqlServerExecutor : DbExecutor
 
     private static IDbConnection CreateConnection(string connectionString, bool trustServer)
     {
-        if (trustServer && !connectionString.ToLower().Contains(TrustServerConfig.ToLower()))
-        {
-            connectionString = $"{connectionString};{TrustServerConfig}=true";
-        }
-        var conn = new SqlConnection(connectionString);
+        var conn = new SqlConnection(BuildConnectionString(connectionString, trustServer));
         return conn;
+    }
+
+    private static string BuildConnectionString(string connectionString, bool trustServer)
+    {
+        var builder = new SqlConnectionStringBuilder(connectionString);
+        if (trustServer)
+        {
+            builder.TrustServerCertificate = true;
+        }
+
+        return builder.ConnectionString;
     }
 
     protected override Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command)

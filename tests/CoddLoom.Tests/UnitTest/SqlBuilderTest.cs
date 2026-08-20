@@ -169,7 +169,20 @@ public class SqlBuilderTest
         Assert.AreEqual(
             "SELECT MAX(CAST(createdAt AS DateTime)) AS latest,tenantId FROM sample GROUP BY createdAt,tenantId ORDER BY tenantId DESC,latest ASC LIMIT 25,25",
             sql);
-        Assert.AreEqual("SELECT COUNT(createdAt) FROM sample GROUP BY createdAt,tenantId", _builder.Count("sample", columns: columns));
+        Assert.AreEqual(
+            "SELECT COUNT(*) FROM (SELECT 1 AS CoddLoomGroup FROM sample GROUP BY createdAt,tenantId) CoddLoomCount",
+            _builder.Count("sample", columns: columns));
+    }
+
+    [TestMethod]
+    public void Count_CountsRowsInsteadOfNonNullValues()
+    {
+        var where = new WhereConditions("nullableColumn", 1)
+            .Add("fallbackColumn", 2, connector: WhereConnector.Or);
+
+        Assert.AreEqual(
+            "SELECT COUNT(*) FROM sample WHERE nullableColumn = @nullableColumn0 OR fallbackColumn = @fallbackColumn0",
+            _builder.Count("sample", where));
     }
 
     [TestMethod]
