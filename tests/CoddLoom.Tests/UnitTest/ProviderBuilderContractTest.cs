@@ -98,6 +98,16 @@ public class ProviderBuilderContractTest
     }
 
     [TestMethod]
+    public void SqlServerGroupedCount_NamesTheDerivedTableProjection()
+    {
+        var columns = new ColumnParam().AddSelect("tenantId", groupBy: true);
+
+        Assert.AreEqual(
+            "SELECT COUNT(*) FROM (SELECT 1 AS CoddLoomGroup FROM sample GROUP BY tenantId) CoddLoomCount",
+            new SqlServerBuilder().Count("sample", columns: columns));
+    }
+
+    [TestMethod]
     public void DropTable_UsesProviderCompatibleSyntax()
     {
         foreach (var provider in Enum.GetValues<Provider>())

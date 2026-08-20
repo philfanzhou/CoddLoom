@@ -104,7 +104,7 @@ public partial class SqlBuilder
 
         if (columns?.GroupBy.Count > 0)
         {
-            var groupedSql = AppendWhere($"SELECT 1 FROM {tableName}", where);
+            var groupedSql = AppendWhere($"SELECT 1 AS CoddLoomGroup FROM {tableName}", where);
             groupedSql = AppendGroupBy(groupedSql, columns);
             return $"SELECT COUNT(*) FROM ({groupedSql}) CoddLoomCount";
         }

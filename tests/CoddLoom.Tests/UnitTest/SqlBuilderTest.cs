@@ -170,7 +170,7 @@ public class SqlBuilderTest
             "SELECT MAX(CAST(createdAt AS DateTime)) AS latest,tenantId FROM sample GROUP BY createdAt,tenantId ORDER BY tenantId DESC,latest ASC LIMIT 25,25",
             sql);
         Assert.AreEqual(
-            "SELECT COUNT(*) FROM (SELECT 1 FROM sample GROUP BY createdAt,tenantId) CoddLoomCount",
+            "SELECT COUNT(*) FROM (SELECT 1 AS CoddLoomGroup FROM sample GROUP BY createdAt,tenantId) CoddLoomCount",
             _builder.Count("sample", columns: columns));
     }
 
