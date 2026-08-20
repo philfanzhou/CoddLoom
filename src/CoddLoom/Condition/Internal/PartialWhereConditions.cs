@@ -1,8 +1,14 @@
+using CoddLoom.Sql;
+
 namespace CoddLoom.Condition.Internal;
 
-internal class PartialWhereConditions
+internal class PartialWhereConditions(WhereConditions whereConditions, WhereConnector connector)
+    : WhereItemBase(connector)
 {
-    public WhereConditions WhereConditions { get; set; }
+    public WhereConditions WhereConditions { get; } = whereConditions;
 
-    public WhereConnector WhereConnector { get; set; }
+    protected internal override string ToSql(SqlBuilder builder)
+    {
+        return builder.RenderInnerWhereSql(WhereConditions);
+    }
 }

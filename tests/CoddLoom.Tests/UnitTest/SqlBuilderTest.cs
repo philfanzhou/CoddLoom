@@ -132,6 +132,35 @@ public class SqlBuilderTest
     }
 
     [TestMethod]
+    public void NestedConditions_PreserveInsertionOrderAndRenameParametersAfterMutation()
+    {
+        var nested = new WhereConditions("id", 2);
+        var where = new WhereConditions()
+            .Add(nested)
+            .Add("id", 1, connector: WhereConnector.Or);
+
+        nested.Add("id", 3, connector: WhereConnector.Or);
+
+        var sql = _builder.Select("sample", where);
+        var names = where.Parameters.Select(parameter => parameter.ParamName).ToArray();
+
+        Assert.AreEqual(
+            "SELECT * FROM sample WHERE (id = @id0 OR id = @id1) OR id = @id2",
+            sql);
+        CollectionAssert.AreEqual(new[] { "id0", "id1", "id2" }, names);
+    }
+
+    [TestMethod]
+    public void NestedConditions_RejectCycles()
+    {
+        var parent = new WhereConditions("parent", 1);
+        var child = new WhereConditions("child", 2).Add(parent);
+
+        Assert.ThrowsExactly<ArgumentException>(() => parent.Add(child));
+        Assert.ThrowsExactly<ArgumentException>(() => parent.Add(parent));
+    }
+
+    [TestMethod]
     public void EmptyNestedConditions_AreIgnored()
     {
         var where = new WhereConditions().Add((WhereConditions)null).Add(new WhereConditions());

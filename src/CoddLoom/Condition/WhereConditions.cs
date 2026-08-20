@@ -14,9 +14,7 @@ public class WhereConditions
 
     private readonly ParameterNameGenerator _parameterNameGenerator = new();
 
-    private readonly List<ValueParam> _valueParamList = [];
     private readonly List<WhereItemBase> _conditionsItemList = [];
-    private readonly List<PartialWhereConditions> _partialConditions = [];
 
     #endregion
 
@@ -36,21 +34,14 @@ public class WhereConditions
     {
         get
         {
-            var paramList = new List<ValueParam>();
-            paramList.AddRange(_valueParamList);
-
-            foreach (var condition in _partialConditions)
-            {
-                paramList.AddRange(condition.WhereConditions.Parameters);
-            }
-
-            return paramList;
+            var parameters = new List<ValueParam>();
+            CollectParameters(this, parameters, new HashSet<ValueParam>());
+            RefreshParamNames(parameters);
+            return parameters.AsReadOnly();
         }
     }
 
     internal IEnumerable<WhereItemBase> Items => _conditionsItemList.AsReadOnly();
-
-    internal IEnumerable<PartialWhereConditions> InnerConditions => _partialConditions.AsReadOnly();
 
     #endregion
 
@@ -77,7 +68,7 @@ public class WhereConditions
 
     public bool IsEmpty()
     {
-        return _conditionsItemList.Count < 1 && _partialConditions.Count < 1;
+        return _conditionsItemList.Count < 1;
     }
 
     public WhereConditions Add(string column, object value,
@@ -98,7 +89,6 @@ public class WhereConditions
         if (allowEmptyValue == false && string.IsNullOrEmpty(value.ToString())) return this;
 
         var param = new ValueParam(column, value, _parameterNameGenerator.Get(column));
-        _valueParamList.Add(param);
         _conditionsItemList.Add(castType != null
             ? new WhereConditionsNormalItem(param, castType.Value, whereOperator, connector)
             : new WhereConditionsNormalItem(param, whereOperator, connector));
@@ -113,12 +103,12 @@ public class WhereConditions
             return this;
         }
 
-        RefreshParamName(where, _parameterNameGenerator);
-        _partialConditions.Add(new PartialWhereConditions
+        if (ReferenceEquals(where, this) || Contains(where, this))
         {
-            WhereConditions = where,
-            WhereConnector = connector
-        });
+            throw new ArgumentException("Nested where conditions cannot contain their parent.", nameof(where));
+        }
+
+        _conditionsItemList.Add(new PartialWhereConditions(where, connector));
         return this;
     }
 
@@ -152,25 +142,68 @@ public class WhereConditions
             .Select(v => new ValueParam(column, v, _parameterNameGenerator.Get(column)))
             .ToList();
 
-        _valueParamList.AddRange(paramList);
         _conditionsItemList.Add(new WhereConditionsInItem(column, paramList, connector));
         return this;
     }
 
-    private static void RefreshParamName(WhereConditions where, ParameterNameGenerator nameGenerator)
+    internal void RefreshParamNames()
     {
-        // Rename the values rather than only normal-condition items. IN conditions
-        // keep their own ValueParam list and previously retained colliding names
-        // when nested under a condition using the same column.
-        foreach (var parameter in where._valueParamList)
+        var parameters = new List<ValueParam>();
+        CollectParameters(this, parameters, new HashSet<ValueParam>());
+        RefreshParamNames(parameters);
+    }
+
+    private static void RefreshParamNames(IEnumerable<ValueParam> parameters)
+    {
+        var nameGenerator = new ParameterNameGenerator();
+        foreach (var parameter in parameters)
         {
             parameter.ParamName = nameGenerator.Get(parameter.Column);
         }
+    }
 
-        foreach(var item in where._partialConditions)
+    private static void CollectParameters(WhereConditions where, ICollection<ValueParam> parameters,
+        ISet<ValueParam> visited)
+    {
+        foreach (var item in where._conditionsItemList)
         {
-            RefreshParamName(item.WhereConditions, nameGenerator);
+            switch (item)
+            {
+                case WhereConditionsNormalItem normalItem:
+                    AddParameter(normalItem.Parameter, parameters, visited);
+                    break;
+                case WhereConditionsInItem inItem:
+                    foreach (var parameter in inItem.Parameters)
+                    {
+                        AddParameter(parameter, parameters, visited);
+                    }
+                    break;
+                case PartialWhereConditions partialItem:
+                    CollectParameters(partialItem.WhereConditions, parameters, visited);
+                    break;
+            }
         }
+    }
+
+    private static void AddParameter(ValueParam parameter, ICollection<ValueParam> parameters,
+        ISet<ValueParam> visited)
+    {
+        if (visited.Add(parameter))
+        {
+            parameters.Add(parameter);
+        }
+    }
+
+    private static bool Contains(WhereConditions where, WhereConditions target)
+    {
+        if (ReferenceEquals(where, target))
+        {
+            return true;
+        }
+
+        return where._conditionsItemList
+            .OfType<PartialWhereConditions>()
+            .Any(item => Contains(item.WhereConditions, target));
     }
 
     #region Obsolete

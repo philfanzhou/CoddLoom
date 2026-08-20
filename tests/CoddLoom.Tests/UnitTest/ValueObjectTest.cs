@@ -38,8 +38,15 @@ public class ValueObjectTest
     [TestMethod]
     public void PageParam_ValidatesBoundsAndCalculatesOffset()
     {
+        var defaults = new PageParam();
+        Assert.AreEqual(1, defaults.PageNumber);
+        Assert.AreEqual(20, defaults.PageSize);
+        Assert.AreEqual(0, defaults.Offset);
+
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new PageParam { PageSize = 0 });
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new PageParam { PageNumber = -1 });
+        Assert.ThrowsExactly<OverflowException>(() =>
+            _ = new PageParam { PageNumber = 50_000, PageSize = 50_000 }.Offset);
 
         var page = new PageParam { PageNumber = 4, PageSize = 25 };
         Assert.AreEqual(75, page.Offset);

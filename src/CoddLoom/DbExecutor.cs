@@ -181,25 +181,60 @@ public abstract class DbExecutor
         if (con == null) throw new ArgumentNullException(nameof(con));
         if (string.IsNullOrEmpty(commandText)) throw new ArgumentNullException(nameof(commandText));
 
+        var parameters = PrepareParameters(dbParams);
         var command = con.CreateCommand();
-        command.CommandText = commandText;
-        command.CommandTimeout = 300;
-
-        if (dbParams != null)
+        try
         {
-            var func = GetAddParameterFunc(command);
-            foreach (var item in dbParams)
+            command.CommandText = commandText;
+            command.CommandTimeout = 300;
+
+            if (parameters != null)
             {
-                func(SqlBuilder.GetParamName(item), item.Value);
+                var func = GetAddParameterFunc(command);
+                foreach (var item in parameters)
+                {
+                    func(SqlBuilder.GetParamName(item), item.Value);
+                }
             }
-        }
 
-        if (tran != null)
+            if (tran != null)
+            {
+                command.Transaction = tran;
+            }
+
+            return command;
+        }
+        catch
         {
-            command.Transaction = tran;
+            command.Dispose();
+            throw;
+        }
+    }
+
+    private IReadOnlyList<ValueParam> PrepareParameters(IEnumerable<ValueParam> dbParams)
+    {
+        if (dbParams == null)
+        {
+            return null;
         }
 
-        return command;
+        var parameters = new List<ValueParam>();
+        foreach (var parameter in dbParams)
+        {
+            if (parameter == null)
+            {
+                throw new ArgumentException("Parameter collections cannot contain null values.", nameof(dbParams));
+            }
+            if (parameters.Count >= MaxParametersPerCommand)
+            {
+                throw new InvalidOperationException(
+                    $"The command requires more than the provider limit of {MaxParametersPerCommand} parameters.");
+            }
+
+            parameters.Add(parameter);
+        }
+
+        return parameters;
     }
 
     private T Execute<T>(string commandText, Func<IDbCommand, T> func,

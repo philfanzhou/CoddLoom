@@ -1,6 +1,7 @@
 using CoddLoom.Cache;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
@@ -131,6 +132,11 @@ internal static class TypeExt
             return value is string enumName
                 ? Enum.Parse(targetType, enumName, true)
                 : Enum.ToObject(targetType, value);
+        }
+
+        if (targetType == typeof(decimal) && value is string decimalValue)
+        {
+            return decimal.Parse(decimalValue, NumberStyles.Number, CultureInfo.InvariantCulture);
         }
 
         return System.Convert.ChangeType(value, targetType);

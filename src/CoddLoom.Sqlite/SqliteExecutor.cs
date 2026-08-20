@@ -8,6 +8,11 @@ namespace CoddLoom.Sqlite;
 // ReSharper disable once InconsistentNaming
 public class SqliteExecutor : DbExecutor
 {
+    static SqliteExecutor()
+    {
+        SQLiteFunction.RegisterFunction(typeof(SqliteDecimalCollation));
+    }
+
     public SqliteExecutor(string connectionString)
         : base(connectionString, BuildConnection(connectionString))
     {
@@ -22,6 +27,8 @@ public class SqliteExecutor : DbExecutor
     {
         return new SQLiteConnection(ConnectionString);
     }
+
+    public override int MaxParametersPerCommand => 32766;
 
     protected override Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command)
     {

@@ -174,9 +174,10 @@ partial class SqlBuilder
                 return "INTEGER";
             case DbType.Currency:
             case DbType.Decimal:
+            case DbType.VarNumeric:
+                return "TEXT COLLATE CODDLOOM_DECIMAL";
             case DbType.Double:
             case DbType.Single:
-            case DbType.VarNumeric:
                 return "REAL";
             case DbType.Date:
             case DbType.DateTime:
@@ -201,7 +202,10 @@ partial class SqlBuilder
 
     protected virtual string GetDecimalColumnType(DbColumnDecimalAttribute decimalColumn)
     {
-        return "REAL";
+        // SQLite has no exact decimal storage class. TEXT affinity preserves the
+        // invariant decimal representation supplied by System.Data.SQLite instead
+        // of coercing it through an IEEE-754 REAL value.
+        return "TEXT COLLATE CODDLOOM_DECIMAL";
     }
 
     protected virtual string GetBinaryColumnType(DbColumnBinaryAttribute binaryColumn)
