@@ -9,8 +9,13 @@ namespace CoddLoom.Sql;
 
 partial class SqlBuilder
 {
-    private string GetWhereSql(WhereConditions where)
+    private string GetWhereSql(WhereConditions where, bool refreshParameterNames = true)
     {
+        if (refreshParameterNames)
+        {
+            where.RefreshParamNames();
+        }
+
         var whereBuilder = new StringBuilder();
         foreach (var item in where.Items)
         {
@@ -19,15 +24,6 @@ partial class SqlBuilder
                 whereBuilder.Append(GetConnector(item.WhereConnector));
             }
             whereBuilder.Append(item.ToSql(this));
-        }
-
-        foreach (var partialItem in where.InnerConditions)
-        {
-            if (whereBuilder.Length > 0)
-            {
-                whereBuilder.Append(GetConnector(partialItem.WhereConnector));
-            }
-            whereBuilder.Append(GetInnerWhereSql(partialItem.WhereConditions));
         }
 
         return whereBuilder.ToString();
@@ -42,8 +38,10 @@ partial class SqlBuilder
 
     protected virtual string GetInnerWhereSql(WhereConditions innerWhere)
     {
-        return $"({GetWhereSql(innerWhere)})";
+        return $"({GetWhereSql(innerWhere, false)})";
     }
+
+    internal string RenderInnerWhereSql(WhereConditions innerWhere) => GetInnerWhereSql(innerWhere);
 
     protected virtual string GetConnector(WhereConnector whereConnector)
     {

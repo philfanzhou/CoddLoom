@@ -2,8 +2,8 @@ namespace CoddLoom.Params;
 
 public class PageParam
 {
-    private int _pageSize;
-    private int _pageNumber;
+    private int _pageSize = 20;
+    private int _pageNumber = 1;
 
     public int PageSize
     {
@@ -31,5 +31,5 @@ public class PageParam
         }
     }
 
-    public int Offset => PageSize * (PageNumber - 1);
+    public int Offset => checked(PageSize * (PageNumber - 1));
 }

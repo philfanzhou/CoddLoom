@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using CoddLoom.Entity;
 
 namespace CoddLoom.Tests.DbTest;
@@ -62,6 +63,28 @@ public class DbConverterTest
         Assert.AreEqual(expectedGuid, projection.Id);
         Assert.IsNull(projection.NullableCount);
         Assert.AreEqual("initial", projection.Missing);
+    }
+
+    [TestMethod]
+    public void ToEntity_ParsesInvariantDecimalTextRegardlessOfCurrentCulture()
+    {
+        var originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
+            var table = new DataTable();
+            table.Columns.Add(nameof(DecimalProjection.Amount), typeof(string));
+            table.Rows.Add("1234567890123456.78");
+
+            using var reader = table.CreateDataReader();
+            Assert.IsTrue(reader.Read());
+
+            Assert.AreEqual(1234567890123456.78m, reader.ToEntity<DecimalProjection>().Amount);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
     }
 
     [TestMethod]
@@ -143,6 +166,11 @@ public class DbConverterTest
         public Guid Id = default;
         public int? NullableCount = default;
         public string Missing = "initial";
+    }
+
+    private sealed class DecimalProjection
+    {
+        public decimal Amount { get; set; }
     }
 
     private sealed class TableProjection

@@ -40,7 +40,8 @@ public class ProviderBuilderContractTest
     {
         AssertCreateSql(Provider.Sqlite,
             "id INTEGER PRIMARY KEY AUTOINCREMENT",
-            "code TEXT NOT NULL", "fixedCode TEXT", "payload BLOB", "amount REAL");
+            "code TEXT NOT NULL", "fixedCode TEXT", "payload BLOB",
+            "amount TEXT COLLATE CODDLOOM_DECIMAL");
         AssertCreateSql(Provider.MySql,
             "id BIGINT AUTO_INCREMENT PRIMARY KEY NOT NULL",
             "code VARCHAR(32) CHARACTER SET utf8mb4 NOT NULL",
@@ -194,7 +195,8 @@ public class ProviderBuilderContractTest
                 DbType.Binary or DbType.Object => "BLOB",
                 DbType.Boolean or DbType.Byte or DbType.SByte or DbType.Int16 or DbType.UInt16
                     or DbType.Int32 or DbType.UInt32 or DbType.Int64 or DbType.UInt64 => "INTEGER",
-                DbType.Currency or DbType.Decimal or DbType.VarNumeric or DbType.Double or DbType.Single => "REAL",
+                DbType.Currency or DbType.Decimal or DbType.VarNumeric => "TEXT COLLATE CODDLOOM_DECIMAL",
+                DbType.Double or DbType.Single => "REAL",
                 _ => "TEXT"
             },
             Provider.MySql or Provider.MariaDb => type switch
