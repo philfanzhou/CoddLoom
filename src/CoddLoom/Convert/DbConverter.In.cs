@@ -5,22 +5,23 @@ using CoddLoom.Entity;
 using CoddLoom.Input;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CoddLoom.Convert;
 
 partial class DbConverter
 {
-    internal static void ToInsert<T>(T entity, 
+    internal static void ToInsert<T>(T entity, TableColumnsCache tableColumnsCache,
         out string tableName, out List<InputValues> inputs)
     {
         if(entity == null)
         {
             throw new ArgumentNullException(nameof(entity));
         }
-        ToInsert([entity], out tableName, out inputs);
+        ToInsert([entity], tableColumnsCache, out tableName, out inputs);
     }
 
-    internal static void ToInsert<T>(IEnumerable<T> entities, 
+    internal static void ToInsert<T>(IEnumerable<T> entities, TableColumnsCache tableColumnsCache,
         out string tableName, out List<InputValues> inputs)
     {
         if(entities == null) 
@@ -30,7 +31,7 @@ partial class DbConverter
 
         var entityMap = EntityMapCache.Get<T>();
         tableName = entityMap.Table.Name;
-        var insertColumns = TableColumnsCache.GetInsertColumns(tableName);
+        var insertColumns = tableColumnsCache.GetInsertColumns(tableName);
         if (insertColumns == null)
         {
             throw new InvalidOperationException("Can't get insert columns");
@@ -45,7 +46,7 @@ partial class DbConverter
         }
     }
 
-    internal static void ToUpdate<T>(T entity,
+    internal static void ToUpdate<T>(T entity, TableColumnsCache tableColumnsCache,
         out string tableName, out InputValues input, out WhereConditions where)
     {
         if (entity == null)
@@ -55,7 +56,7 @@ partial class DbConverter
 
         var entityMap = EntityMapCache.Get<T>();
         tableName = entityMap.Table.Name;
-        var updateColumns = TableColumnsCache.GetUpdateColumns(entityMap.Table.Name);
+        var updateColumns = tableColumnsCache.GetUpdateColumns(entityMap.Table.Name);
         if (updateColumns == null)
         {
             throw new InvalidOperationException("Can't get update columns");
@@ -80,7 +81,7 @@ partial class DbConverter
     }
 
     private static InputValues GetInputValues<T>(T entity, EntityMap entityMap, 
-        ICollection<string> insertColumns, int inputIndex = 0)
+        IReadOnlyCollection<string> insertColumns, int inputIndex = 0)
     {
         if (entity == null)
         {

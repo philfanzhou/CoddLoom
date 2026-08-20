@@ -2,6 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using CoddLoom;
 using CoddLoom.Condition;
 using CoddLoom.Params;
+using CoddLoom.Input;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -304,6 +305,55 @@ namespace CoddLoom.Tests.DbTest
                 Assert.AreEqual(1, result[0].IntData, "The first record's IntData should be one.");
                 Assert.AreEqual("ColumnUser2", result[1].UnionId, "The second record's UnionId should be ColumnUser2.");
                 Assert.AreEqual(2, result[1].IntData, "The second record's IntData should be two.");
+        }
+
+        [TestMethod]
+        public void Count_IncludesRowsWhoseFirstConditionColumnIsNull()
+        {
+            var marker = $"NullableCount{Guid.NewGuid():N}";
+            DbEngine.Insert(UserTable.TableName, CreateRequiredValues(marker + "1", 1, marker));
+            DbEngine.Insert(UserTable.TableName, CreateRequiredValues(marker + "2", 2, null));
+
+            var where = new WhereConditions()
+                .Add(UserTable.SpecialString, marker)
+                .Add(UserTable.UnionId, marker + "2", connector: WhereConnector.Or);
+
+            Assert.AreEqual(2, DbEngine.Count(UserTable.TableName, where));
+        }
+
+        [TestMethod]
+        public void PageSelect_GroupedResults_CountsGroupsInsteadOfFirstGroupSize()
+        {
+            var marker = $"GroupedCount{Guid.NewGuid():N}";
+            DbEngine.Insert(UserTable.TableName, CreateRequiredValues(marker + "1", 1, marker));
+            DbEngine.Insert(UserTable.TableName, CreateRequiredValues(marker + "2", 1, marker));
+            DbEngine.Insert(UserTable.TableName, CreateRequiredValues(marker + "3", 1, marker));
+            DbEngine.Insert(UserTable.TableName, CreateRequiredValues(marker + "4", 2, marker));
+
+            var where = new WhereConditions(UserTable.UnionId, marker + "%", WhereOperator.Like);
+            var columns = new ColumnParam().AddSelect(UserTable.IntData, groupBy: true);
+            var page = new PageParam { PageNumber = 1, PageSize = 1 };
+            var result = DbEngine.PageSelect(
+                record => System.Convert.ToInt32(record[0]), UserTable.TableName, where,
+                new OrderByCondition(UserTable.IntData), columns, page,
+                out var totalPages, out var totalCount);
+
+            Assert.AreEqual(2, totalCount);
+            Assert.AreEqual(2, totalPages);
+            Assert.HasCount(1, result);
+        }
+
+        private static InputValues CreateRequiredValues(string unionId, int intData, string specialString)
+        {
+            return new InputValues()
+                .Add(UserTable.Id, Guid.NewGuid().ToString())
+                .Add(UserTable.UnionId, unionId)
+                .Add(UserTable.DoubleData, 1d)
+                .Add(UserTable.DecimalData, 1m)
+                .Add(UserTable.ShortData, (short)1)
+                .Add(UserTable.IntData, intData)
+                .Add(UserTable.BoolData, false)
+                .Add(UserTable.SpecialString, specialString);
         }
     }
 }

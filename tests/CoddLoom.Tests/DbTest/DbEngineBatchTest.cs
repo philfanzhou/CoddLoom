@@ -108,6 +108,29 @@ namespace CoddLoom.Tests.DbTest
                 Assert.AreEqual(0, count, "No records should be inserted after a primary-key conflict.");
         }
 
+        [TestMethod]
+        public void Insert_BatchFailureCaughtInsideCallerTransaction_DoesNotInsertDiagnosticRows()
+        {
+            var duplicateId = Guid.NewGuid().ToString();
+            var marker = $"HandledFailure{Guid.NewGuid():N}";
+            var entities = new List<User>
+            {
+                CreateTestUser(duplicateId, marker + "1", 1, "Handled1"),
+                CreateTestUser(duplicateId, marker + "2", 2, "Handled2")
+            };
+
+            Executor.Transaction(transaction =>
+            {
+                Assert.ThrowsExactly<InvalidOperationException>(() =>
+                    DbEngine.Insert(entities, 2, transaction));
+            });
+
+            var where = new WhereConditions();
+            where.Add(UserTable.UnionId, marker + "%", WhereOperator.Like);
+            Assert.AreEqual(0, DbEngine.Count(UserTable.TableName, where),
+                "Handling a batch failure must not commit rows inserted by failure diagnostics.");
+        }
+
         /// <summary>
         /// Tests inserting a large batch of entities.
         /// Covers large data volumes and parameter-limit handling.

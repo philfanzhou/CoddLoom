@@ -14,14 +14,14 @@ partial class DbEngine
     public int Insert<T>(T entity,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        DbConverter.ToInsert(entity, out var table, out var inputs);
+        DbConverter.ToInsert(entity, _tableColumnsCache, out var table, out var inputs);
         return Insert(table, inputs.First(), con, tran);
     }
 
     public int Insert<T>(IEnumerable<T> entities, int batchSize,
         IDbTransaction tran = null)
     {
-        DbConverter.ToInsert(entities, out var table, out var inputs);
+        DbConverter.ToInsert(entities, _tableColumnsCache, out var table, out var inputs);
         return Insert(table, inputs, batchSize, tran);
     }
 
@@ -35,7 +35,7 @@ partial class DbEngine
     public int Update<T>(T entity,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        DbConverter.ToUpdate(entity, out var table, out var input, out var where);
+        DbConverter.ToUpdate(entity, _tableColumnsCache, out var table, out var input, out var where);
         return Update(table, input, where, con, tran);
     }
 

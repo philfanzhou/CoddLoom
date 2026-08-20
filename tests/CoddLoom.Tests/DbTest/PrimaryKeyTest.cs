@@ -27,7 +27,7 @@ namespace CoddLoom.Tests.DbTest
                 };
 
                 // This should not throw because TableDefine already declares a primary key.
-                var affected = DbEngine.Insert(entity);
+                var affected = engine.Insert(entity);
                 Assert.AreEqual(1, affected);
 
                 // Verify that the record can be queried by primary key.
@@ -39,7 +39,7 @@ namespace CoddLoom.Tests.DbTest
                 var where = WhereConditions.ById<TestEntityWithoutPrimaryKey>(1, out var tableName);
                 Assert.AreEqual(TestEntityWithoutPrimaryKeyTable.TableName, tableName);
                 
-                var result = DbEngine.Select<TestEntityWithoutPrimaryKey>(where, null, con).FirstOrDefault();
+                var result = engine.Select<TestEntityWithoutPrimaryKey>(where, null, con).FirstOrDefault();
                 Assert.IsNotNull(result);
                 Assert.AreEqual(1, result.Id);
                 Assert.AreEqual("TestEntity", result.Name);
@@ -63,7 +63,7 @@ namespace CoddLoom.Tests.DbTest
                 };
 
                 // Insertion should succeed because TableDefine declares the columns, even without a primary key.
-                var affected = DbEngine.Insert(entity);
+                var affected = engine.Insert(entity);
                 Assert.AreEqual(1, affected);
 
                 // Verify that ById throws because TableDefine does not declare a primary key.
