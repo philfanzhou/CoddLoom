@@ -139,6 +139,20 @@ internal static class TypeExt
             return decimal.Parse(decimalValue, NumberStyles.Number, CultureInfo.InvariantCulture);
         }
 
+        if (targetType == typeof(DateTimeOffset))
+        {
+            if (value is string dateTimeOffsetValue)
+            {
+                return DateTimeOffset.Parse(dateTimeOffsetValue, CultureInfo.InvariantCulture,
+                    DateTimeStyles.RoundtripKind);
+            }
+
+            if (value is DateTime dateTimeValue)
+            {
+                return new DateTimeOffset(dateTimeValue);
+            }
+        }
+
         return System.Convert.ChangeType(value, targetType);
     }
 }
