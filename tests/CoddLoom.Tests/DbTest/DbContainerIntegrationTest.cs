@@ -18,6 +18,7 @@ public class DbContainerIntegrationTest : TestBase
 
         Assert.AreSame(engine, DbContainer.Get(uniqueName));
         Assert.AreSame(engine, DbContainer.Get<ContainerTestEngine>());
+        Assert.IsNotNull(DbContainer.Get());
         Assert.IsNull(DbContainer.Get($"missing-{Guid.NewGuid():N}"));
     }
 
