@@ -47,6 +47,32 @@ public class DbEngineFirstTest
         Assert.AreEqual(0, command.Parameters.Single().Value);
     }
 
+    [TestMethod]
+    public void PageSelect_WithoutWhereRetainsCountSemantics()
+    {
+        var connection = new RecordingConnection();
+        var engine = new DbEngine(new RecordingExecutor(connection));
+        connection.Open();
+
+        var result = engine.PageSelect(
+            record => record["name"].ToString(),
+            "first_test",
+            null,
+            null,
+            null,
+            new PageParam { PageNumber = 1, PageSize = 1 },
+            out var totalPages,
+            out var totalCount,
+            connection);
+
+        Assert.AreEqual(1, totalPages);
+        Assert.AreEqual(1, totalCount);
+        CollectionAssert.AreEqual(new[] { "second" }, result);
+        Assert.HasCount(2, connection.Commands);
+        StringAssert.Contains(connection.Commands[0].CommandText, "COUNT");
+        StringAssert.Contains(connection.Commands[1].CommandText, "SELECT * FROM first_test");
+    }
+
     private sealed class RecordingExecutor : DbExecutor
     {
         private readonly RecordingConnection _connection;
@@ -137,21 +163,30 @@ public class DbEngineFirstTest
 
         public override void Cancel() { }
         public override int ExecuteNonQuery() => throw new NotSupportedException();
-        public override object ExecuteScalar() => throw new NotSupportedException();
+        public override object ExecuteScalar()
+        {
+            RecordCommand();
+            return 1;
+        }
         public override void Prepare() { }
         protected override DbParameter CreateDbParameter() => new RecordingParameter();
 
         protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
         {
-            connection.Commands.Add(new RecordedCommand(
-                CommandText,
-                _parameters.Cast<DbParameter>().ToList(),
-                DbTransaction));
+            RecordCommand();
 
             var table = new DataTable();
             table.Columns.Add("name", typeof(string));
             table.Rows.Add("second");
             return table.CreateDataReader();
+        }
+
+        private void RecordCommand()
+        {
+            connection.Commands.Add(new RecordedCommand(
+                CommandText,
+                _parameters.Cast<DbParameter>().ToList(),
+                DbTransaction));
         }
     }
 
