@@ -88,6 +88,54 @@ public class DbConverterTest
     }
 
     [TestMethod]
+    public void ToEntity_PreservesDateTimeOffsetValuesAndParsedOffsets()
+    {
+        var directValue = new DateTimeOffset(2024, 1, 2, 3, 4, 5, TimeSpan.FromHours(-4));
+
+        Assert.AreEqual(directValue, MapDateTimeOffset(directValue));
+
+        var parsed = MapDateTimeOffset("2024-01-02T03:04:05+05:30");
+        Assert.AreEqual(new DateTimeOffset(2024, 1, 2, 3, 4, 5,
+            TimeSpan.FromHours(5.5)), parsed);
+        Assert.AreEqual(TimeSpan.FromHours(5.5), parsed.Offset);
+    }
+
+    [TestMethod]
+    public void ToEntity_ConvertsUtcDateTimeWithoutChangingTheInstant()
+    {
+        var value = new DateTime(2024, 1, 2, 3, 4, 5, DateTimeKind.Utc);
+
+        var converted = MapDateTimeOffset(value, DataSetDateTime.Utc);
+
+        Assert.AreEqual(TimeSpan.Zero, converted.Offset);
+        Assert.AreEqual(value, converted.UtcDateTime);
+    }
+
+    [TestMethod]
+    public void ToEntity_ConvertsLocalAndUnspecifiedDateTimesUsingTheLocalOffset()
+    {
+        var localValue = new DateTime(2024, 1, 2, 3, 4, 5, DateTimeKind.Local);
+        var localOffset = TimeZoneInfo.Local.GetUtcOffset(localValue);
+        var expectedLocal = new DateTimeOffset(
+            DateTime.SpecifyKind(localValue, DateTimeKind.Unspecified), localOffset);
+
+        var unspecifiedValue = new DateTime(2024, 1, 2, 3, 4, 5, DateTimeKind.Unspecified);
+        var unspecifiedOffset = TimeZoneInfo.Local.GetUtcOffset(unspecifiedValue);
+        var expectedUnspecified = new DateTimeOffset(unspecifiedValue, unspecifiedOffset);
+
+        Assert.AreEqual(expectedLocal, MapDateTimeOffset(localValue, DataSetDateTime.Local));
+        Assert.AreEqual(expectedUnspecified,
+            MapDateTimeOffset(unspecifiedValue, DataSetDateTime.Unspecified));
+    }
+
+    [TestMethod]
+    public void ToEntity_RejectsInvalidOrUnsupportedDateTimeOffsetValues()
+    {
+        Assert.ThrowsExactly<FormatException>(() => MapDateTimeOffset("not-a-date"));
+        Assert.ThrowsExactly<InvalidCastException>(() => MapDateTimeOffset(123));
+    }
+
+    [TestMethod]
     public void ToEntity_DistinguishesTypesWithTheSameSimpleName()
     {
         var firstTable = new DataTable();
@@ -173,6 +221,11 @@ public class DbConverterTest
         public decimal Amount { get; set; }
     }
 
+    private sealed class DateTimeOffsetProjection
+    {
+        public DateTimeOffset Value { get; set; }
+    }
+
     private sealed class TableProjection
     {
         public int Id { get; set; }
@@ -181,6 +234,23 @@ public class DbConverterTest
     }
 
     private enum ProjectionState { Inactive, Active }
+
+    private static DateTimeOffset MapDateTimeOffset(object value,
+        DataSetDateTime? dateTimeMode = null)
+    {
+        var table = new DataTable();
+        var column = table.Columns.Add(nameof(DateTimeOffsetProjection.Value), value.GetType());
+        if (dateTimeMode.HasValue)
+        {
+            column.DateTimeMode = dateTimeMode.Value;
+        }
+
+        table.Rows.Add(value);
+        using var reader = table.CreateDataReader();
+        Assert.IsTrue(reader.Read());
+
+        return reader.ToEntity<DateTimeOffsetProjection>().Value;
+    }
 
     private static class FirstModels
     {
