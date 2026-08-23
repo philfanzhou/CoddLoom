@@ -56,7 +56,8 @@ partial class DbEngine
         IDbConnection con = null, IDbTransaction tran = null)
     {
         var pageParam = new PageParam { PageSize = 1, PageNumber = 1 };
-        return PageSelect(convertor, tableName, where, orderBy, columns, pageParam, out var _, out var _, con, tran)
+        var sql = Executor.SqlBuilder.Select(tableName, where, orderBy, pageParam, columns);
+        return Executor.Reader(sql, convertor, where?.Parameters, con, tran)
             .FirstOrDefault();
     }
 
