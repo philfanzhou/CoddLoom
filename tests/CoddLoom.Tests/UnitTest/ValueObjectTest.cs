@@ -70,6 +70,7 @@ public class ValueObjectTest
         Assert.ThrowsExactly<Exception>(() => new OrderByCondition<OrderTable>("unknown"));
         Assert.ThrowsExactly<ArgumentNullException>(() => new OrderByCondition<OrderTable>(string.Empty));
         Assert.ThrowsExactly<ArgumentNullException>(() => new OrderByCondition<OrderTypeWithoutColumns>("id"));
+        Assert.ThrowsExactly<ArgumentNullException>(() => new OrderByCondition(string.Empty));
     }
 
     [TestMethod]

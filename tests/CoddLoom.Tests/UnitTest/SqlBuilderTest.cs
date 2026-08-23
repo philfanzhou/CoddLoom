@@ -106,14 +106,24 @@ public class SqlBuilderTest
             .Add("name", "abc", WhereOperator.Like, WhereConnector.Or)
             .IsNull("deletedAt")
             .IsNotNull("createdAt", WhereConnector.Or)
-            .In("status", new[] { 1, 2 });
+            .In("status", new[] { 1, 2 })
+            .Add("casted", 7, DbType.DateTime);
 
         var sql = _builder.Select("sample", where);
 
         Assert.AreEqual(
-            "SELECT * FROM sample WHERE a = @a0 AND b != @b0 AND c > @c0 AND d >= @d0 AND e < @e0 AND f <= @f0 OR name LIKE @name0 AND deletedAt IS NULL OR createdAt IS NOT NULL AND status IN (@status0,@status1)",
+            "SELECT * FROM sample WHERE a = @a0 AND b != @b0 AND c > @c0 AND d >= @d0 AND e < @e0 AND f <= @f0 OR name LIKE @name0 AND deletedAt IS NULL OR createdAt IS NOT NULL AND status IN (@status0,@status1) AND CAST(casted AS DateTime) = @casted0",
             sql);
         Assert.AreEqual("%abc%", where.Parameters.Single(parameter => parameter.Column == "name").Value);
+    }
+
+    [TestMethod]
+    public void Like_WithExistingPrefix_DoesNotAddAnotherWildcard()
+    {
+        var where = new WhereConditions("name", "%abc", WhereOperator.Like);
+
+        Assert.AreEqual("SELECT * FROM sample WHERE name LIKE @name0", _builder.Select("sample", where));
+        Assert.AreEqual("%abc", where.Parameters.Single().Value);
     }
 
     [TestMethod]
