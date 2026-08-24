@@ -88,6 +88,28 @@ public class DbConverterTest
     }
 
     [TestMethod]
+    public void ToEntity_MatchesColumnNamesOrdinallyRegardlessOfCurrentCulture()
+    {
+        var originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("tr-TR");
+            var table = new DataTable();
+            table.Columns.Add("id", typeof(int));
+            table.Rows.Add(42);
+
+            using var reader = table.CreateDataReader();
+            Assert.IsTrue(reader.Read());
+
+            Assert.AreEqual(42, reader.ToEntity<OrdinalColumnProjection>().Id);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
+    }
+
+    [TestMethod]
     public void ToEntity_PreservesDateTimeOffsetValuesAndParsedOffsets()
     {
         var directValue = new DateTimeOffset(2024, 1, 2, 3, 4, 5, TimeSpan.FromHours(-4));
@@ -199,6 +221,11 @@ public class DbConverterTest
     private sealed class GuidProjection
     {
         public Guid Id { get; set; }
+    }
+
+    private sealed class OrdinalColumnProjection
+    {
+        public int Id { get; set; }
     }
 
     [MapTable(Name = "projection")]

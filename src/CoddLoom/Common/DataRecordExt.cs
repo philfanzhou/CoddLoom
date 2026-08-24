@@ -10,7 +10,7 @@ internal static class DataRecordExt
         var columnNames = new string[record.FieldCount];
         for (var i = 0; i < record.FieldCount; i++)
         {
-            columnNames[i] = record.GetName(i).ToLower();
+            columnNames[i] = record.GetName(i);
         }
 
         return columnNames;
@@ -18,7 +18,8 @@ internal static class DataRecordExt
 
     internal static object GetValue(this IDataRecord record, string[] columns, string name)
     {
-        var index = Array.IndexOf(columns, name.ToLower());
+        var index = Array.FindIndex(columns,
+            column => string.Equals(column, name, StringComparison.OrdinalIgnoreCase));
         if (index == -1)
         {
             return null;
