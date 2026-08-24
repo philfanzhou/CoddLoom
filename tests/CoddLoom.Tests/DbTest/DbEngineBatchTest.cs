@@ -3,6 +3,7 @@ using CoddLoom.Condition;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using CoddLoom.Input;
 using CoddLoom.Sqlite;
 using CoddLoom.Tests.DbCode;
 using CoddLoom.Tests.DbCode.Entity;
@@ -394,6 +395,55 @@ namespace CoddLoom.Tests.DbTest
             {
                 engine.Drop(UserTable.TableName);
                 if (File.Exists(dbPath)) File.Delete(dbPath);
+            }
+        }
+
+        [TestMethod]
+        public void Insert_BatchSizeOfOne_Should_InsertEveryRowAsSingleRowBatch()
+        {
+            var entities = new List<User>();
+            for (int i = 1; i <= 3; i++)
+            {
+                entities.Add(CreateTestUser(
+                    Guid.NewGuid().ToString(),
+                    $"SingleRowBatchUser{i}",
+                    i,
+                    $"Single{i}"
+                ));
+            }
+
+            var affected = DbEngine.Insert(entities, 1);
+
+            Assert.AreEqual(3, affected, "Each row should be inserted as its own single-row batch.");
+
+            var where = new WhereConditions();
+            where.Add(UserTable.UnionId, "SingleRowBatchUser%", WhereOperator.Like);
+            var count = DbEngine.Count(UserTable.TableName, where);
+            Assert.AreEqual(3, count, "All rows should be present after a batch size of one.");
+        }
+
+        [TestMethod]
+        public void Insert_NonPositiveBatchSize_Should_ThrowBeforeTransactionAndEnumeration()
+        {
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => DbEngine.Insert(new UnEnumeratedInputs(), 0),
+                "A batch size of zero must be rejected before any work starts.");
+
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => DbEngine.Insert(new UnEnumeratedInputs(), -5),
+                "A negative batch size must be rejected before any work starts.");
+        }
+
+        private sealed class UnEnumeratedInputs : IEnumerable<InputValues>
+        {
+            public IEnumerator<InputValues> GetEnumerator()
+            {
+                throw new InvalidOperationException("Inputs must not be enumerated.");
+            }
+
+            System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
             }
         }
 
