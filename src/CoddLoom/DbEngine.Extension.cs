@@ -21,6 +21,12 @@ partial class DbEngine
     public int Insert<T>(IEnumerable<T> entities, int batchSize,
         IDbTransaction tran = null)
     {
+        if (batchSize <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(batchSize),
+                "Batch size must be greater than 0.");
+        }
+
         DbConverter.ToInsert(entities, _tableColumnsCache, out var table, out var inputs);
         return Insert(table, inputs, batchSize, tran);
     }

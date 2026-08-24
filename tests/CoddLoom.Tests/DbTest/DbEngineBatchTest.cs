@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using CoddLoom.Input;
+using CoddLoom.Params;
+using CoddLoom.Sql;
 using CoddLoom.Sqlite;
 using CoddLoom.Tests.DbCode;
 using CoddLoom.Tests.DbCode.Entity;
@@ -401,44 +403,75 @@ namespace CoddLoom.Tests.DbTest
         [TestMethod]
         public void Insert_BatchSizeOfOne_Should_InsertEveryRowAsSingleRowBatch()
         {
-            var entities = new List<User>();
-            for (int i = 1; i <= 3; i++)
+            var singleRowDb = Path.Combine(Path.GetTempPath(), $"coddloom-batch1-{Guid.NewGuid():N}.db");
+            var singleRowExecutor = new BatchCountingSqliteExecutor($"Data Source={singleRowDb};Version=3;Pooling=False;");
+            var engine = new TestDbEngine(singleRowExecutor);
+
+            var batchOfTenDb = Path.Combine(Path.GetTempPath(), $"coddloom-batch10-{Guid.NewGuid():N}.db");
+            var batchOfTenExecutor = new BatchCountingSqliteExecutor($"Data Source={batchOfTenDb};Version=3;Pooling=False;");
+            var engineWithBatchOfTen = new TestDbEngine(batchOfTenExecutor);
+
+            try
             {
-                entities.Add(CreateTestUser(
-                    Guid.NewGuid().ToString(),
-                    $"SingleRowBatchUser{i}",
-                    i,
-                    $"Single{i}"
-                ));
+                var entities = new List<User>();
+                for (int i = 1; i <= 5; i++)
+                {
+                    entities.Add(CreateTestUser(
+                        Guid.NewGuid().ToString(),
+                        $"SingleRowBatchUser{i}",
+                        i,
+                        $"Single{i}"
+                    ));
+                }
+
+                Assert.AreEqual(5, engine.Insert(entities, 1));
+                Assert.AreEqual(5, singleRowExecutor.InsertBatchCount,
+                    "A batch size of one must issue one insert command per row.");
+
+                Assert.AreEqual(5, engineWithBatchOfTen.Insert(entities, 10));
+                Assert.AreEqual(1, batchOfTenExecutor.InsertBatchCount,
+                    "Rows within the batch size limit must be sent as a single insert command.");
             }
-
-            var affected = DbEngine.Insert(entities, 1);
-
-            Assert.AreEqual(3, affected, "Each row should be inserted as its own single-row batch.");
-
-            var where = new WhereConditions();
-            where.Add(UserTable.UnionId, "SingleRowBatchUser%", WhereOperator.Like);
-            var count = DbEngine.Count(UserTable.TableName, where);
-            Assert.AreEqual(3, count, "All rows should be present after a batch size of one.");
+            finally
+            {
+                engine.Drop(UserTable.TableName);
+                engineWithBatchOfTen.Drop(UserTable.TableName);
+                if (File.Exists(singleRowDb)) File.Delete(singleRowDb);
+                if (File.Exists(batchOfTenDb)) File.Delete(batchOfTenDb);
+            }
         }
 
         [TestMethod]
         public void Insert_NonPositiveBatchSize_Should_ThrowBeforeTransactionAndEnumeration()
         {
-            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
-                () => DbEngine.Insert(new UnEnumeratedInputs(), 0),
+            var entityZero = Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => DbEngine.Insert(new UnEnumeratedSequence<User>(), 0),
                 "A batch size of zero must be rejected before any work starts.");
+            Assert.AreEqual("batchSize", entityZero.ParamName,
+                "The exception must come from the batchSize validation, not an upstream mapping error.");
 
-            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
-                () => DbEngine.Insert(new UnEnumeratedInputs(), -5),
-                "A negative batch size must be rejected before any work starts.");
+            var entityNegative = Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => DbEngine.Insert(new UnEnumeratedSequence<User>(), -5));
+            Assert.AreEqual("batchSize", entityNegative.ParamName);
+
+            var inputZero = Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => DbEngine.Insert(UserTable.TableName, new UnEnumeratedSequence<InputValues>(), 0));
+            Assert.AreEqual("batchSize", inputZero.ParamName);
+
+            var inputNegative = Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => DbEngine.Insert(UserTable.TableName, new UnEnumeratedSequence<InputValues>(), -5));
+            Assert.AreEqual("batchSize", inputNegative.ParamName);
         }
 
-        private sealed class UnEnumeratedInputs : IEnumerable<InputValues>
+        /// <summary>
+        /// A sequence that fails the test if it is ever enumerated, proving that
+        /// argument validation happens before transaction start or data enumeration.
+        /// </summary>
+        private sealed class UnEnumeratedSequence<T> : IEnumerable<T>
         {
-            public IEnumerator<InputValues> GetEnumerator()
+            public IEnumerator<T> GetEnumerator()
             {
-                throw new InvalidOperationException("Inputs must not be enumerated.");
+                throw new InvalidOperationException("The sequence must never be enumerated by this test.");
             }
 
             System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -457,6 +490,30 @@ namespace CoddLoom.Tests.DbTest
 
             public override bool CanContinueTransactionAfterCommandFailure { get; }
                 = canContinueTransactionAfterCommandFailure;
+        }
+
+        /// <summary>
+        /// A SQLite executor whose SqlBuilder counts the insert commands it builds,
+        /// exposing exactly how many insert batches were sent to the database.
+        /// </summary>
+        private sealed class BatchCountingSqliteExecutor(string connectionString)
+            : SqliteExecutor(connectionString)
+        {
+            public int InsertBatchCount => ((CountingSqlBuilder)SqlBuilder).InsertBatchCount;
+
+            public override SqlBuilder SqlBuilder { get; } = new CountingSqlBuilder();
+
+            private sealed class CountingSqlBuilder : SqlBuilder
+            {
+                public int InsertBatchCount { get; private set; }
+
+                public override string Insert(string tableName, IEnumerable<InputValues> inputs,
+                    out List<ValueParam> dbParams, bool useParameter = true)
+                {
+                    InsertBatchCount++;
+                    return base.Insert(tableName, inputs, out dbParams, useParameter);
+                }
+            }
         }
 
         
