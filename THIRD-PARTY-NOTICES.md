@@ -6,7 +6,8 @@ CoddLoom is licensed under the MIT License. Its database-provider packages refer
 | --- | --- | --- |
 | `Microsoft.Data.SqlClient` 7.0.2 | `CoddLoom.SqlServer` | MIT; its native SNI runtime has separate Microsoft redistribution terms |
 | `Microsoft.Data.SqlClient.Extensions.Azure` 7.0.2 | `CoddLoom.SqlServer` | MIT |
-| `System.Data.SQLite.Core` 1.0.119 | `CoddLoom.Sqlite` | Public Domain, with separately licensed portions documented by System.Data.SQLite |
+| `System.Data.SQLite` 2.0.4 | `CoddLoom.Sqlite` | Public Domain, with separately licensed portions documented by System.Data.SQLite |
+| `SourceGear.sqlite3` 3.53.4 | `CoddLoom.Sqlite` | Public Domain (SQLite) |
 | `MySql.Data` 26.7.0 | `CoddLoom.MySql` | GPL-2.0-only WITH Universal-FOSS-exception-1.0 |
 | `MySqlConnector` 2.6.2 | `CoddLoom.MariaDb` | MIT |
 | `Oracle.ManagedDataAccess.Core` 23.26.300 | `CoddLoom.Oracle` | Oracle Free Distribution, Hosting, and Use Terms and Conditions |
