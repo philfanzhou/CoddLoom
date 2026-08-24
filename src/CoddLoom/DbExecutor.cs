@@ -5,7 +5,6 @@ using CoddLoom.Table;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Reflection;
 
 namespace CoddLoom;
@@ -268,10 +267,6 @@ public abstract class DbExecutor
     {
         using var reader = command.ExecuteReader();
         var result = new List<T>();
-        if (reader is not DbDataReader { HasRows: true })
-        {
-            return result;
-        }
         while (reader.Read())
         {
             result.Add(convertor(reader));
