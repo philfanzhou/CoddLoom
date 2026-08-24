@@ -53,7 +53,7 @@ public class MariaDbExecutor(string connectionString)
             Port = port
         };
 
-        var checkDbSql = $"CREATE DATABASE IF NOT EXISTS {database}";
+        var checkDbSql = $"CREATE DATABASE IF NOT EXISTS {MariaDbIdentifier.QuoteDatabase(database)}";
         using var connection = new MySqlConnection(connStrBuilder.ConnectionString);
         try
         {
