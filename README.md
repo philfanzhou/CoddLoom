@@ -47,6 +47,19 @@ For PostgreSQL, install `CoddLoom.PostgreSql` and construct the engine with a
 
 Tables and entities are defined independently: table constants describe schema and reusable SQL identifiers, while mapping attributes connect entity members to those columns.
 
+## ID generation and concurrency
+
+`GenerateId`, `GenerateMaxId`, `GenerateTimeId`, and `GenerateUtcTimeId` only
+return candidate values that are unused when their existence queries run. They do
+not reserve an ID or guarantee that a later insert will succeed: concurrent callers
+can receive the same candidate between the query and the insert. Passing a database
+connection or transaction does not remove that post-return race.
+
+For concurrent workloads, prefer IDs generated atomically by the database through
+an identity column or sequence. Client-generated UUIDs are another option. If IDs
+must be generated with an application-specific scheme, enforce a unique constraint
+in the database and retry the insert after a duplicate-key failure.
+
 ## Build and test
 
 ```bash
