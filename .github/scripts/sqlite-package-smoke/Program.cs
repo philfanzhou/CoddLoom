@@ -45,7 +45,7 @@ try
     command.ExecuteNonQuery();
 
     command.CommandText =
-        "SELECT group_concat(Amount) FROM (SELECT Amount FROM SmokeDecimal ORDER BY Amount);";
+        "SELECT group_concat(Amount ORDER BY Amount) FROM SmokeDecimal;";
     var ordered = command.ExecuteScalar() as string;
     if (ordered != "9,10,100")
     {
