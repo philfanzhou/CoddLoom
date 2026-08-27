@@ -21,6 +21,59 @@ env:
   DOTNET_NOLOGO: true
 
 jobs:
+  sqlite-package-macos-arm64:
+    name: SQLite package smoke test (macOS arm64)
+    runs-on: macos-15
+    timeout-minutes: 10
+    env:
+      PACKAGE_VERSION: 0.0.0-ci.${{ github.run_number }}.${{ github.run_attempt }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Pack SQLite and its CoddLoom dependency
+        run: |
+          dotnet pack src/CoddLoom/CoddLoom.csproj \
+            --configuration Release \
+            --output artifacts/packages \
+            -p:Version="$PACKAGE_VERSION" \
+            -p:RepositoryCommit=${{ github.sha }}
+          dotnet pack src/CoddLoom.Sqlite/CoddLoom.Sqlite.csproj \
+            --configuration Release \
+            --output artifacts/packages \
+            -p:Version="$PACKAGE_VERSION" \
+            -p:RepositoryCommit=${{ github.sha }}
+
+      - name: Create clean package consumer
+        run: |
+          dotnet new console \
+            --framework net8.0 \
+            --output artifacts/sqlite-consumer \
+            --no-restore
+          dotnet add artifacts/sqlite-consumer package CoddLoom.Sqlite \
+            --version "$PACKAGE_VERSION" \
+            --no-restore
+          cp .github/scripts/sqlite-package-smoke/Program.cs \
+            artifacts/sqlite-consumer/Program.cs
+
+      - name: Restore package consumer from local packages
+        run: |
+          dotnet restore artifacts/sqlite-consumer \
+            --source artifacts/packages \
+            --source https://api.nuget.org/v3/index.json
+
+      - name: Run native arm64 SQLite smoke test
+        run: >-
+          dotnet run
+          --project artifacts/sqlite-consumer
+          --configuration Release
+          --no-restore
+
   build-test-pack:
     name: Build, SQLite test, coverage, and pack
     runs-on: ubuntu-24.04
