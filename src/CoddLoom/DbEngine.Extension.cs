@@ -93,8 +93,11 @@ partial class DbEngine
     /// previously generated candidate, or <c>default(T)</c> on the first call.</param>
     /// <param name="con">An optional database connection used by the existence query.</param>
     /// <param name="tran">An optional transaction used by the existence query.</param>
-    /// <param name="tryCount">The maximum number of candidates to test.</param>
+    /// <param name="tryCount">The maximum number of candidates to test. Must be greater than
+    /// zero.</param>
     /// <returns>An ID that was not present when the existence query ran.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="tryCount"/> is
+    /// less than or equal to zero.</exception>
     /// <exception cref="Exception">Thrown when every one of the
     /// <paramref name="tryCount"/> candidates already exists in the column.</exception>
     /// <remarks>
@@ -109,6 +112,12 @@ partial class DbEngine
     public T GenerateId<T>(string tableName, string columnName, Func<T, T> generateId,
         IDbConnection con = null, IDbTransaction tran = null, int tryCount = 10)
     {
+        if (tryCount <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(tryCount),
+                "Try count must be greater than 0.");
+        }
+
         var currentId = default(T);
         for (var i = 0; i < tryCount; i++)
         {
@@ -126,21 +135,26 @@ partial class DbEngine
     }
 
     /// <summary>
-    /// Returns a candidate ID one greater than the current maximum value in a column.
+    /// Returns a candidate ID one greater than the first value returned by descending database
+    /// ordering, after parsing that value as a <see cref="long"/>.
     /// </summary>
     /// <param name="tableName">The table containing the ID column.</param>
-    /// <param name="columnName">The ID column to query.</param>
+    /// <param name="columnName">The numerically ordered ID column to query.</param>
     /// <param name="con">An optional database connection used by the queries.</param>
     /// <param name="tran">An optional transaction used by the queries.</param>
-    /// <returns>A candidate ID that was not present when queried.</returns>
-    /// <exception cref="FormatException">Thrown when the maximum column value cannot be parsed as
-    /// a <see cref="long"/>.</exception>
-    /// <exception cref="OverflowException">Thrown when the maximum column value is
-    /// <see cref="long.MaxValue"/>.</exception>
+    /// <returns>A candidate ID that was not present when queried, or <c>1</c> when the table is
+    /// empty.</returns>
+    /// <exception cref="FormatException">Thrown when the selected column value is not in a valid
+    /// <see cref="long"/> format.</exception>
+    /// <exception cref="OverflowException">Thrown when the selected column value is outside the
+    /// range of <see cref="long"/>, or when it equals <see cref="long.MaxValue"/> and cannot be
+    /// incremented.</exception>
     /// <exception cref="Exception">Thrown when the single generated candidate already exists in
     /// the column.</exception>
     /// <remarks>
-    /// This method uses a non-atomic maximum-value query followed by an existence query and makes
+    /// The database determines the descending ordering. Use this method only with a column whose
+    /// database type sorts numerically; text columns can produce a lexicographic result instead.
+    /// The method uses a non-atomic maximum-value query followed by an existence query and makes
     /// only one attempt. If the candidate already exists, the method throws rather than
     /// recomputing the maximum. It does not reserve the returned value, and concurrent callers can
     /// receive the same ID before either caller inserts it. Supplying a connection or transaction
@@ -173,11 +187,12 @@ partial class DbEngine
     /// <exception cref="Exception">Thrown when all ten generated candidates already exist in the
     /// column.</exception>
     /// <remarks>
-    /// The time and random components do not guarantee uniqueness. Because the timestamp has
-    /// second granularity and the random suffix is drawn from a per-attempt <see cref="Random"/>
-    /// instance, retries within the same second can regenerate the same candidate, so a collision
-    /// is not necessarily resolved by retrying. This method does not reserve the returned value,
-    /// and concurrent callers can receive the same candidate before either caller inserts it.
+    /// The time and random components do not guarantee uniqueness. The timestamp has second
+    /// granularity and the suffix has only 899 possible values (100 through 998), so retries can
+    /// repeat a candidate. On .NET Framework, rapidly constructed <see cref="Random"/> instances
+    /// can also receive the same time-based seed and produce identical suffixes. This method does
+    /// not reserve the returned value, and concurrent callers can receive the same candidate
+    /// before either caller inserts it.
     /// Supplying a connection or transaction alone does not eliminate that race; the caller must
     /// use an isolation or locking strategy that protects the existence query through the insert.
     /// Prefer a database identity or sequence, a UUID, or an insert protected by a unique
@@ -204,11 +219,12 @@ partial class DbEngine
     /// <exception cref="Exception">Thrown when all ten generated candidates already exist in the
     /// column.</exception>
     /// <remarks>
-    /// The UTC time and random components do not guarantee uniqueness. Because the timestamp has
-    /// second granularity and the random suffix is drawn from a per-attempt <see cref="Random"/>
-    /// instance, retries within the same second can regenerate the same candidate, so a collision
-    /// is not necessarily resolved by retrying. This method does not reserve the returned value,
-    /// and concurrent callers can receive the same candidate before either caller inserts it.
+    /// The UTC time and random components do not guarantee uniqueness. The timestamp has second
+    /// granularity and the suffix has only 899 possible values (100 through 998), so retries can
+    /// repeat a candidate. On .NET Framework, rapidly constructed <see cref="Random"/> instances
+    /// can also receive the same time-based seed and produce identical suffixes. This method does
+    /// not reserve the returned value, and concurrent callers can receive the same candidate
+    /// before either caller inserts it.
     /// Supplying a connection or transaction alone does not eliminate that race; the caller must
     /// use an isolation or locking strategy that protects the existence query through the insert.
     /// Prefer a database identity or sequence, a UUID, or an insert protected by a unique
