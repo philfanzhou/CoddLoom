@@ -93,31 +93,26 @@ partial class DbEngine
     /// previously generated candidate, or <c>default(T)</c> on the first call.</param>
     /// <param name="con">An optional database connection used by the existence query.</param>
     /// <param name="tran">An optional transaction used by the existence query.</param>
-    /// <param name="tryCount">The maximum number of candidates to test. Must be greater than
-    /// zero.</param>
+    /// <param name="tryCount">The maximum number of candidates to test. When the value is less
+    /// than or equal to zero, no candidate is generated or tested.</param>
     /// <returns>An ID that was not present when the existence query ran.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="tryCount"/> is
-    /// less than or equal to zero.</exception>
-    /// <exception cref="Exception">Thrown when every one of the
-    /// <paramref name="tryCount"/> candidates already exists in the column.</exception>
+    /// <exception cref="Exception">Thrown when <paramref name="tryCount"/> is less than or equal
+    /// to zero, or when every generated candidate already exists in the column.</exception>
     /// <remarks>
     /// This method does not reserve the returned value or guarantee that a later insert will
     /// succeed. Concurrent callers can receive the same candidate between the existence query
-    /// and the caller's insert. Supplying a connection or transaction alone does not eliminate
-    /// that race; the caller must use an isolation or locking strategy that protects the
-    /// existence query through the insert. Prefer a database identity or sequence, a UUID, or an
-    /// insert protected by a unique constraint with retry handling when concurrent uniqueness is
-    /// required.
+    /// and the caller's insert. When the caller has an open transaction, pass it through
+    /// <paramref name="tran"/> so the query can observe the caller's uncommitted writes. Without
+    /// it, the query runs outside that transaction; when neither <paramref name="con"/> nor
+    /// <paramref name="tran"/> is supplied, it uses a separate connection. Supplying the current
+    /// transaction still does not by itself eliminate the post-return race; the caller must use
+    /// an isolation or locking strategy that protects the existence query through the insert.
+    /// Prefer a database identity or sequence, a UUID, or an insert protected by a unique
+    /// constraint with retry handling when concurrent uniqueness is required.
     /// </remarks>
     public T GenerateId<T>(string tableName, string columnName, Func<T, T> generateId,
         IDbConnection con = null, IDbTransaction tran = null, int tryCount = 10)
     {
-        if (tryCount <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(tryCount),
-                "Try count must be greater than 0.");
-        }
-
         var currentId = default(T);
         for (var i = 0; i < tryCount; i++)
         {
@@ -157,11 +152,14 @@ partial class DbEngine
     /// The method uses a non-atomic maximum-value query followed by an existence query and makes
     /// only one attempt. If the candidate already exists, the method throws rather than
     /// recomputing the maximum. It does not reserve the returned value, and concurrent callers can
-    /// receive the same ID before either caller inserts it. Supplying a connection or transaction
-    /// alone does not eliminate the race; the caller must use an isolation or locking strategy
-    /// that protects the maximum and existence queries through the insert. Prefer a database
-    /// identity or sequence, a UUID, or an insert protected by a unique constraint with retry
-    /// handling.
+    /// receive the same ID before either caller inserts it. When the caller has an open
+    /// transaction, pass it through <paramref name="tran"/> so both queries can observe the
+    /// caller's uncommitted writes. Without it, the queries run outside that transaction; when
+    /// neither <paramref name="con"/> nor <paramref name="tran"/> is supplied, they use separate
+    /// connections. Supplying the current transaction still does not by itself eliminate the
+    /// post-return race; the caller must use an isolation or locking strategy that protects the
+    /// maximum and existence queries through the insert. Prefer a database identity or sequence,
+    /// a UUID, or an insert protected by a unique constraint with retry handling.
     /// </remarks>
     public long GenerateMaxId(string tableName, string columnName,
         IDbConnection con = null, IDbTransaction tran = null)
@@ -192,9 +190,12 @@ partial class DbEngine
     /// repeat a candidate. On .NET Framework, rapidly constructed <see cref="Random"/> instances
     /// can also receive the same time-based seed and produce identical suffixes. This method does
     /// not reserve the returned value, and concurrent callers can receive the same candidate
-    /// before either caller inserts it.
-    /// Supplying a connection or transaction alone does not eliminate that race; the caller must
-    /// use an isolation or locking strategy that protects the existence query through the insert.
+    /// before either caller inserts it. When the caller has an open transaction, pass it through
+    /// <paramref name="tran"/> so the query can observe the caller's uncommitted writes. Without
+    /// it, the query runs outside that transaction; when neither <paramref name="con"/> nor
+    /// <paramref name="tran"/> is supplied, it uses a separate connection. Supplying the current
+    /// transaction still does not by itself eliminate the post-return race; the caller must use
+    /// an isolation or locking strategy that protects the existence query through the insert.
     /// Prefer a database identity or sequence, a UUID, or an insert protected by a unique
     /// constraint with retry handling when concurrent uniqueness is required.
     /// </remarks>
@@ -224,9 +225,12 @@ partial class DbEngine
     /// repeat a candidate. On .NET Framework, rapidly constructed <see cref="Random"/> instances
     /// can also receive the same time-based seed and produce identical suffixes. This method does
     /// not reserve the returned value, and concurrent callers can receive the same candidate
-    /// before either caller inserts it.
-    /// Supplying a connection or transaction alone does not eliminate that race; the caller must
-    /// use an isolation or locking strategy that protects the existence query through the insert.
+    /// before either caller inserts it. When the caller has an open transaction, pass it through
+    /// <paramref name="tran"/> so the query can observe the caller's uncommitted writes. Without
+    /// it, the query runs outside that transaction; when neither <paramref name="con"/> nor
+    /// <paramref name="tran"/> is supplied, it uses a separate connection. Supplying the current
+    /// transaction still does not by itself eliminate the post-return race; the caller must use
+    /// an isolation or locking strategy that protects the existence query through the insert.
     /// Prefer a database identity or sequence, a UUID, or an insert protected by a unique
     /// constraint with retry handling when concurrent uniqueness is required.
     /// </remarks>

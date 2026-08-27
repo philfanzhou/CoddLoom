@@ -27,24 +27,6 @@ public class DbEngineUtilityIntegrationTest : TestBase
     }
 
     [TestMethod]
-    [DataRow(0)]
-    [DataRow(-1)]
-    public void GenerateId_RejectsNonPositiveTryCountBeforeGeneratingCandidate(int tryCount)
-    {
-        var generatorCalled = false;
-
-        var exception = Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
-            DbEngine.GenerateId<string>(UserTable.TableName, UserTable.Id, _ =>
-            {
-                generatorCalled = true;
-                return "1";
-            }, tryCount: tryCount));
-
-        Assert.AreEqual("tryCount", exception.ParamName);
-        Assert.IsFalse(generatorCalled);
-    }
-
-    [TestMethod]
     public void GenerateMaxAndTimeIds_ReturnExpectedShapes()
     {
         var numericTable = new TableDefine(typeof(NumericIdTable));

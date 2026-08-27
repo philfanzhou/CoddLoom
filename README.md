@@ -55,6 +55,11 @@ not reserve an ID or guarantee that a later insert will succeed: concurrent call
 can receive the same candidate between the query and the insert. Passing a database
 connection or transaction does not by itself remove that post-return race; the caller
 must use an isolation or locking strategy that protects the query through the insert.
+When calling these methods from an open transaction, pass that transaction through
+the `tran` parameter. Otherwise the queries do not participate in the transaction and
+cannot observe its uncommitted writes; if neither `con` nor `tran` is supplied, each
+query uses a separate connection. Repeated calls can therefore return the same ID even
+without concurrent callers.
 
 For concurrent workloads, prefer IDs generated atomically by the database through
 an identity column or sequence. Client-generated UUIDs are another option. If IDs
