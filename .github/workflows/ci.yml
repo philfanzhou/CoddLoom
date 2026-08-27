@@ -53,24 +53,24 @@ jobs:
         run: |
           dotnet new console \
             --framework net8.0 \
-            --output artifacts/sqlite-consumer \
+            --output "$RUNNER_TEMP/sqlite-consumer" \
             --no-restore
-          dotnet add artifacts/sqlite-consumer package CoddLoom.Sqlite \
+          dotnet add "$RUNNER_TEMP/sqlite-consumer" package CoddLoom.Sqlite \
             --version "$PACKAGE_VERSION" \
             --no-restore
           cp .github/scripts/sqlite-package-smoke/Program.cs \
-            artifacts/sqlite-consumer/Program.cs
+            "$RUNNER_TEMP/sqlite-consumer/Program.cs"
 
       - name: Restore package consumer from local packages
         run: |
-          dotnet restore artifacts/sqlite-consumer \
+          dotnet restore "$RUNNER_TEMP/sqlite-consumer" \
             --source artifacts/packages \
             --source https://api.nuget.org/v3/index.json
 
       - name: Run native arm64 SQLite smoke test
         run: >-
           dotnet run
-          --project artifacts/sqlite-consumer
+          --project "$RUNNER_TEMP/sqlite-consumer"
           --configuration Release
           --no-restore
 
