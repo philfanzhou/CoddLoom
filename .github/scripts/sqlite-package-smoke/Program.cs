@@ -36,7 +36,25 @@ try
         throw new InvalidOperationException($"The SQLite smoke-test read returned '{value}'.");
     }
 
-    Console.WriteLine("SQLite package create, insert, and read smoke test passed.");
+    command.CommandText =
+        "CREATE TABLE SmokeDecimal (Amount TEXT COLLATE CODDLOOM_DECIMAL);";
+    command.ExecuteNonQuery();
+
+    command.CommandText =
+        "INSERT INTO SmokeDecimal (Amount) VALUES ('10'), ('9'), ('100');";
+    command.ExecuteNonQuery();
+
+    command.CommandText =
+        "SELECT group_concat(Amount) FROM (SELECT Amount FROM SmokeDecimal ORDER BY Amount);";
+    var ordered = command.ExecuteScalar() as string;
+    if (ordered != "9,10,100")
+    {
+        throw new InvalidOperationException(
+            $"The CODDLOOM_DECIMAL collation ordered rows as '{ordered}'.");
+    }
+
+    Console.WriteLine(
+        "SQLite package create, insert, read, and CODDLOOM_DECIMAL collation smoke test passed.");
 }
 finally
 {
