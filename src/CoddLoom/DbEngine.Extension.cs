@@ -100,15 +100,10 @@ partial class DbEngine
     /// to zero, or when every generated candidate already exists in the column.</exception>
     /// <remarks>
     /// This method does not reserve the returned value or guarantee that a later insert will
-    /// succeed. Concurrent callers can receive the same candidate between the existence query
-    /// and the caller's insert. When the caller has an open transaction, pass it through
-    /// <paramref name="tran"/> so the query can observe the caller's uncommitted writes. Without
-    /// it, the query runs outside that transaction; when neither <paramref name="con"/> nor
-    /// <paramref name="tran"/> is supplied, it uses a separate connection. Supplying the current
-    /// transaction still does not by itself eliminate the post-return race; the caller must use
-    /// an isolation or locking strategy that protects the existence query through the insert.
-    /// Prefer a database identity or sequence, a UUID, or an insert protected by a unique
-    /// constraint with retry handling when concurrent uniqueness is required.
+    /// succeed.
+    /// See the "ID generation and concurrency" section of the README for the contract shared by
+    /// the four <c>Generate*Id</c> methods, the <paramref name="con"/> and <paramref name="tran"/>
+    /// rules, and safer alternatives.
     /// </remarks>
     public T GenerateId<T>(string tableName, string columnName, Func<T, T> generateId,
         IDbConnection con = null, IDbTransaction tran = null, int tryCount = 10)
@@ -147,19 +142,14 @@ partial class DbEngine
     /// <exception cref="Exception">Thrown when the single generated candidate already exists in
     /// the column.</exception>
     /// <remarks>
-    /// The database determines the descending ordering. Use this method only with a column whose
-    /// database type sorts numerically; text columns can produce a lexicographic result instead.
-    /// The method uses a non-atomic maximum-value query followed by an existence query and makes
-    /// only one attempt. If the candidate already exists, the method throws rather than
-    /// recomputing the maximum. It does not reserve the returned value, and concurrent callers can
-    /// receive the same ID before either caller inserts it. When the caller has an open
-    /// transaction, pass it through <paramref name="tran"/> so both queries can observe the
-    /// caller's uncommitted writes. Without it, the queries run outside that transaction; when
-    /// neither <paramref name="con"/> nor <paramref name="tran"/> is supplied, they use separate
-    /// connections. Supplying the current transaction still does not by itself eliminate the
-    /// post-return race; the caller must use an isolation or locking strategy that protects the
-    /// maximum and existence queries through the insert. Prefer a database identity or sequence,
-    /// a UUID, or an insert protected by a unique constraint with retry handling.
+    /// The database performs the descending ordering, so use this method only with a non-nullable
+    /// column whose database type sorts numerically: a text column yields a lexicographic maximum,
+    /// and a NULL sorts first on providers that default to <c>NULLS FIRST</c>. The maximum-value
+    /// query and the existence query are not atomic, and the method makes a single attempt: if the
+    /// candidate already exists it throws rather than recomputing the maximum.
+    /// See the "ID generation and concurrency" section of the README for the contract shared by
+    /// the four <c>Generate*Id</c> methods, the <paramref name="con"/> and <paramref name="tran"/>
+    /// rules, and safer alternatives.
     /// </remarks>
     public long GenerateMaxId(string tableName, string columnName,
         IDbConnection con = null, IDbTransaction tran = null)
@@ -185,19 +175,13 @@ partial class DbEngine
     /// <exception cref="Exception">Thrown when all ten generated candidates already exist in the
     /// column.</exception>
     /// <remarks>
-    /// The time and random components do not guarantee uniqueness. The timestamp has second
-    /// granularity and the suffix has only 899 possible values (100 through 998), so retries can
-    /// repeat a candidate. On .NET Framework, rapidly constructed <see cref="Random"/> instances
-    /// can also receive the same time-based seed and produce identical suffixes. This method does
-    /// not reserve the returned value, and concurrent callers can receive the same candidate
-    /// before either caller inserts it. When the caller has an open transaction, pass it through
-    /// <paramref name="tran"/> so the query can observe the caller's uncommitted writes. Without
-    /// it, the query runs outside that transaction; when neither <paramref name="con"/> nor
-    /// <paramref name="tran"/> is supplied, it uses a separate connection. Supplying the current
-    /// transaction still does not by itself eliminate the post-return race; the caller must use
-    /// an isolation or locking strategy that protects the existence query through the insert.
-    /// Prefer a database identity or sequence, a UUID, or an insert protected by a unique
-    /// constraint with retry handling when concurrent uniqueness is required.
+    /// The time and random components do not guarantee uniqueness: the timestamp has second
+    /// granularity and the suffix has only 899 possible values (100 through 998), so a retry can
+    /// repeat a candidate. On .NET Framework, where rapidly constructed <see cref="Random"/>
+    /// instances share a time-based seed, every retry within one seed tick repeats it.
+    /// See the "ID generation and concurrency" section of the README for the contract shared by
+    /// the four <c>Generate*Id</c> methods, the <paramref name="con"/> and <paramref name="tran"/>
+    /// rules, and safer alternatives.
     /// </remarks>
     public string GenerateTimeId(string tableName, string columnName, Func<DateTime> getTime,
         IDbConnection con = null, IDbTransaction tran = null)
@@ -220,19 +204,13 @@ partial class DbEngine
     /// <exception cref="Exception">Thrown when all ten generated candidates already exist in the
     /// column.</exception>
     /// <remarks>
-    /// The UTC time and random components do not guarantee uniqueness. The timestamp has second
-    /// granularity and the suffix has only 899 possible values (100 through 998), so retries can
-    /// repeat a candidate. On .NET Framework, rapidly constructed <see cref="Random"/> instances
-    /// can also receive the same time-based seed and produce identical suffixes. This method does
-    /// not reserve the returned value, and concurrent callers can receive the same candidate
-    /// before either caller inserts it. When the caller has an open transaction, pass it through
-    /// <paramref name="tran"/> so the query can observe the caller's uncommitted writes. Without
-    /// it, the query runs outside that transaction; when neither <paramref name="con"/> nor
-    /// <paramref name="tran"/> is supplied, it uses a separate connection. Supplying the current
-    /// transaction still does not by itself eliminate the post-return race; the caller must use
-    /// an isolation or locking strategy that protects the existence query through the insert.
-    /// Prefer a database identity or sequence, a UUID, or an insert protected by a unique
-    /// constraint with retry handling when concurrent uniqueness is required.
+    /// The UTC time and random components do not guarantee uniqueness: the timestamp has second
+    /// granularity and the suffix has only 899 possible values (100 through 998), so a retry can
+    /// repeat a candidate. On .NET Framework, where rapidly constructed <see cref="Random"/>
+    /// instances share a time-based seed, every retry within one seed tick repeats it.
+    /// See the "ID generation and concurrency" section of the README for the contract shared by
+    /// the four <c>Generate*Id</c> methods, the <paramref name="con"/> and <paramref name="tran"/>
+    /// rules, and safer alternatives.
     /// </remarks>
     public string GenerateUtcTimeId(string tableName, string columnName,
         IDbConnection con = null, IDbTransaction tran = null)

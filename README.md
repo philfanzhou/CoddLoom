@@ -59,7 +59,8 @@ When calling these methods from an open transaction, pass that transaction throu
 the `tran` parameter. Otherwise the queries do not participate in the transaction and
 cannot observe its uncommitted writes; if neither `con` nor `tran` is supplied, each
 query uses a separate connection. Repeated calls can therefore return the same ID even
-without concurrent callers.
+without concurrent callers. When both are supplied, `tran` wins and `con` is ignored:
+the queries run on `tran.Connection`.
 
 For concurrent workloads, prefer IDs generated atomically by the database through
 an identity column or sequence. Client-generated UUIDs are another option. If IDs
