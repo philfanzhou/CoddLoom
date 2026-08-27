@@ -89,17 +89,22 @@ partial class DbEngine
     /// <typeparam name="T">The type of the ID.</typeparam>
     /// <param name="tableName">The table to query for an existing ID.</param>
     /// <param name="columnName">The ID column to query.</param>
-    /// <param name="generateId">A function that generates each candidate ID.</param>
+    /// <param name="generateId">A function that produces each candidate ID. It receives the
+    /// previously generated candidate, or <c>default(T)</c> on the first call.</param>
     /// <param name="con">An optional database connection used by the existence query.</param>
     /// <param name="tran">An optional transaction used by the existence query.</param>
     /// <param name="tryCount">The maximum number of candidates to test.</param>
     /// <returns>An ID that was not present when the existence query ran.</returns>
+    /// <exception cref="Exception">Thrown when every one of the
+    /// <paramref name="tryCount"/> candidates already exists in the column.</exception>
     /// <remarks>
     /// This method does not reserve the returned value or guarantee that a later insert will
     /// succeed. Concurrent callers can receive the same candidate between the existence query
-    /// and the caller's insert. Supplying a connection or transaction does not eliminate that
-    /// race. Prefer a database identity or sequence, a UUID, or an insert protected by a unique
-    /// constraint with retry handling when concurrent uniqueness is required.
+    /// and the caller's insert. Supplying a connection or transaction alone does not eliminate
+    /// that race; the caller must use an isolation or locking strategy that protects the
+    /// existence query through the insert. Prefer a database identity or sequence, a UUID, or an
+    /// insert protected by a unique constraint with retry handling when concurrent uniqueness is
+    /// required.
     /// </remarks>
     public T GenerateId<T>(string tableName, string columnName, Func<T, T> generateId,
         IDbConnection con = null, IDbTransaction tran = null, int tryCount = 10)
@@ -128,12 +133,21 @@ partial class DbEngine
     /// <param name="con">An optional database connection used by the queries.</param>
     /// <param name="tran">An optional transaction used by the queries.</param>
     /// <returns>A candidate ID that was not present when queried.</returns>
+    /// <exception cref="FormatException">Thrown when the maximum column value cannot be parsed as
+    /// a <see cref="long"/>.</exception>
+    /// <exception cref="OverflowException">Thrown when the maximum column value is
+    /// <see cref="long.MaxValue"/>.</exception>
+    /// <exception cref="Exception">Thrown when the single generated candidate already exists in
+    /// the column.</exception>
     /// <remarks>
-    /// This method uses a non-atomic maximum-value query followed by an existence query. It does
-    /// not reserve the returned value, and concurrent callers can receive the same ID before
-    /// either caller inserts it. Supplying a connection or transaction does not eliminate the
-    /// race between returning the ID and the caller's insert. Prefer a database identity or
-    /// sequence, a UUID, or an insert protected by a unique constraint with retry handling.
+    /// This method uses a non-atomic maximum-value query followed by an existence query and makes
+    /// only one attempt. If the candidate already exists, the method throws rather than
+    /// recomputing the maximum. It does not reserve the returned value, and concurrent callers can
+    /// receive the same ID before either caller inserts it. Supplying a connection or transaction
+    /// alone does not eliminate the race; the caller must use an isolation or locking strategy
+    /// that protects the maximum and existence queries through the insert. Prefer a database
+    /// identity or sequence, a UUID, or an insert protected by a unique constraint with retry
+    /// handling.
     /// </remarks>
     public long GenerateMaxId(string tableName, string columnName,
         IDbConnection con = null, IDbTransaction tran = null)
@@ -156,10 +170,16 @@ partial class DbEngine
     /// <param name="con">An optional database connection used by the existence query.</param>
     /// <param name="tran">An optional transaction used by the existence query.</param>
     /// <returns>A candidate ID that was not present when queried.</returns>
+    /// <exception cref="Exception">Thrown when all ten generated candidates already exist in the
+    /// column.</exception>
     /// <remarks>
-    /// The time and random components do not guarantee uniqueness. This method does not reserve
-    /// the returned value, and concurrent callers can receive the same candidate before either
-    /// caller inserts it. Supplying a connection or transaction does not eliminate that race.
+    /// The time and random components do not guarantee uniqueness. Because the timestamp has
+    /// second granularity and the random suffix is drawn from a per-attempt <see cref="Random"/>
+    /// instance, retries within the same second can regenerate the same candidate, so a collision
+    /// is not necessarily resolved by retrying. This method does not reserve the returned value,
+    /// and concurrent callers can receive the same candidate before either caller inserts it.
+    /// Supplying a connection or transaction alone does not eliminate that race; the caller must
+    /// use an isolation or locking strategy that protects the existence query through the insert.
     /// Prefer a database identity or sequence, a UUID, or an insert protected by a unique
     /// constraint with retry handling when concurrent uniqueness is required.
     /// </remarks>
@@ -181,11 +201,17 @@ partial class DbEngine
     /// <param name="con">An optional database connection used by the existence query.</param>
     /// <param name="tran">An optional transaction used by the existence query.</param>
     /// <returns>A candidate ID that was not present when queried.</returns>
+    /// <exception cref="Exception">Thrown when all ten generated candidates already exist in the
+    /// column.</exception>
     /// <remarks>
-    /// The UTC time and random components do not guarantee uniqueness. This method does not
-    /// reserve the returned value, and concurrent callers can receive the same candidate before
-    /// either caller inserts it. Supplying a connection or transaction does not eliminate that
-    /// race. Prefer a database identity or sequence, a UUID, or an insert protected by a unique
+    /// The UTC time and random components do not guarantee uniqueness. Because the timestamp has
+    /// second granularity and the random suffix is drawn from a per-attempt <see cref="Random"/>
+    /// instance, retries within the same second can regenerate the same candidate, so a collision
+    /// is not necessarily resolved by retrying. This method does not reserve the returned value,
+    /// and concurrent callers can receive the same candidate before either caller inserts it.
+    /// Supplying a connection or transaction alone does not eliminate that race; the caller must
+    /// use an isolation or locking strategy that protects the existence query through the insert.
+    /// Prefer a database identity or sequence, a UUID, or an insert protected by a unique
     /// constraint with retry handling when concurrent uniqueness is required.
     /// </remarks>
     public string GenerateUtcTimeId(string tableName, string columnName,

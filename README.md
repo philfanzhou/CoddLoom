@@ -53,7 +53,8 @@ Tables and entities are defined independently: table constants describe schema a
 return candidate values that are unused when their existence queries run. They do
 not reserve an ID or guarantee that a later insert will succeed: concurrent callers
 can receive the same candidate between the query and the insert. Passing a database
-connection or transaction does not remove that post-return race.
+connection or transaction does not by itself remove that post-return race; the caller
+must use an isolation or locking strategy that protects the query through the insert.
 
 For concurrent workloads, prefer IDs generated atomically by the database through
 an identity column or sequence. Client-generated UUIDs are another option. If IDs
