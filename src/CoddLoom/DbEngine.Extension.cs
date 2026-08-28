@@ -97,11 +97,13 @@ partial class DbEngine
     /// previously generated candidate, or <c>default(T)</c> on the first call.</param>
     /// <param name="con">An optional database connection used by the existence query.</param>
     /// <param name="tran">An optional transaction used by the existence query.</param>
-    /// <param name="tryCount">The maximum number of candidates to test. When the value is less
-    /// than or equal to zero, no candidate is generated or tested.</param>
+    /// <param name="tryCount">The maximum number of candidates to test. Must be greater than
+    /// zero.</param>
     /// <returns>An ID that was not present when the existence query ran.</returns>
-    /// <exception cref="Exception">Thrown when <paramref name="tryCount"/> is less than or equal
-    /// to zero, or when every generated candidate already exists in the column.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="tryCount"/> is
+    /// less than or equal to zero.</exception>
+    /// <exception cref="Exception">Thrown when every generated candidate already exists in the
+    /// column.</exception>
     /// <remarks>
     /// This method does not reserve the returned value or guarantee that a later insert will
     /// succeed.
@@ -113,6 +115,12 @@ partial class DbEngine
     public T GenerateId<T>(string tableName, string columnName, Func<T, T> generateId,
         IDbConnection con = null, IDbTransaction tran = null, int tryCount = 10)
     {
+        if (tryCount <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(tryCount),
+                "Try count must be greater than 0.");
+        }
+
         var currentId = default(T);
         for (var i = 0; i < tryCount; i++)
         {

@@ -29,6 +29,26 @@ public class DbEngineUtilityIntegrationTest : TestBase
     }
 
     [TestMethod]
+    [DataRow(0)]
+    [DataRow(-1)]
+    public void GenerateId_NonPositiveTryCount_ThrowsBeforeGeneratingOrQuerying(int tryCount)
+    {
+        var generationCount = 0;
+
+#pragma warning disable CS0618 // Exercise the retained behavior of the obsolete ID API.
+        var exception = Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
+            DbEngine.GenerateId<string>("GenerateIdMustNotQuery", "id", _ =>
+            {
+                generationCount++;
+                return "candidate";
+            }, tryCount: tryCount));
+#pragma warning restore CS0618
+
+        Assert.AreEqual("tryCount", exception.ParamName);
+        Assert.AreEqual(0, generationCount);
+    }
+
+    [TestMethod]
     public void GenerateMaxAndTimeIds_ReturnExpectedShapes()
     {
         var numericTable = new TableDefine(typeof(NumericIdTable));
