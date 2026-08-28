@@ -56,9 +56,11 @@ reserve it, and they do not guarantee that a later insert will succeed.
 **When these are enough.** A single writer generating IDs for the table, or an
 insert backed by a unique constraint with a retry on duplicate key.
 
-**Deprecated.** All four emit a compiler warning. They remain source-compatible and
-their behavior is unchanged; existing callers can keep using them while migrating to
-one of the alternatives below.
+**Deprecated.** All four emit a compiler warning. They remain source-compatible, and
+the deprecation itself does not change their behavior; existing callers can keep using
+them while migrating to one of the alternatives below. One behavior did change
+separately: `GenerateId` now throws `ArgumentOutOfRangeException` when `tryCount` is
+zero or less, instead of reporting candidate exhaustion.
 
 **Concurrency.** Otherwise, two callers can receive the same candidate in the window
 between the existence query and either caller's insert. Supplying `con` or `tran`
