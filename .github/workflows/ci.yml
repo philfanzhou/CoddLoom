@@ -130,13 +130,13 @@ jobs:
 
       - name: Smoke-test package restore
         run: |
-          dotnet new classlib --framework net8.0 --output artifacts/package-consumer --no-restore
-          dotnet add artifacts/package-consumer package CoddLoom.Sqlite --version "$PACKAGE_VERSION" --no-restore
-          dotnet add artifacts/package-consumer package CoddLoom.PostgreSql --version "$PACKAGE_VERSION" --no-restore
-          dotnet restore artifacts/package-consumer \
+          dotnet new classlib --framework net8.0 --output "$RUNNER_TEMP/package-consumer" --no-restore
+          dotnet add "$RUNNER_TEMP/package-consumer" package CoddLoom.Sqlite --version "$PACKAGE_VERSION" --no-restore
+          dotnet add "$RUNNER_TEMP/package-consumer" package CoddLoom.PostgreSql --version "$PACKAGE_VERSION" --no-restore
+          dotnet restore "$RUNNER_TEMP/package-consumer" \
             --source artifacts/packages \
             --source https://api.nuget.org/v3/index.json
-          dotnet build artifacts/package-consumer --configuration Release --no-restore
+          dotnet build "$RUNNER_TEMP/package-consumer" --configuration Release --no-restore
 
       - name: Upload test results
         if: always()
