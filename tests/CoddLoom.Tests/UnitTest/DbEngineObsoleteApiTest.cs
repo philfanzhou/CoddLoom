@@ -13,6 +13,14 @@ public class DbEngineObsoleteApiTest
         "Prefer a database identity/sequence, UUID, or unique-constraint-protected inserts with retry handling.";
 
     [TestMethod]
+    [DataRow(0, "000")]
+    [DataRow(999, "999")]
+    public void GenerateTimeIdSuffix_FormatsBoundaryAsThreeAsciiDigits(int suffix, string expected)
+    {
+        Assert.AreEqual(expected, DbEngine.FormatTimeIdSuffix(suffix));
+    }
+
+    [TestMethod]
     [DataRow("GenerateId")]
     [DataRow("GenerateMaxId")]
     [DataRow("GenerateTimeId")]

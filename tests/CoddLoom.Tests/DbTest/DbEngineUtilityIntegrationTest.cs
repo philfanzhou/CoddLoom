@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using CoddLoom.Table;
 
 namespace CoddLoom.Tests.DbTest;
@@ -154,18 +153,6 @@ public class DbEngineUtilityIntegrationTest : TestBase
         {
             DbEngine.Drop(NullableTextIdTable.TableName);
         }
-    }
-
-    [TestMethod]
-    [DataRow(0, "000")]
-    [DataRow(999, "999")]
-    public void GenerateTimeIdSuffix_FormatsBoundaryAsThreeAsciiDigits(int suffix, string expected)
-    {
-        var formatSuffix = typeof(DbEngine).GetMethod(
-            "FormatTimeIdSuffix", BindingFlags.NonPublic | BindingFlags.Static);
-
-        Assert.IsNotNull(formatSuffix);
-        Assert.AreEqual(expected, formatSuffix.Invoke(null, [suffix]));
     }
 
     [TestMethod]

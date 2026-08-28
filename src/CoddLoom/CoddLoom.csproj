@@ -6,4 +6,8 @@
     <Description>A lightweight, explicit ORM built directly on ADO.NET.</Description>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="CoddLoom.Tests" />
+  </ItemGroup>
+
 </Project>
