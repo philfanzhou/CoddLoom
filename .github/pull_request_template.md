@@ -1,4 +1,4 @@
-> 标题与正文一律用中文填写。
+> 正文一律用中文填写。标题沿用英文 conventional commit 格式（squash 合并后即为 commit 标题）。
 
 ## 概述
 

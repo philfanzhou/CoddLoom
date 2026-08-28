@@ -7,7 +7,9 @@
 
 - **仓库内的流程与约束文档用中文**：本文件、`.github/ISSUE_TEMPLATE/` 下的 issue 模板、
   `.github/pull_request_template.md`。
-- **提交到 GitHub 的 issue 和 PR，标题与正文一律用中文。** review 意见同样用中文。
+- **提交到 GitHub 的 issue 和 PR，正文一律用中文。** review 意见同样用中文。
+  issue 标题用中文；PR 标题沿用英文 conventional commit 格式（`feat:` / `fix:` / `docs:` …），
+  因为 squash 合并后它就是 `main` 上那条 commit 的标题。
 - **面向使用者的文档用英文**：`README.md`、`THIRD-PARTY-NOTICES.md`、代码里的 XML 文档注释、
   异常消息、`[Obsolete]` 等特性中面向调用方的文字。这些是公开发布物的一部分。
 - 代码标识符、commit message 保持英文。
