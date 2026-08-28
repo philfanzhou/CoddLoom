@@ -1,30 +1,31 @@
-## Summary
+> 正文一律用中文填写。标题沿用英文 conventional commit 格式（squash 合并后即为 commit 标题）。
 
-Describe the problem and the change.
+## 概述
+
+说明要解决的问题和本次的改动。
 
 Closes #
 
-## Scope
+## 范围
 
-Quote the `最小修改范围` from the linked issue, then account for it:
+先引用所链接 issue 的 `最小修改范围`，然后逐项交代：
 
-- **In scope, done:**
-- **Deliberately not fixed here** (pre-existing defects found while working; each one
-  filed as its own issue): #NNN — one line. Write `None` if there were none.
+- **范围内，已完成：**
+- **本次刻意不修**（实施过程中发现的既有缺陷，每一条都已单独开 issue）：
+  #NNN —— 一句话说明。确认没有就写「无」。
 
-Nothing in this PR should change runtime behavior the issue ruled out. If it does, say
-which acceptance criterion required it.
+本 PR 不应改变 issue 已排除的运行时行为。如果确实改了，说明是哪一条验收标准要求的。
 
-## Compatibility
+## 兼容性
 
-List public API, database, SQL generation, provider, package, configuration, or migration impact. Write `None` when there is no impact.
+列出对公开 API、数据库、SQL 生成、provider、包、配置或迁移的影响。没有影响就写「无」。
 
-## Verification
+## 验证
 
-- [ ] .NET solution builds
-- [ ] Unit tests pass
-- [ ] Relevant database integration or provider contract tests pass
-- [ ] Package build and restore checks pass when packaging is affected
-- [ ] Documentation is updated when behavior or usage changes
-- [ ] No secrets or sensitive data are included
-- [ ] Every commit is traceable to an acceptance criterion in the linked issue
+- [ ] .NET 解决方案可以构建
+- [ ] 单元测试通过
+- [ ] 相关的数据库集成测试或 provider 契约测试通过
+- [ ] 涉及打包时，包构建与还原检查通过
+- [ ] 行为或用法有变化时，文档已同步更新
+- [ ] 不包含密钥或敏感数据
+- [ ] 每个 commit 都能追溯到所链接 issue 的某条验收标准

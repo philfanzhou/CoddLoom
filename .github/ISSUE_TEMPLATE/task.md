@@ -1,5 +1,5 @@
 ---
-name: 任务 / Task
+name: 任务
 about: 一个可实施的改动。范围必须写清楚，否则 review 阶段会失控。
 title: ''
 labels: ''
