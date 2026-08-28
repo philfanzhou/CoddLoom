@@ -49,23 +49,31 @@ Tables and entities are defined independently: table constants describe schema a
 
 ## ID generation and concurrency
 
-`GenerateId`, `GenerateMaxId`, `GenerateTimeId`, and `GenerateUtcTimeId` only
-return candidate values that are unused when their existence queries run. They do
-not reserve an ID or guarantee that a later insert will succeed: concurrent callers
-can receive the same candidate between the query and the insert. Passing a database
-connection or transaction does not by itself remove that post-return race; the caller
-must use an isolation or locking strategy that protects the query through the insert.
-When calling these methods from an open transaction, pass that transaction through
-the `tran` parameter. Otherwise the queries do not participate in the transaction and
-cannot observe its uncommitted writes; if neither `con` nor `tran` is supplied, each
-query uses a separate connection. Repeated calls can therefore return the same ID even
-without concurrent callers. When both are supplied, `tran` wins and `con` is ignored:
-the queries run on `tran.Connection`.
+`GenerateId`, `GenerateMaxId`, `GenerateTimeId`, and `GenerateUtcTimeId` return a
+candidate that was unused at the moment their existence query ran. They do not
+reserve it, and they do not guarantee that a later insert will succeed.
 
-For concurrent workloads, prefer IDs generated atomically by the database through
-an identity column or sequence. Client-generated UUIDs are another option. If IDs
-must be generated with an application-specific scheme, enforce a unique constraint
-in the database and retry the insert after a duplicate-key failure.
+**When these are enough.** A single writer generating IDs for the table, or an
+insert backed by a unique constraint with a retry on duplicate key.
+
+**Concurrency.** Otherwise, two callers can receive the same candidate in the window
+between the existence query and either caller's insert. Supplying `con` or `tran`
+does not by itself close that window — the query and the insert must be covered by
+one isolation level or lock. A serializable transaction spanning both does close it;
+read committed does not. On PostgreSQL that surfaces as a serialization failure for
+one of the two, which the caller retries.
+
+**Connections and transactions.** These methods query through `tran` when supplied,
+otherwise `con`, otherwise a connection of their own; when both are given, `tran`
+takes precedence and `con` is unused. This matters with no concurrency at all: a
+caller inside an open transaction that does not forward it through `tran` runs the
+query on a different connection, where its own uncommitted rows are invisible, so
+two consecutive calls can return the same ID.
+
+**Alternatives.** Prefer an ID the database generates atomically — an identity column
+or a sequence. Client-generated UUIDs are the other standard choice. If IDs must
+follow an application-specific scheme, enforce a unique constraint and retry the
+insert after a duplicate-key failure.
 
 ## Build and test
 
