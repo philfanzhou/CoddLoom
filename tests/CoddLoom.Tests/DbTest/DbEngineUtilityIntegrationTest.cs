@@ -4,6 +4,7 @@ using CoddLoom.Tests.DbCode.Tables;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using CoddLoom.Table;
 
@@ -98,6 +99,37 @@ public class DbEngineUtilityIntegrationTest : TestBase
             ? "SELECT NULL FROM DUAL"
             : "SELECT NULL";
         Assert.AreEqual(0, Executor.Scalar(nullSql, _ => 1));
+    }
+
+    [TestMethod]
+    public void GenerateTimeId_UsesInvariantGregorianCalendar()
+    {
+        var originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            var cultures = new[]
+            {
+                CultureInfo.InvariantCulture,
+                CultureInfo.GetCultureInfo("th-TH"),
+                originalCulture
+            };
+
+            foreach (var culture in cultures)
+            {
+                CultureInfo.CurrentCulture = culture;
+#pragma warning disable CS0618 // Exercise the retained behavior of the obsolete ID API.
+                var generated = DbEngine.GenerateTimeId(UserTable.TableName, UserTable.Id,
+                    () => new DateTime(2024, 2, 3, 4, 5, 6));
+#pragma warning restore CS0618
+
+                StringAssert.StartsWith(generated, "240203040506", culture.Name);
+                Assert.HasCount(15, generated, culture.Name);
+            }
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
     }
 
     [TestMethod]

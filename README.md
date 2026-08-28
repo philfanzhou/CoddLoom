@@ -69,6 +69,10 @@ one isolation level or lock. A serializable transaction spanning both does close
 read committed does not. On PostgreSQL that surfaces as a serialization failure for
 one of the two, which the caller retries.
 
+Time-based candidates format their 12-digit `yyMMddHHmmss` timestamp prefix with
+the invariant culture's Gregorian calendar. The same `DateTime` therefore has the
+same prefix regardless of the process's current culture.
+
 **Connections and transactions.** These methods query through `tran` when supplied,
 otherwise `con`, otherwise a connection of their own; when both are given, `tran`
 takes precedence and `con` is unused. This matters with no concurrency at all: a
