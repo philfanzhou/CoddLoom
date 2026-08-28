@@ -81,23 +81,27 @@ issue 的 `最小修改范围` 有约束力。issue 说不会变的运行时行�
 
 PR 合并不等于工作结束。合并后必须检查并合理处理以下事项，不要遗留失效状态或无主分支：
 
-1. 确认远端 PR 已合并，目标分支已经包含合并结果。
+1. 确认远端 PR 已合并，目标分支已经包含合并结果。合并时用了 `gh pr merge --delete-branch`
+   的话，注意本地删分支那一步可能因为下面第 4 条的 worktree 占用而失败；PR 本身仍然会正常
+   合并，照第 4–6 条手工收尾即可。
 2. 检查 PR 对应的远端 issue。已经完成的 issue 应关闭；只完成一部分或仍有后续工作的 issue
    应保持开启，并更新说明或链接后续 issue，不能因为 PR 已合并就放任状态失真。PR 本来就没有
    关联 issue 时（例如维护者直接要求的改动），在汇报里写明「无关联 issue」，不要跳过这一条。
 3. 确认远端工作分支已经随合并自动删除（仓库开启了 `deleteBranchOnMerge`）。分支仍然存在时，
    要么删掉，要么说明保留原因。
-4. 更新本地的目标分支。注意本仓库经常用 worktree，目标分支可能已经被别的工作区检出，这时
-   `git switch main` 会直接失败；改用 `git fetch origin main:main` 更新，或者说明是在哪个
-   工作区更新的。
-5. 清理本地工作分支和远端跟踪引用。本仓库用 squash 合并，工作分支的 commit 不会成为目标分支
+4. 用 `git worktree list` 检查残留 worktree，删掉不再需要的，并执行 `git worktree prune`。
+   `.claude/worktrees/` 下的工作区被 `.git/info/exclude` 忽略，不会出现在 `git status` 里，
+   是最容易漏掉的那类失效状态。这一步排在更新目标分支之前：只要目标分支还被某个 worktree
+   检出，第 5 条就做不了。删之前先确认那个工作区是干净的、没有独有提交。
+5. 更新本地的目标分支：`git switch main && git merge --ff-only origin/main`。如果 `main` 仍然
+   被别的工作区检出，`git switch main` 和 `git fetch origin main:main` 都会直接失败——前者报
+   `already checked out at ...`，后者报 `refusing to fetch into branch ...`，两条命令谁也绕不
+   过去。只能先按第 4 条移除那个工作区，或者进到那个工作区里更新并在汇报中说明。
+6. 清理本地工作分支和远端跟踪引用。本仓库用 squash 合并，工作分支的 commit 不会成为目标分支
    的祖先，因此 `git branch -d` 一定报 `not fully merged`，`git branch --merged` 也一定列不出
    它——这不构成「还没合并」的证据。删除前用别的方式确认改动确实进去了（`gh pr view <编号>
    --json state,mergeCommit` 显示已合并，或者该分支与目标分支之间已经没有实质 diff），确认之后
    再 `git branch -D`。确认不了就保留分支并说明原因；绝不要因为 `-d` 失败就顺手换成 `-D`。
-6. 用 `git worktree list` 检查残留 worktree，清理掉不再需要的，并执行 `git worktree prune`。
-   `.claude/worktrees/` 下的工作区被 `.git/info/exclude` 忽略，不会出现在 `git status` 里，
-   是最容易漏掉的那类失效状态。
 7. 向用户汇报 PR、issue、远端分支、本地分支和 worktree 各自的最终状态；任何未完成的清理都要
    说明原因和后续动作。
 
