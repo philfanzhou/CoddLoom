@@ -152,14 +152,14 @@ partial class DbEngine
     /// <exception cref="OverflowException">Thrown when the selected column value is outside the
     /// range of <see cref="long"/>, or when it equals <see cref="long.MaxValue"/> and cannot be
     /// incremented.</exception>
-    /// <exception cref="Exception">Thrown when the single generated candidate already exists in
-    /// the column.</exception>
+    /// <exception cref="Exception">Thrown when all ten generated candidates already exist in the
+    /// column.</exception>
     /// <remarks>
     /// The database performs the descending ordering, so use this method only with a non-nullable
     /// column whose database type sorts numerically: a text column yields a lexicographic maximum,
     /// and a NULL sorts first on providers that default to <c>NULLS FIRST</c>. The maximum-value
-    /// query and the existence query are not atomic, and the method makes a single attempt: if the
-    /// candidate already exists it throws rather than recomputing the maximum.
+    /// query and each existence query are not atomic. When a candidate already exists, the method
+    /// recomputes the maximum and retries, up to ten candidates.
     /// See the "ID generation and concurrency" section of the README for the contract shared by
     /// the four <c>Generate*Id</c> methods, the <paramref name="con"/> and <paramref name="tran"/>
     /// rules, and safer alternatives.
@@ -174,7 +174,7 @@ partial class DbEngine
             var maxInTable = First(record => long.Parse(record[columnName].ToString()),
                 tableName, null, orderBy, con, tran);
             return checked(maxInTable + 1);
-        }, con, tran, 1);
+        }, con, tran);
     }
 
     /// <summary>
