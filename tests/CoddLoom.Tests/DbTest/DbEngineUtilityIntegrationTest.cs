@@ -119,6 +119,42 @@ public class DbEngineUtilityIntegrationTest : TestBase
     }
 
     [TestMethod]
+    public void GenerateMaxId_ConvertsNumericTextAndIgnoresNulls()
+    {
+        var table = new TableDefine(typeof(NullableTextIdTable));
+        DbEngine.InitializeTable([table]);
+        try
+        {
+#pragma warning disable CS0618 // Exercise the retained behavior of the obsolete ID API.
+            Assert.AreEqual(1L,
+                DbEngine.GenerateMaxId(NullableTextIdTable.TableName, NullableTextIdTable.NumericText));
+
+            DbEngine.Insert(NullableTextIdTable.TableName,
+                new InputValues().Add(NullableTextIdTable.RowId, 1L).AddNull(NullableTextIdTable.NumericText));
+            Assert.AreEqual(1L,
+                DbEngine.GenerateMaxId(NullableTextIdTable.TableName, NullableTextIdTable.NumericText));
+
+            DbEngine.Insert(NullableTextIdTable.TableName,
+                new InputValues().Add(NullableTextIdTable.RowId, 2L).Add(NullableTextIdTable.NumericText, "99"));
+            DbEngine.Insert(NullableTextIdTable.TableName,
+                new InputValues().Add(NullableTextIdTable.RowId, 3L).Add(NullableTextIdTable.NumericText, "100"));
+            Assert.AreEqual(101L,
+                DbEngine.GenerateMaxId(NullableTextIdTable.TableName, NullableTextIdTable.NumericText));
+
+            DbEngine.Insert(NullableTextIdTable.TableName,
+                new InputValues().Add(NullableTextIdTable.RowId, 4L)
+                    .Add(NullableTextIdTable.NumericText, long.MaxValue.ToString()));
+            Assert.ThrowsExactly<OverflowException>(() =>
+                DbEngine.GenerateMaxId(NullableTextIdTable.TableName, NullableTextIdTable.NumericText));
+#pragma warning restore CS0618
+        }
+        finally
+        {
+            DbEngine.Drop(NullableTextIdTable.TableName);
+        }
+    }
+
+    [TestMethod]
     public void ExecutorConvenienceApis_HandleDataSetsConnectionsAndFailures()
     {
         DbEngine.Insert(UserTable.TableName, CreateRequiredRow("1", "adapter"));
@@ -253,13 +289,10 @@ public class DbEngineUtilityIntegrationTest : TestBase
         public void Dispose() => Close();
         public void Open() => State = ConnectionState.Open;
 
-        public IDataReader ReadMaximum()
+        public object ReadMaximum()
         {
             MaximumQueryCount++;
-            var table = new DataTable();
-            table.Columns.Add("id", typeof(long));
-            table.Rows.Add(_maximums.Dequeue());
-            return table.CreateDataReader();
+            return _maximums.Dequeue();
         }
 
         public object ReadCandidateExists()
@@ -283,9 +316,13 @@ public class DbEngineUtilityIntegrationTest : TestBase
         public IDbDataParameter CreateParameter() => new ScriptedParameter();
         public void Dispose() { }
         public int ExecuteNonQuery() => throw new NotSupportedException();
-        public IDataReader ExecuteReader() => connection.ReadMaximum();
-        public IDataReader ExecuteReader(CommandBehavior behavior) => connection.ReadMaximum();
-        public object ExecuteScalar() => connection.ReadCandidateExists();
+        public IDataReader ExecuteReader() => throw new NotSupportedException();
+        public IDataReader ExecuteReader(CommandBehavior behavior) => throw new NotSupportedException();
+
+        public object ExecuteScalar() => CommandText.Contains("MAX(")
+            ? connection.ReadMaximum()
+            : connection.ReadCandidateExists();
+
         public void Prepare() { }
     }
 
@@ -316,5 +353,12 @@ public class DbEngineUtilityIntegrationTest : TestBase
             get => this[IndexOf(parameterName)];
             set => this[IndexOf(parameterName)] = value;
         }
+    }
+
+    private static class NullableTextIdTable
+    {
+        [DbTableName] internal const string TableName = "NullableTextIdTable";
+        [DbPrimaryKey(Type = DbType.Int64)] internal const string RowId = "rowId";
+        [DbColumnString(AllowEmpty = true)] internal const string NumericText = "numericText";
     }
 }

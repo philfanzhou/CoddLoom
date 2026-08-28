@@ -137,6 +137,22 @@ public class ProviderBuilderContractTest
     }
 
     [TestMethod]
+    public void Int64Cast_UsesProviderCompatibleSignedType()
+    {
+        foreach (var provider in Enum.GetValues<Provider>())
+        {
+            var expected = provider switch
+            {
+                Provider.Sqlite => "CAST(id AS INTEGER)",
+                Provider.MySql or Provider.MariaDb => "CAST(id AS SIGNED)",
+                Provider.Oracle => "CAST(id AS NUMBER(19))",
+                _ => "CAST(id AS BIGINT)"
+            };
+            Assert.AreEqual(expected, CreateBuilder(provider).Cast("id", DbType.Int64), provider.ToString());
+        }
+    }
+
+    [TestMethod]
     public void ParameterMarkers_UseProviderCompatiblePrefixes()
     {
         foreach (var provider in Enum.GetValues<Provider>())

@@ -25,6 +25,7 @@ partial class SqlBuilder
         var typeStr = dbType switch
         {
             DbType.DateTime => "DateTime",
+            DbType.Int64 => GetColumnType(DbType.Int64),
             _ => throw new NotSupportedException(dbType.ToString())
         };
         return $"CAST({column} AS {typeStr})";
