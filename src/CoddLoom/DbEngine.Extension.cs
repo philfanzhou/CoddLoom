@@ -11,6 +11,10 @@ namespace CoddLoom;
 
 partial class DbEngine
 {
+    private const string ConcurrentIdGenerationObsoleteMessage =
+        "This check-then-return API cannot guarantee uniqueness under concurrency. " +
+        "Prefer a database identity/sequence, UUID, or unique-constraint-protected inserts with retry handling.";
+
     public int Insert<T>(T entity,
         IDbConnection con = null, IDbTransaction tran = null)
     {
@@ -105,6 +109,7 @@ partial class DbEngine
     /// the four <c>Generate*Id</c> methods, the <paramref name="con"/> and <paramref name="tran"/>
     /// rules, and safer alternatives.
     /// </remarks>
+    [Obsolete(ConcurrentIdGenerationObsoleteMessage, false)]
     public T GenerateId<T>(string tableName, string columnName, Func<T, T> generateId,
         IDbConnection con = null, IDbTransaction tran = null, int tryCount = 10)
     {
@@ -151,6 +156,7 @@ partial class DbEngine
     /// the four <c>Generate*Id</c> methods, the <paramref name="con"/> and <paramref name="tran"/>
     /// rules, and safer alternatives.
     /// </remarks>
+    [Obsolete(ConcurrentIdGenerationObsoleteMessage, false)]
     public long GenerateMaxId(string tableName, string columnName,
         IDbConnection con = null, IDbTransaction tran = null)
     {
@@ -183,6 +189,7 @@ partial class DbEngine
     /// the four <c>Generate*Id</c> methods, the <paramref name="con"/> and <paramref name="tran"/>
     /// rules, and safer alternatives.
     /// </remarks>
+    [Obsolete(ConcurrentIdGenerationObsoleteMessage, false)]
     public string GenerateTimeId(string tableName, string columnName, Func<DateTime> getTime,
         IDbConnection con = null, IDbTransaction tran = null)
     {
@@ -212,6 +219,7 @@ partial class DbEngine
     /// the four <c>Generate*Id</c> methods, the <paramref name="con"/> and <paramref name="tran"/>
     /// rules, and safer alternatives.
     /// </remarks>
+    [Obsolete(ConcurrentIdGenerationObsoleteMessage, false)]
     public string GenerateUtcTimeId(string tableName, string columnName,
         IDbConnection con = null, IDbTransaction tran = null)
     {

@@ -17,12 +17,14 @@ public class DbEngineUtilityIntegrationTest : TestBase
     {
         DbEngine.Insert(UserTable.TableName, CreateRequiredRow("1", "existing"));
 
+#pragma warning disable CS0618 // Exercise the retained behavior of the obsolete ID API.
         var generated = DbEngine.GenerateId<string>(UserTable.TableName, UserTable.Id,
             current => current == null ? "1" : (int.Parse(current) + 1).ToString());
 
         Assert.AreEqual("2", generated);
         var exception = Assert.ThrowsExactly<Exception>(() =>
             DbEngine.GenerateId<string>(UserTable.TableName, UserTable.Id, _ => "1", tryCount: 2));
+#pragma warning restore CS0618
         StringAssert.Contains(exception.Message, "Generate new UserTable.id ID failed");
     }
 
@@ -34,19 +36,23 @@ public class DbEngineUtilityIntegrationTest : TestBase
         try
         {
             DbEngine.Insert(NumericIdTable.TableName, new InputValues().Add(NumericIdTable.Id, 3L));
+#pragma warning disable CS0618 // Exercise the retained behavior of the obsolete ID APIs.
             Assert.AreEqual(4L, DbEngine.GenerateMaxId(NumericIdTable.TableName, NumericIdTable.Id));
+#pragma warning restore CS0618
         }
         finally
         {
             DbEngine.Drop(NumericIdTable.TableName);
         }
 
+#pragma warning disable CS0618 // Exercise the retained behavior of the obsolete ID APIs.
         var timeId = DbEngine.GenerateTimeId(UserTable.TableName, UserTable.Id,
             () => new DateTime(2024, 2, 3, 4, 5, 6));
         StringAssert.StartsWith(timeId, "240203040506");
         Assert.HasCount(15, timeId);
 
         var utcId = DbEngine.GenerateUtcTimeId(UserTable.TableName, UserTable.Id);
+#pragma warning restore CS0618
         Assert.HasCount(15, utcId);
 
         var before = (DateTime.UtcNow - DateTime.UnixEpoch).TotalMilliseconds;
