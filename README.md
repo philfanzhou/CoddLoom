@@ -71,7 +71,11 @@ one of the two, which the caller retries.
 
 Time-based candidates format their 12-digit `yyMMddHHmmss` timestamp prefix with
 the invariant culture's Gregorian calendar. The same `DateTime` therefore has the
-same prefix regardless of the process's current culture.
+same prefix regardless of the process's current culture. They keep second-level
+timestamp precision and append a random three-digit suffix from `000` through `999`.
+One local random generator supplies all retries in a `GenerateTimeId` call, but
+retries can still choose the same suffix and concurrent calls still are not
+guaranteed to return different candidates.
 
 **Connections and transactions.** These methods query through `tran` when supplied,
 otherwise `con`, otherwise a connection of their own; when both are given, `tran`
