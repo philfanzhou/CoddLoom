@@ -56,6 +56,10 @@ reserve it, and they do not guarantee that a later insert will succeed.
 **When these are enough.** A single writer generating IDs for the table, or an
 insert backed by a unique constraint with a retry on duplicate key.
 
+**Deprecated.** All four emit a compiler warning. They remain source-compatible and
+their behavior is unchanged; existing callers can keep using them while migrating to
+one of the alternatives below.
+
 **Concurrency.** Otherwise, two callers can receive the same candidate in the window
 between the existence query and either caller's insert. Supplying `con` or `tran`
 does not by itself close that window — the query and the insert must be covered by
