@@ -5,6 +5,7 @@ using CoddLoom.Params;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 
 namespace CoddLoom;
@@ -189,6 +190,7 @@ partial class DbEngine
     /// <exception cref="Exception">Thrown when all ten generated candidates already exist in the
     /// column.</exception>
     /// <remarks>
+    /// The 12-digit timestamp prefix uses the invariant culture's Gregorian calendar.
     /// The time and random components do not guarantee uniqueness: the timestamp has second
     /// granularity and the suffix has only 899 possible values (100 through 998), so a retry can
     /// repeat a candidate. On .NET Framework, where rapidly constructed <see cref="Random"/>
@@ -204,7 +206,8 @@ partial class DbEngine
         return GenerateId<string>(tableName, columnName, _ =>
         {
             var time = getTime();
-            return time.ToString("yyMMddHHmmss") + new Random().Next(100, 999).ToString().PadRight(3, '0');
+            return time.ToString("yyMMddHHmmss", CultureInfo.InvariantCulture)
+                + new Random().Next(100, 999).ToString().PadRight(3, '0');
         }, con, tran);
     }
 
@@ -219,6 +222,7 @@ partial class DbEngine
     /// <exception cref="Exception">Thrown when all ten generated candidates already exist in the
     /// column.</exception>
     /// <remarks>
+    /// The 12-digit UTC timestamp prefix uses the invariant culture's Gregorian calendar.
     /// The UTC time and random components do not guarantee uniqueness: the timestamp has second
     /// granularity and the suffix has only 899 possible values (100 through 998), so a retry can
     /// repeat a candidate. On .NET Framework, where rapidly constructed <see cref="Random"/>
