@@ -197,9 +197,9 @@ partial class DbEngine
     /// <remarks>
     /// The 12-digit timestamp prefix uses the invariant culture's Gregorian calendar.
     /// The time and random components do not guarantee uniqueness: the timestamp has second
-    /// granularity and the suffix has only 899 possible values (100 through 998), so a retry can
-    /// repeat a candidate. On .NET Framework, where rapidly constructed <see cref="Random"/>
-    /// instances share a time-based seed, every retry within one seed tick repeats it.
+    /// granularity and the suffix has 1000 possible values (<c>000</c> through <c>999</c>), so a
+    /// retry can randomly repeat a candidate. Each call uses one local <see cref="Random"/> for all
+    /// of its retries.
     /// See the "ID generation and concurrency" section of the README for the contract shared by
     /// the four <c>Generate*Id</c> methods, the <paramref name="con"/> and <paramref name="tran"/>
     /// rules, and safer alternatives.
@@ -208,11 +208,12 @@ partial class DbEngine
     public string GenerateTimeId(string tableName, string columnName, Func<DateTime> getTime,
         IDbConnection con = null, IDbTransaction tran = null)
     {
+        var random = new Random();
         return GenerateId<string>(tableName, columnName, _ =>
         {
             var time = getTime();
             return time.ToString("yyMMddHHmmss", CultureInfo.InvariantCulture)
-                + new Random().Next(100, 999).ToString().PadRight(3, '0');
+                + FormatTimeIdSuffix(random.Next(0, 1000));
         }, con, tran);
     }
 
@@ -229,9 +230,9 @@ partial class DbEngine
     /// <remarks>
     /// The 12-digit UTC timestamp prefix uses the invariant culture's Gregorian calendar.
     /// The UTC time and random components do not guarantee uniqueness: the timestamp has second
-    /// granularity and the suffix has only 899 possible values (100 through 998), so a retry can
-    /// repeat a candidate. On .NET Framework, where rapidly constructed <see cref="Random"/>
-    /// instances share a time-based seed, every retry within one seed tick repeats it.
+    /// granularity and the suffix has 1000 possible values (<c>000</c> through <c>999</c>), so a
+    /// retry can randomly repeat a candidate. Each call uses one local <see cref="Random"/> for all
+    /// of its retries.
     /// See the "ID generation and concurrency" section of the README for the contract shared by
     /// the four <c>Generate*Id</c> methods, the <paramref name="con"/> and <paramref name="tran"/>
     /// rules, and safer alternatives.
@@ -241,6 +242,11 @@ partial class DbEngine
         IDbConnection con = null, IDbTransaction tran = null)
     {
         return GenerateTimeId(tableName, columnName, () => DateTime.UtcNow, con, tran);
+    }
+
+    private static string FormatTimeIdSuffix(int suffix)
+    {
+        return suffix.ToString("D3", CultureInfo.InvariantCulture);
     }
 
     private static readonly DateTime UnixEpoch = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
