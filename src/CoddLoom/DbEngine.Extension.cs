@@ -116,6 +116,13 @@ partial class DbEngine
     public T GenerateId<T>(string tableName, string columnName, Func<T, T> generateId,
         IDbConnection con = null, IDbTransaction tran = null, int tryCount = 10)
     {
+        return GenerateId(tableName, columnName, generateId, null, con, tran, tryCount);
+    }
+
+    private T GenerateId<T>(string tableName, string columnName, Func<T, T> generateId,
+        DbType? candidateCast, IDbConnection con = null, IDbTransaction tran = null,
+        int tryCount = 10)
+    {
         if (tryCount <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(tryCount),
@@ -128,7 +135,7 @@ partial class DbEngine
             currentId = generateId(currentId);
 
             var where = new WhereConditions();
-            where.Add(columnName, currentId);
+            where.Add(columnName, currentId, candidateCast);
             if (Exist(tableName, where, con, tran) == false)
             {
                 return currentId;
@@ -173,7 +180,7 @@ partial class DbEngine
             var sql = Executor.SqlBuilder.Select(tableName, columns: columns);
             var maxInTable = Executor.Scalar(sql, System.Convert.ToInt64, con: con, tran: tran);
             return checked(maxInTable + 1);
-        }, con, tran);
+        }, DbType.Int64, con, tran);
     }
 
     /// <summary>
