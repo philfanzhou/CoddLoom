@@ -36,9 +36,12 @@ public class MySqlBuilder : SqlBuilder
 
     protected override string GetCastColumn(string column, DbType dbType)
     {
-        return dbType == DbType.DateTime
-            ? $"CAST({column} AS DATETIME)"
-            : base.GetCastColumn(column, dbType);
+        return dbType switch
+        {
+            DbType.DateTime => $"CAST({column} AS DATETIME)",
+            DbType.Int64 => $"CAST({column} AS SIGNED)",
+            _ => base.GetCastColumn(column, dbType)
+        };
     }
 
     protected override string GetColumnType(DbType type)

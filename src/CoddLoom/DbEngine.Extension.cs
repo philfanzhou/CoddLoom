@@ -139,27 +139,25 @@ partial class DbEngine
     }
 
     /// <summary>
-    /// Returns a candidate ID one greater than the first value returned by descending database
-    /// ordering, after parsing that value as a <see cref="long"/>.
+    /// Returns a candidate ID one greater than the maximum value after the database converts the
+    /// column to its signed 64-bit integer type.
     /// </summary>
     /// <param name="tableName">The table containing the ID column.</param>
-    /// <param name="columnName">The numerically ordered ID column to query.</param>
+    /// <param name="columnName">The numeric or numeric-text ID column to query.</param>
     /// <param name="con">An optional database connection used by the queries.</param>
     /// <param name="tran">An optional transaction used by the queries.</param>
-    /// <returns>A candidate ID that was not present when queried, or <c>1</c> when the table is
-    /// empty.</returns>
-    /// <exception cref="FormatException">Thrown when the selected column value is not in a valid
-    /// <see cref="long"/> format.</exception>
-    /// <exception cref="OverflowException">Thrown when the selected column value is outside the
-    /// range of <see cref="long"/>, or when it equals <see cref="long.MaxValue"/> and cannot be
-    /// incremented.</exception>
+    /// <returns>A candidate ID that was not present when queried, or <c>1</c> when the table is empty
+    /// or the column contains only <see langword="null"/> values.</returns>
+    /// <exception cref="OverflowException">Thrown when the maximum value equals
+    /// <see cref="long.MaxValue"/> and cannot be incremented.</exception>
     /// <exception cref="Exception">Thrown when all ten generated candidates already exist in the
     /// column.</exception>
     /// <remarks>
-    /// The database performs the descending ordering, so use this method only with a non-nullable
-    /// column whose database type sorts numerically: a text column yields a lexicographic maximum,
-    /// and a NULL sorts first on providers that default to <c>NULLS FIRST</c>. The maximum-value
-    /// query and each existence query are not atomic. When a candidate already exists, the method
+    /// The database converts values to its signed 64-bit integer type before computing the maximum,
+    /// so numeric text is compared numerically and <see langword="null"/> values are ignored.
+    /// Non-numeric text follows the provider's conversion behavior and may fail with a
+    /// provider-specific exception or convert to a provider-specific value. The maximum-value query
+    /// and each existence query are not atomic. When a candidate already exists, the method
     /// recomputes the maximum and retries, up to ten candidates.
     /// See the "ID generation and concurrency" section of the README for the contract shared by
     /// the four <c>Generate*Id</c> methods, the <paramref name="con"/> and <paramref name="tran"/>
@@ -171,9 +169,9 @@ partial class DbEngine
     {
         return GenerateId<long>(tableName, columnName, _ =>
         {
-            var orderBy = new OrderByCondition(columnName, true);
-            var maxInTable = First(record => long.Parse(record[columnName].ToString()),
-                tableName, null, orderBy, con, tran);
+            var columns = new ColumnParam().AddSelect(columnName, "MAX", DbType.Int64);
+            var sql = Executor.SqlBuilder.Select(tableName, columns: columns);
+            var maxInTable = Executor.Scalar(sql, System.Convert.ToInt64, con: con, tran: tran);
             return checked(maxInTable + 1);
         }, con, tran);
     }
