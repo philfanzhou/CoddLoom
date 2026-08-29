@@ -23,6 +23,19 @@ requires a GitHub token even for public packages; see
 [Working with the NuGet registry](https://docs.github.com/packages/working-with-a-github-packages-registry/working-with-the-nuget-registry)
 for source and authentication setup.
 
+## Compatibility
+
+`CoddLoom`, MariaDB, MySQL, PostgreSQL, SQLite, and SQL Server target
+`netstandard2.0`. The Oracle provider targets `netstandard2.1`.
+
+CI verifies that clean downstream projects targeting `net8.0` and `net10.0` can
+restore and build all seven locally packed packages. The .NET 10 check also loads a
+public type from every package and exercises SQLite by opening a database and
+writing and reading a row. This establishes package and framework compatibility; it
+does not mean that every provider connects to a live database on both target
+frameworks. The real-database integration matrix remains the one documented in
+[Build and test](#build-and-test).
+
 ## Example
 
 ```csharp
