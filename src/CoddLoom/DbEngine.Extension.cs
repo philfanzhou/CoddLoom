@@ -244,7 +244,7 @@ partial class DbEngine
         return GenerateTimeId(tableName, columnName, () => DateTime.UtcNow, con, tran);
     }
 
-    private static string FormatTimeIdSuffix(int suffix)
+    internal static string FormatTimeIdSuffix(int suffix)
     {
         return suffix.ToString("D3", CultureInfo.InvariantCulture);
     }

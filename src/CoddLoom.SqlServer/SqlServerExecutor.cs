@@ -30,7 +30,7 @@ public class SqlServerExecutor : DbExecutor
         return conn;
     }
 
-    private static string BuildConnectionString(string connectionString, bool trustServer)
+    internal static string BuildConnectionString(string connectionString, bool trustServer)
     {
         var builder = new SqlConnectionStringBuilder(connectionString);
         if (trustServer)

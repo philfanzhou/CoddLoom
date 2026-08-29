@@ -144,7 +144,7 @@ public class SchemaQueryBuilderTest
         public override SqlBuilder SqlBuilder => LegacyBuilder;
 
         [Obsolete("Test-only legacy override.")]
-        protected override void GetExistTableParam(TableDefine table,
+        protected internal override void GetExistTableParam(TableDefine table,
             out string checkTable, out WhereConditions where)
         {
             LegacyExistsHookCalled = true;
@@ -160,7 +160,7 @@ public class SchemaQueryBuilderTest
         public bool LegacyColumnsHookCalled { get; private set; }
 
         [Obsolete("Test-only legacy override.")]
-        protected override string GetTableColumnsSql(string tableName)
+        protected internal override string GetTableColumnsSql(string tableName)
         {
             LegacyColumnsHookCalled = true;
             return $"SELECT name FROM pragma_table_info('{tableName.Replace("'", "''")}')";
