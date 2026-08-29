@@ -131,8 +131,13 @@ jobs:
       - name: Smoke-test package restore
         run: |
           dotnet new classlib --framework net8.0 --output "$RUNNER_TEMP/package-consumer" --no-restore
-          dotnet add "$RUNNER_TEMP/package-consumer" package CoddLoom.Sqlite --version "$PACKAGE_VERSION" --no-restore
+          dotnet add "$RUNNER_TEMP/package-consumer" package CoddLoom --version "$PACKAGE_VERSION" --no-restore
+          dotnet add "$RUNNER_TEMP/package-consumer" package CoddLoom.MariaDb --version "$PACKAGE_VERSION" --no-restore
+          dotnet add "$RUNNER_TEMP/package-consumer" package CoddLoom.MySql --version "$PACKAGE_VERSION" --no-restore
+          dotnet add "$RUNNER_TEMP/package-consumer" package CoddLoom.Oracle --version "$PACKAGE_VERSION" --no-restore
           dotnet add "$RUNNER_TEMP/package-consumer" package CoddLoom.PostgreSql --version "$PACKAGE_VERSION" --no-restore
+          dotnet add "$RUNNER_TEMP/package-consumer" package CoddLoom.Sqlite --version "$PACKAGE_VERSION" --no-restore
+          dotnet add "$RUNNER_TEMP/package-consumer" package CoddLoom.SqlServer --version "$PACKAGE_VERSION" --no-restore
           dotnet restore "$RUNNER_TEMP/package-consumer" \
             --source artifacts/packages \
             --source https://api.nuget.org/v3/index.json
