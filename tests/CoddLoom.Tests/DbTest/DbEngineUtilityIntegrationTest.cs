@@ -87,6 +87,29 @@ public class DbEngineUtilityIntegrationTest : TestBase
     }
 
     [TestMethod]
+    public void GenerateTimeId_SuffixCoversCompleteAllowedRange()
+    {
+        const int sampleCount = 200;
+        var fixedTime = new DateTime(2024, 2, 3, 4, 5, 6);
+
+#pragma warning disable CS0618 // Exercise the retained behavior of the obsolete ID API.
+        var suffixes = Enumerable.Range(0, sampleCount)
+            .Select(_ => DbEngine.GenerateTimeId(UserTable.TableName, UserTable.Id, () => fixedTime))
+            .Select(timeId => timeId[12..])
+            .ToArray();
+#pragma warning restore CS0618
+
+        Assert.IsTrue(suffixes.All(suffix => suffix.Length == 3
+            && suffix.All(character => character is >= '0' and <= '9')));
+        var numericSuffixes = suffixes
+            .Select(suffix => int.Parse(suffix, NumberStyles.None, CultureInfo.InvariantCulture))
+            .ToArray();
+        Assert.IsTrue(numericSuffixes.All(suffix => suffix is >= 0 and <= 999));
+        // A full-range generator misses 000-099 in 200 samples with probability 0.9^200 ≈ 7e-10.
+        Assert.IsTrue(numericSuffixes.Any(suffix => suffix < 100));
+    }
+
+    [TestMethod]
     public void GenerateMaxId_RequeriesMaximumAfterCandidateCollision()
     {
         var executor = new ScriptedIdExecutor([1L, 2L], [true, false]);
