@@ -17,9 +17,8 @@ It keeps SQL visible and the data-access model small: there is no LINQ provider,
 | `CoddLoom.PostgreSql` | PostgreSQL |
 
 Stable versions are published to [NuGet.org](https://www.nuget.org/) from `vX.Y.Z`
-tags. Every successful push to `main` also publishes a uniquely versioned
-`0.0.0-edge.*` build to GitHub Packages for pre-release validation. GitHub Packages
-requires a GitHub token even for public packages; see
+tags. Every tagged release is also published to GitHub Packages, which requires a
+GitHub token even for public packages; see
 [Working with the NuGet registry](https://docs.github.com/packages/working-with-a-github-packages-registry/working-with-the-nuget-registry)
 for source and authentication setup.
 
