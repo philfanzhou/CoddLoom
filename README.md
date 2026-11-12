@@ -100,9 +100,22 @@ The `DbEngine` command family has the same counterparts:
 `UpdateAsync`, `DeleteAsync`, `CountAsync`, `ExistAsync`, `DropAsync`, and
 `InitializeTableAsync`. Each one delegates to the executor methods above, so
 its SQL text, parameters, batch boundaries, transaction ownership, and
-exception types match its synchronous version exactly. The query family
-(`Select`, `First`, `SelectById`, `PageSelect`) keeps its synchronous shape
-for now.
+exception types match its synchronous version exactly. Since 0.3.0 the query
+family has async counterparts as well: `SelectAsync` (all six overloads,
+including the JOIN forms), `FirstAsync` (three overloads), `SelectByIdAsync`,
+and `PageSelectAsync` (four overloads) — fourteen methods in total, with the
+same SQL, parameters, connection ownership, and exception types as their
+synchronous versions.
+
+`PageSelectAsync` returns a `PageResult<T>` (`Items`, `PageNumber`,
+`TotalPage`, `TotalCount`) instead of using `out` parameters, which
+asynchronous methods cannot have. Like the synchronous `PageSelect`, a paged
+call runs two commands — the COUNT first, then the page SELECT — and the two
+are not atomic: rows may change between them, so `TotalCount` can disagree
+with what the SELECT still sees. The `TotalPage` carry rule is unchanged (any
+remainder adds one final page), and a null `PageParam` skips the COUNT
+entirely, leaving `TotalPage` and `TotalCount` at zero, just like the
+synchronous `out` values.
 
 ```csharp
 using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(5));
@@ -127,6 +140,19 @@ await executor.TransactionAsync(async tran =>
 // batch size and the provider parameter limit, like the synchronous Insert.
 var affected = await engine.InsertAsync(newUsers, batchSize: 50,
     cancellationToken: cancellation.Token);
+
+// The query family awaits the same SQL: SelectAsync maps rows, FirstAsync
+// takes a page of one, and PageSelectAsync returns the pagination metadata
+// on its PageResult<T> instead of through out parameters.
+var oldest = await engine.FirstAsync<User>(where, orderBy,
+    cancellationToken: cancellation.Token);
+
+var page = await engine.PageSelectAsync<User>(
+    where, orderBy, new PageParam { PageNumber = 2, PageSize = 20 },
+    cancellationToken: cancellation.Token);
+
+Console.WriteLine($"{page.Items.Count} of {page.TotalCount} rows on page "
+    + $"{page.PageNumber} of {page.TotalPage}");
 ```
 
 **Cancellation convention.** The `CancellationToken` is always the last

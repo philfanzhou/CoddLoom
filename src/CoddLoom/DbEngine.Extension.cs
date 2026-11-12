@@ -224,6 +224,76 @@ partial class DbEngine
     }
 
     /// <summary>
+    /// Asynchronously queries the first record matching the condition and maps it
+    /// with the convertor. This is the asynchronous counterpart of
+    /// <see cref="First{T}(Func{IDataRecord, T}, string, WhereConditions, OrderByCondition, ColumnParam, DbConnection, DbTransaction)"/>;
+    /// the generated SQL (including the page of size one), parameters, connection
+    /// ownership, and exception types are identical, and the convertor keeps the
+    /// synchronous <see cref="IDataRecord"/> signature.
+    /// </summary>
+    /// <remarks>
+    /// The call delegates to the executor's asynchronous methods and awaits the
+    /// driver's asynchronous APIs directly; it never wraps the synchronous path in
+    /// <c>Task.Run</c>. The cancellation token is observed before any database call
+    /// and is then forwarded to the driver's asynchronous execution.
+    /// </remarks>
+    public async Task<T> FirstAsync<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where,
+        OrderByCondition orderBy, ColumnParam columns,
+        DbConnection con = null, DbTransaction tran = null,
+        CancellationToken cancellationToken = default)
+    {
+        var pageParam = new PageParam { PageSize = 1, PageNumber = 1 };
+        var sql = Executor.SqlBuilder.SelectWithParameters(tableName, where, orderBy, pageParam, columns, out var dbParams);
+        var rows = await Executor.ReaderAsync(sql, convertor, dbParams, con, tran,
+            cancellationToken).ConfigureAwait(false);
+        return rows.FirstOrDefault();
+    }
+
+    /// <summary>
+    /// Asynchronously queries the first record matching the condition and maps it
+    /// with the convertor. This is the asynchronous counterpart of
+    /// <see cref="First{T}(Func{IDataRecord, T}, string, WhereConditions, OrderByCondition, DbConnection, DbTransaction)"/>;
+    /// the generated SQL, parameters, connection ownership, and exception types are
+    /// identical.
+    /// </summary>
+    /// <remarks>
+    /// The call delegates to the executor's asynchronous methods and awaits the
+    /// driver's asynchronous APIs directly; it never wraps the synchronous path in
+    /// <c>Task.Run</c>. The cancellation token is observed before any database call
+    /// and is then forwarded to the driver's asynchronous execution.
+    /// </remarks>
+    public Task<T> FirstAsync<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where,
+        OrderByCondition orderBy,
+        DbConnection con = null, DbTransaction tran = null,
+        CancellationToken cancellationToken = default)
+    {
+        return FirstAsync(convertor, tableName, where, orderBy, null, con, tran, cancellationToken);
+    }
+
+    /// <summary>
+    /// Asynchronously queries the first mapped entity matching the condition. This
+    /// is the asynchronous counterpart of
+    /// <see cref="First{T}(WhereConditions, OrderByCondition, DbConnection, DbTransaction)"/>;
+    /// the generated SQL, parameters, connection ownership, and exception types are
+    /// identical.
+    /// </summary>
+    /// <remarks>
+    /// The call delegates to the executor's asynchronous methods and awaits the
+    /// driver's asynchronous APIs directly; it never wraps the synchronous path in
+    /// <c>Task.Run</c>. The cancellation token is observed before any database call
+    /// and is then forwarded to the driver's asynchronous execution.
+    /// </remarks>
+    public Task<T> FirstAsync<T>(WhereConditions where,
+        OrderByCondition orderBy,
+        DbConnection con = null, DbTransaction tran = null,
+        CancellationToken cancellationToken = default)
+        where T : new()
+    {
+        var table = EntityMapCache.GetTableName<T>();
+        return FirstAsync(DbConverter.ToEntity<T>, table, where, orderBy, con, tran, cancellationToken);
+    }
+
+    /// <summary>
     /// Generates a candidate ID and returns it when the ID is not present at query time.
     /// </summary>
     /// <typeparam name="T">The type of the ID.</typeparam>
