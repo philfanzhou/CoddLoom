@@ -95,6 +95,15 @@ synchronous versions:
   `ExecuteAsync<T>`, `ValidateConnectionAsync`
 - MySQL and MariaDB additionally offer `EnsureDatabaseAsync`
 
+The `DbEngine` command family has the same counterparts:
+`InsertAsync` (single record and batched, entity and `InputValues`),
+`UpdateAsync`, `DeleteAsync`, `CountAsync`, `ExistAsync`, `DropAsync`, and
+`InitializeTableAsync`. Each one delegates to the executor methods above, so
+its SQL text, parameters, batch boundaries, transaction ownership, and
+exception types match its synchronous version exactly. The query family
+(`Select`, `First`, `SelectById`, `PageSelect`) keeps its synchronous shape
+for now.
+
 ```csharp
 using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
@@ -113,6 +122,11 @@ await executor.TransactionAsync(async tran =>
         dbParams: [new ValueParam(users[0].Id, "id")],
         tran: tran);
 }, cancellation.Token);
+
+// Batched engine inserts run in one engine-owned transaction and split by
+// batch size and the provider parameter limit, like the synchronous Insert.
+var affected = await engine.InsertAsync(newUsers, batchSize: 50,
+    cancellationToken: cancellation.Token);
 ```
 
 **Cancellation convention.** The `CancellationToken` is always the last

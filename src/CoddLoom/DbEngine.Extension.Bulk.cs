@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CoddLoom;
 
@@ -47,6 +49,50 @@ partial class DbEngine
     }
 
     /// <summary>
+    /// Inserts data in batches asynchronously and throws when any record cannot be
+    /// inserted. This is the asynchronous counterpart of
+    /// <see cref="InsertWithTransaction(string, IEnumerable{InputValues}, int, DbTransaction)"/>;
+    /// the batch splitting, error wrapping, and transaction ownership are identical.
+    /// </summary>
+    /// <param name="table">The table name.</param>
+    /// <param name="inputs">The records to insert.</param>
+    /// <param name="batchSize">The batch size.</param>
+    /// <param name="transaction">The transaction.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The number of successfully inserted records.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when a batch cannot be inserted; includes its row-index range and error details.</exception>
+    private async Task<int> InsertWithTransactionAsync(string table, IEnumerable<InputValues> inputs,
+        int batchSize, DbTransaction transaction, CancellationToken cancellationToken)
+    {
+        if (table == null) throw new ArgumentNullException(nameof(table));
+        if (batchSize < 1) throw new ArgumentOutOfRangeException(nameof(batchSize), "Batch size must be greater than 0.");
+        if (transaction == null) throw new ArgumentNullException(nameof(transaction));
+        if (inputs == null) throw new ArgumentNullException(nameof(inputs));
+
+        var affected = 0;
+        var batchIndex = 0;
+        var startIndex = 0;
+
+        foreach (var batch in Chunk(inputs, batchSize, Executor.MaxParametersPerCommand))
+        {
+            try
+            {
+                affected += await ExecuteChunkAsync(batch, table, transaction, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                throw BuildBatchException(ex, batch, startIndex, $"batch {batchIndex + 1}");
+            }
+
+            startIndex += batch.Count;
+            batchIndex++;
+        }
+
+        return affected;
+    }
+
+    /// <summary>
     /// Builds an exception for a failed batch.
     /// </summary>
     private static InvalidOperationException BuildBatchException(Exception ex, IReadOnlyList<InputValues> batch, int startIndex, string batchLabel)
@@ -68,6 +114,22 @@ partial class DbEngine
 
         var sql = Executor.SqlBuilder.Insert(table, chunk, out var dbParams);
         return Executor.NonQuery(sql, dbParams, null, transaction);
+    }
+
+    /// <summary>
+    /// Executes a batch insert asynchronously.
+    /// </summary>
+    private async Task<int> ExecuteChunkAsync(IReadOnlyList<InputValues> chunk, string table,
+        DbTransaction transaction, CancellationToken cancellationToken)
+    {
+        if (chunk.Count == 0)
+        {
+            return 0;
+        }
+
+        var sql = Executor.SqlBuilder.Insert(table, chunk, out var dbParams);
+        return await Executor.NonQueryAsync(sql, dbParams, null, transaction, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     /// <summary>
