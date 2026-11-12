@@ -168,8 +168,9 @@ methods (`TransactionAsync`, `ExecuteAsync`) forward the token to
 synchronous members: netstandard2.0 has no `BeginTransactionAsync`, and for
 most drivers beginning a transaction is not a network round trip. The
 `Adapter`/`AdapterProcedure` family stays synchronous because ADO.NET has no
-`FillAsync`; the swallowing `TryTransaction`/`TryExecute` pair and the
-deprecated `Generate*Id` methods deliberately received no async twins. The
+`FillAsync`; the swallowing `TryTransaction`/`TryExecute` pair deliberately
+received no async twins, and the deprecated `Generate*Id` methods were removed
+in 0.3.0 (see "ID generation"). The
 async layer was added in 0.3.0 and is purely additive.
 
 **Rollback failure.** When a transaction callback throws, `Transaction` and
@@ -181,47 +182,22 @@ failure is retained in that exception's `Data` dictionary under the key
 rollback failure replace the original exception, hiding the root cause of the
 business failure.
 
-## ID generation and concurrency
+## ID generation
 
-`GenerateId`, `GenerateMaxId`, `GenerateTimeId`, and `GenerateUtcTimeId` return a
-candidate that was unused at the moment their existence query ran. They do not
-reserve it, and they do not guarantee that a later insert will succeed.
+CoddLoom ships no client-side ID generator. The former `GenerateId`,
+`GenerateMaxId`, `GenerateTimeId`, and `GenerateUtcTimeId` methods — which only
+returned candidates that were unused at query time, without reserving them —
+were deprecated in 0.1.0 and **removed in 0.3.0**. Two concurrent callers could
+receive the same candidate in the window between the existence query and either
+insert, and supplying a connection or transaction did not close that window by
+itself.
 
-**When these are enough.** A single writer generating IDs for the table, or an
-insert backed by a unique constraint with a retry on duplicate key.
-
-**Deprecated.** All four emit a compiler warning. They remain source-compatible, and
-the deprecation itself does not change their behavior; existing callers can keep using
-them while migrating to one of the alternatives below. One behavior did change
-separately: `GenerateId` now throws `ArgumentOutOfRangeException` when `tryCount` is
-zero or less, instead of reporting candidate exhaustion.
-
-**Concurrency.** Otherwise, two callers can receive the same candidate in the window
-between the existence query and either caller's insert. Supplying `con` or `tran`
-does not by itself close that window — the query and the insert must be covered by
-one isolation level or lock. A serializable transaction spanning both does close it;
-read committed does not. On PostgreSQL that surfaces as a serialization failure for
-one of the two, which the caller retries.
-
-Time-based candidates format their 12-digit `yyMMddHHmmss` timestamp prefix with
-the invariant culture's Gregorian calendar. The same `DateTime` therefore has the
-same prefix regardless of the process's current culture. They keep second-level
-timestamp precision and append a random three-digit suffix from `000` through `999`.
-One local random generator supplies all retries in a `GenerateTimeId` call, but
-retries can still choose the same suffix and concurrent calls still are not
-guaranteed to return different candidates.
-
-**Connections and transactions.** These methods query through `tran` when supplied,
-otherwise `con`, otherwise a connection of their own; when both are given, `tran`
-takes precedence and `con` is unused. This matters with no concurrency at all: a
-caller inside an open transaction that does not forward it through `tran` runs the
-query on a different connection, where its own uncommitted rows are invisible, so
-two consecutive calls can return the same ID.
-
-**Alternatives.** Prefer an ID the database generates atomically — an identity column
-or a sequence. Client-generated UUIDs are the other standard choice. If IDs must
-follow an application-specific scheme, enforce a unique constraint and retry the
-insert after a duplicate-key failure.
+Prefer an ID the database generates atomically — an identity column or a
+sequence. Client-generated UUIDs are the other standard choice. If IDs must
+follow an application-specific scheme, enforce a unique constraint and retry
+the insert after a duplicate-key failure; with a serializable transaction
+spanning the check and the insert, a serialization failure for one caller is
+the retry signal.
 
 ## Build and test
 
