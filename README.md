@@ -42,6 +42,11 @@ using CoddLoom;
 using CoddLoom.Condition;
 using CoddLoom.Sqlite;
 using CoddLoom.Table;
+using System.IO;
+
+// The SQLite target directory is the caller's responsibility; the executor
+// itself creates neither the directory nor the database file.
+Directory.CreateDirectory("data");
 
 var executor = new SqliteExecutor("data", "app.db");
 var engine = new DbEngine(executor, new[]
