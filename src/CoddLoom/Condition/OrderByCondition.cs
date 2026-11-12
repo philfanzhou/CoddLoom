@@ -8,11 +8,20 @@ public class OrderByCondition
 {
     private readonly List<OrderByItem> _conditions = new ();
 
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="column"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="column"/> is an empty string.
+    /// </exception>
     public OrderByCondition(string column, bool descending = false)
     {
         Add(column, descending);
     }
 
+    /// <exception cref="ArgumentException">
+    /// Both <paramref name="orderBy"/> and <paramref name="defaultOrderBy"/> are null or empty strings.
+    /// </exception>
     /// <exception cref="ArgumentException">
     /// <paramref name="tableType"/> does not define any constant fields to map order-by columns.
     /// </exception>
@@ -26,9 +35,19 @@ public class OrderByCondition
     {
     }
 
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="column"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="column"/> is an empty string.
+    /// </exception>
     public void Add(string column, bool descending = false)
     {
-        if (string.IsNullOrEmpty(column)) throw new ArgumentNullException(nameof(column));
+        if (column == null) throw new ArgumentNullException(nameof(column));
+        if (column.Length == 0)
+            throw new ArgumentException(
+                "The order-by column must not be an empty string.",
+                nameof(column));
         _conditions.Add(new OrderByItem(column, descending));
     }
 
@@ -43,7 +62,9 @@ public class OrderByCondition
     {
         if(string.IsNullOrEmpty(orderBy) && string.IsNullOrEmpty(defaultOrderBy))
         {
-            throw new ArgumentNullException(nameof(defaultOrderBy));
+            throw new ArgumentException(
+                "Neither orderBy nor defaultOrderBy provides an order-by column; specify at least one.",
+                nameof(defaultOrderBy));
         }
 
         if (string.IsNullOrEmpty(orderBy))
@@ -81,6 +102,9 @@ public class OrderByCondition
 
 public class OrderByCondition<TTable> : OrderByCondition where TTable : class
 {
+    /// <exception cref="ArgumentException">
+    /// Both <paramref name="orderBy"/> and <paramref name="defaultOrderBy"/> are null or empty strings.
+    /// </exception>
     /// <exception cref="ArgumentException">
     /// <typeparamref name="TTable"/> does not define any constant fields to map order-by columns.
     /// </exception>
