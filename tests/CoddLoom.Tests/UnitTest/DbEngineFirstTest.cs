@@ -83,7 +83,7 @@ public class DbEngineFirstTest
             _connection = connection;
         }
 
-        public override IDbConnection GetConnection() => _connection;
+        public override DbConnection GetConnection() => _connection;
 
         protected override Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command)
         {

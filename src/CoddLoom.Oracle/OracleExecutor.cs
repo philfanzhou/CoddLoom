@@ -2,6 +2,7 @@ using Oracle.ManagedDataAccess.Client;
 using CoddLoom.Sql;
 using System;
 using System.Data;
+using System.Data.Common;
 
 namespace CoddLoom.Oracle;
 
@@ -14,7 +15,7 @@ public class OracleExecutor : DbExecutor
 
     public override SqlBuilder SqlBuilder { get; } = new OracleBuilder();
 
-    public override IDbConnection GetConnection()
+    public override DbConnection GetConnection()
     {
         return new OracleConnection(ConnectionString);
     }

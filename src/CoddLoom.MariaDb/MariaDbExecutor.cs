@@ -2,6 +2,7 @@ using MySqlConnector;
 using CoddLoom.Sql;
 using System;
 using System.Data;
+using System.Data.Common;
 
 namespace CoddLoom.MariaDb;
 
@@ -60,7 +61,7 @@ public class MariaDbExecutor(string connectionString)
 
     public override SqlBuilder SqlBuilder { get; } = new MariaDbBuilder();
 
-    public override IDbConnection GetConnection()
+    public override DbConnection GetConnection()
     {
         return new MySqlConnection(ConnectionString);
     }

@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Globalization;
 using System.Linq;
 using CoddLoom.Table;
@@ -269,7 +270,7 @@ public class DbEngineUtilityIntegrationTest : TestBase
         public int MaximumQueryCount => _connection.MaximumQueryCount;
         public int ExistenceQueryCount => _connection.ExistenceQueryCount;
 
-        public override IDbConnection GetConnection() => _connection;
+        public override DbConnection GetConnection() => _connection;
 
         protected override Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command)
         {
@@ -287,10 +288,11 @@ public class DbEngineUtilityIntegrationTest : TestBase
             throw new NotSupportedException();
     }
 
-    private sealed class ScriptedIdConnection : IDbConnection
+    private sealed class ScriptedIdConnection : DbConnection
     {
         private readonly Queue<long> _maximums;
         private readonly Queue<bool> _candidateExists;
+        private ConnectionState _state;
 
         public ScriptedIdConnection(IEnumerable<long> maximums, IEnumerable<bool> candidateExists)
         {
@@ -300,18 +302,21 @@ public class DbEngineUtilityIntegrationTest : TestBase
 
         public int MaximumQueryCount { get; private set; }
         public int ExistenceQueryCount { get; private set; }
-        public string ConnectionString { get; set; }
-        public int ConnectionTimeout => 0;
-        public string Database => "scripted";
-        public ConnectionState State { get; private set; }
 
-        public IDbTransaction BeginTransaction() => throw new NotSupportedException();
-        public IDbTransaction BeginTransaction(IsolationLevel il) => throw new NotSupportedException();
-        public void ChangeDatabase(string databaseName) => throw new NotSupportedException();
-        public void Close() => State = ConnectionState.Closed;
-        public IDbCommand CreateCommand() => new ScriptedIdCommand(this);
-        public void Dispose() => Close();
-        public void Open() => State = ConnectionState.Open;
+        public override string ConnectionString { get; set; }
+        public override string Database => "scripted";
+        public override string DataSource => "scripted";
+        public override string ServerVersion => "1.0";
+        public override ConnectionState State => _state;
+
+        public override void ChangeDatabase(string databaseName) => throw new NotSupportedException();
+        public override void Close() => _state = ConnectionState.Closed;
+        public override void Open() => _state = ConnectionState.Open;
+
+        protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel) =>
+            throw new NotSupportedException();
+
+        protected override DbCommand CreateDbCommand() => new ScriptedIdCommand(this);
 
         public object ReadMaximum()
         {
@@ -326,57 +331,85 @@ public class DbEngineUtilityIntegrationTest : TestBase
         }
     }
 
-    private sealed class ScriptedIdCommand(ScriptedIdConnection connection) : IDbCommand
+    private sealed class ScriptedIdCommand(ScriptedIdConnection connection) : DbCommand
     {
-        public string CommandText { get; set; }
-        public int CommandTimeout { get; set; }
-        public CommandType CommandType { get; set; }
-        public IDbConnection Connection { get; set; } = connection;
-        public IDataParameterCollection Parameters { get; } = new ScriptedParameterCollection();
-        public IDbTransaction Transaction { get; set; }
-        public UpdateRowSource UpdatedRowSource { get; set; }
+        private readonly ScriptedParameterCollection _parameters = new();
 
-        public void Cancel() { }
-        public IDbDataParameter CreateParameter() => new ScriptedParameter();
-        public void Dispose() { }
-        public int ExecuteNonQuery() => throw new NotSupportedException();
-        public IDataReader ExecuteReader() => throw new NotSupportedException();
-        public IDataReader ExecuteReader(CommandBehavior behavior) => throw new NotSupportedException();
+        public override string CommandText { get; set; }
+        public override int CommandTimeout { get; set; }
+        public override CommandType CommandType { get; set; }
+        public override bool DesignTimeVisible { get; set; }
+        public override UpdateRowSource UpdatedRowSource { get; set; }
+        protected override DbConnection DbConnection { get; set; } = connection;
+        protected override DbParameterCollection DbParameterCollection => _parameters;
+        protected override DbTransaction DbTransaction { get; set; }
 
-        public object ExecuteScalar() => CommandText.Contains("MAX(")
+        public override void Cancel() { }
+        public override void Prepare() { }
+        protected override DbParameter CreateDbParameter() => new ScriptedParameter();
+
+        public override int ExecuteNonQuery() => throw new NotSupportedException();
+
+        protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior) =>
+            throw new NotSupportedException();
+
+        public override object ExecuteScalar() => CommandText.Contains("MAX(")
             ? connection.ReadMaximum()
             : connection.ReadCandidateExists();
-
-        public void Prepare() { }
     }
 
-    private sealed class ScriptedParameter : IDbDataParameter
+    private sealed class ScriptedParameter : DbParameter
     {
-        public DbType DbType { get; set; }
-        public ParameterDirection Direction { get; set; }
-        public bool IsNullable => true;
-        public string ParameterName { get; set; }
-        public string SourceColumn { get; set; }
-        public DataRowVersion SourceVersion { get; set; }
-        public object Value { get; set; }
-        public byte Precision { get; set; }
-        public byte Scale { get; set; }
-        public int Size { get; set; }
+        public override DbType DbType { get; set; }
+        public override ParameterDirection Direction { get; set; }
+        public override bool IsNullable { get; set; }
+        public override string ParameterName { get; set; }
+        public override int Size { get; set; }
+        public override string SourceColumn { get; set; }
+        public override bool SourceColumnNullMapping { get; set; }
+        public override object Value { get; set; }
+
+        public override void ResetDbType() { }
     }
 
-    private sealed class ScriptedParameterCollection : ArrayList, IDataParameterCollection
+    private sealed class ScriptedParameterCollection : DbParameterCollection
     {
-        public bool Contains(string parameterName) => IndexOf(parameterName) >= 0;
-        public int IndexOf(string parameterName) =>
-            this.Cast<IDbDataParameter>().ToList()
-                .FindIndex(parameter => parameter.ParameterName == parameterName);
-        public void RemoveAt(string parameterName) => RemoveAt(IndexOf(parameterName));
+        private readonly List<DbParameter> _parameters = [];
 
-        public object this[string parameterName]
+        public override int Count => _parameters.Count;
+        public override object SyncRoot => ((ICollection)_parameters).SyncRoot;
+
+        public override int Add(object value)
         {
-            get => this[IndexOf(parameterName)];
-            set => this[IndexOf(parameterName)] = value;
+            _parameters.Add((DbParameter)value);
+            return _parameters.Count - 1;
         }
+
+        public override void AddRange(Array values)
+        {
+            foreach (var value in values)
+            {
+                Add(value);
+            }
+        }
+
+        public override void Clear() => _parameters.Clear();
+        public override bool Contains(object value) => _parameters.Contains((DbParameter)value);
+        public override bool Contains(string value) => IndexOf(value) >= 0;
+        public override void CopyTo(Array array, int index) => ((ICollection)_parameters).CopyTo(array, index);
+        public override IEnumerator GetEnumerator() => _parameters.GetEnumerator();
+        public override int IndexOf(object value) => _parameters.IndexOf((DbParameter)value);
+        public override int IndexOf(string parameterName) =>
+            _parameters.FindIndex(parameter => parameter.ParameterName == parameterName);
+        public override void Insert(int index, object value) => _parameters.Insert(index, (DbParameter)value);
+        public override void Remove(object value) => _parameters.Remove((DbParameter)value);
+        public override void RemoveAt(int index) => _parameters.RemoveAt(index);
+        public override void RemoveAt(string parameterName) => _parameters.RemoveAt(IndexOf(parameterName));
+        protected override DbParameter GetParameter(int index) => _parameters[index];
+        protected override DbParameter GetParameter(string parameterName) => _parameters[IndexOf(parameterName)];
+        protected override void SetParameter(int index, DbParameter value) => _parameters[index] = value;
+        protected override void SetParameter(string parameterName, DbParameter value) =>
+            _parameters[IndexOf(parameterName)] = value;
     }
 
     private static class NullableTextIdTable

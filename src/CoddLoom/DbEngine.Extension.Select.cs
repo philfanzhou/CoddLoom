@@ -5,6 +5,7 @@ using CoddLoom.Params;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 
 namespace CoddLoom;
@@ -13,14 +14,14 @@ partial class DbEngine
 {
     public List<T> Select<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, 
         OrderByCondition orderBy,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         return Select(convertor, tableName, where, orderBy, null, con, tran);
     }
 
     public List<T> Select<T>(WhereConditions where,
         OrderByCondition orderBy, ColumnParam columns,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
         where T : new()
     {
         var tableName = EntityMapCache.GetTableName<T>();
@@ -29,14 +30,14 @@ partial class DbEngine
 
     public List<T> Select<T>(WhereConditions where,
         OrderByCondition orderBy,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
         where T : new()
     {
         return Select<T>(where, orderBy, null, con, tran);
     }
 
     public T SelectById<T>(object id,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
         where T : new()
     {
         var where = WhereConditions.ById<T>(id, out var tableName);
@@ -52,7 +53,7 @@ partial class DbEngine
 
     public List<T> Select<T>(Func<IDataRecord, T> convertor, JoinConditions join, WhereConditions where,
         OrderByCondition orderBy, ColumnParam columns,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         return Select(convertor, join.GetTableName(Executor.SqlBuilder),
             where, orderBy, columns, con, tran);
@@ -60,7 +61,7 @@ partial class DbEngine
 
     public List<T> Select<T>(Func<IDataRecord, T> convertor, JoinConditions join, WhereConditions where, 
         OrderByCondition orderBy,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         return Select(convertor, join, 
             where, orderBy, null, con, tran);
@@ -68,7 +69,7 @@ partial class DbEngine
 
     public List<T> PageSelect<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where, OrderByCondition orderBy,
         PageParam pageParam, out int totalPages, out int totalCount,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         return PageSelect(convertor,
             tableName, where, orderBy, null, pageParam, out totalPages, out totalCount, con, tran);
@@ -76,7 +77,7 @@ partial class DbEngine
 
     public List<T> PageSelect<T>(WhereConditions where, OrderByCondition orderBy, ColumnParam columns,
         PageParam pageParam, out int totalPages, out int totalCount,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
         where T : new()
     {
         var table = EntityMapCache.GetTableName<T>();
@@ -86,7 +87,7 @@ partial class DbEngine
 
     public List<T> PageSelect<T>(WhereConditions where, OrderByCondition orderBy,
         PageParam pageParam, out int totalPages, out int totalCount,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
         where T : new()
     {
         return PageSelect<T>(where, orderBy, null, pageParam, out totalPages, out totalCount, con, tran);

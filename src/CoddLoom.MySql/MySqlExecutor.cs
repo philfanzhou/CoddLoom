@@ -2,6 +2,7 @@ using MySql.Data.MySqlClient;
 using CoddLoom.Sql;
 using System;
 using System.Data;
+using System.Data.Common;
 
 namespace CoddLoom.MySql;
 
@@ -64,7 +65,7 @@ public class MySqlExecutor : DbExecutor
 
     public override SqlBuilder SqlBuilder { get; } = new MySqlBuilder();
 
-    public override IDbConnection GetConnection()
+    public override DbConnection GetConnection()
     {
         return new MySqlConnection(ConnectionString);
     }
