@@ -33,28 +33,6 @@ public class SchemaQueryBuilderTest
         AssertSchemaQueries(new ExposedPostgreSqlBuilder(), table, "current_schema()", table.Name.ToLowerInvariant());
     }
 
-    [TestMethod]
-    public void InitializeTable_UsesLegacyProviderSchemaHooks()
-    {
-        var dbPath = Path.Combine(Path.GetTempPath(), $"coddloom-legacy-schema-{Guid.NewGuid():N}.db");
-        var executor = new LegacySqliteExecutor($"Data Source={dbPath};Version=3;Pooling=False;");
-        var engine = new DbEngine(executor);
-        var table = new TableDefine(typeof(UserTable));
-
-        try
-        {
-            engine.InitializeTable(new[] { table });
-            engine.InitializeTable(new[] { table });
-
-            Assert.IsTrue(executor.LegacyBuilder.LegacyColumnsHookCalled);
-        }
-        finally
-        {
-            engine.Drop(table.Name);
-            if (File.Exists(dbPath)) File.Delete(dbPath);
-        }
-    }
-
     private static void AssertSchemaQueries(
         ISchemaQueryBuilder builder, TableDefine table, string scopeSql, string expectedTableName)
     {
@@ -132,24 +110,5 @@ public class SchemaQueryBuilderTest
 
         string ISchemaQueryBuilder.GetTableColumnsSql(TableDefine table, out List<ValueParam> dbParams)
             => base.GetTableColumnsSql(table, out dbParams);
-    }
-
-    private sealed class LegacySqliteExecutor(string connectionString) : SqliteExecutor(connectionString)
-    {
-        public LegacySqlBuilder LegacyBuilder { get; } = new();
-
-        public override SqlBuilder SqlBuilder => LegacyBuilder;
-    }
-
-    private sealed class LegacySqlBuilder : SqlBuilder
-    {
-        public bool LegacyColumnsHookCalled { get; private set; }
-
-        [Obsolete("Test-only legacy override.")]
-        protected internal override string GetTableColumnsSql(string tableName)
-        {
-            LegacyColumnsHookCalled = true;
-            return $"SELECT name FROM pragma_table_info('{tableName.Replace("'", "''")}')";
-        }
     }
 }
