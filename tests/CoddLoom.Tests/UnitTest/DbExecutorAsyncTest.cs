@@ -261,27 +261,32 @@ public class DbExecutorAsyncTest
     }
 
     [TestMethod]
-    public async Task TransactionAsync_KeepsSyncRollbackMaskingSemantics()
+    public async Task RollbackFailure_ThrowsTheOriginalException_LikeTheSyncVersion()
     {
-        // The sync Transaction lets a rollback failure mask the original
-        // exception (issue #77 tracks the shared fix); TransactionAsync must
-        // reproduce that behavior exactly instead of diverging.
+        // Since the issue #77 fix, a rollback failure no longer masks the
+        // callback's original exception on either path; TransactionAsync must
+        // keep matching the synchronous behavior exactly.
         var syncConnection = new RecordingConnection(ExecutionSurface.SyncOnly);
         var syncExecutor = new RecordingExecutor(syncConnection);
         var asyncConnection = new RecordingConnection(ExecutionSurface.AsyncOnly);
         var asyncExecutor = new RecordingExecutor(asyncConnection);
 
-        Assert.ThrowsExactly<ApplicationException>(() => syncExecutor.Transaction(tran =>
+        var syncOriginal = Assert.ThrowsExactly<InvalidOperationException>(() => syncExecutor.Transaction(tran =>
         {
             ((RecordingTransaction)tran).ThrowOnRollback = true;
             throw new InvalidOperationException("original");
         }));
+        Assert.IsInstanceOfType<ApplicationException>(
+            syncOriginal.Data["CoddLoom.RollbackException"]);
 
-        await Assert.ThrowsExactlyAsync<ApplicationException>(() => asyncExecutor.TransactionAsync(tran =>
-        {
-            ((RecordingTransaction)tran).ThrowOnRollback = true;
-            throw new InvalidOperationException("original");
-        }));
+        var asyncOriginal = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => asyncExecutor.TransactionAsync(tran =>
+            {
+                ((RecordingTransaction)tran).ThrowOnRollback = true;
+                throw new InvalidOperationException("original");
+            }));
+        Assert.IsInstanceOfType<ApplicationException>(
+            asyncOriginal.Data["CoddLoom.RollbackException"]);
     }
 
     [TestMethod]
