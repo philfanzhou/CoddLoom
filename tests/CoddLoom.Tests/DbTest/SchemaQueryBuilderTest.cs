@@ -46,7 +46,6 @@ public class SchemaQueryBuilderTest
             engine.InitializeTable(new[] { table });
             engine.InitializeTable(new[] { table });
 
-            Assert.IsTrue(executor.LegacyExistsHookCalled);
             Assert.IsTrue(executor.LegacyBuilder.LegacyColumnsHookCalled);
         }
         finally
@@ -137,22 +136,9 @@ public class SchemaQueryBuilderTest
 
     private sealed class LegacySqliteExecutor(string connectionString) : SqliteExecutor(connectionString)
     {
-        public bool LegacyExistsHookCalled { get; private set; }
-
         public LegacySqlBuilder LegacyBuilder { get; } = new();
 
         public override SqlBuilder SqlBuilder => LegacyBuilder;
-
-        [Obsolete("Test-only legacy override.")]
-        protected internal override void GetExistTableParam(TableDefine table,
-            out string checkTable, out WhereConditions where)
-        {
-            LegacyExistsHookCalled = true;
-            checkTable = "sqlite_master";
-            where = new WhereConditions()
-                .Add("type", "table")
-                .Add("name", table.Name);
-        }
     }
 
     private sealed class LegacySqlBuilder : SqlBuilder

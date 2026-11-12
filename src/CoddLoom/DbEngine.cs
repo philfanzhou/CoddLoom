@@ -348,16 +348,6 @@ public partial class DbEngine
 
     private bool ExistTable(TableDefine tableDefine, DbConnection con)
     {
-        if (Executor.TryGetLegacyExistTableParam(tableDefine, out var checkTable, out var where))
-        {
-            if (string.IsNullOrEmpty(checkTable) || where == null)
-            {
-                return false;
-            }
-
-            return Count(checkTable, where, con) > 0;
-        }
-
         var sql = Executor.SqlBuilder.GetTableExistsSql(tableDefine, out var dbParams);
         return Executor.Scalar(sql, System.Convert.ToInt32, dbParams, con) > 0;
     }
@@ -365,17 +355,6 @@ public partial class DbEngine
     private async Task<bool> ExistTableAsync(TableDefine tableDefine, DbConnection con,
         CancellationToken cancellationToken)
     {
-        if (Executor.TryGetLegacyExistTableParam(tableDefine, out var checkTable, out var where))
-        {
-            if (string.IsNullOrEmpty(checkTable) || where == null)
-            {
-                return false;
-            }
-
-            return await CountAsync(checkTable, where, null, con,
-                cancellationToken: cancellationToken).ConfigureAwait(false) > 0;
-        }
-
         var sql = Executor.SqlBuilder.GetTableExistsSql(tableDefine, out var dbParams);
         return await Executor.ScalarAsync(sql, System.Convert.ToInt32, dbParams, con,
             cancellationToken: cancellationToken).ConfigureAwait(false) > 0;
