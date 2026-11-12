@@ -79,6 +79,59 @@ DDL. Each constructor only stores its inputs:
 
 Tables and entities are defined independently: table constants describe schema and reusable SQL identifiers, while mapping attributes connect entity members to those columns.
 
+## Asynchronous execution
+
+Every execution-oriented API has a true-async counterpart that awaits the
+driver's asynchronous APIs directly (`OpenAsync`, `ExecuteNonQueryAsync`,
+`ExecuteReaderAsync`/`ReadAsync`, `ExecuteScalarAsync`) with
+`ConfigureAwait(false)`; none of them wraps the synchronous path in
+`Task.Run`. The SQL text, parameters, one-connection-per-command lifecycle,
+command timeout, parameter limits, and exception types are identical to the
+synchronous versions:
+
+- `NonQueryAsync`, `NonQueryProcedureAsync`, `ReaderAsync`,
+  `ReaderProcedureAsync`, `ScalarAsync`, `ScalarProcedureAsync`
+- `TransactionAsync`, `TransactionAsync<T>`, `ExecuteAsync`,
+  `ExecuteAsync<T>`, `ValidateConnectionAsync`
+- MySQL and MariaDB additionally offer `EnsureDatabaseAsync`
+
+```csharp
+using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+await executor.ValidateConnectionAsync(cancellation.Token);
+
+var users = await executor.ReaderAsync(
+    "SELECT id, name FROM user_table WHERE region = @region",
+    record => new User(record["id"].ToString(), record["name"].ToString()),
+    dbParams: [new ValueParam("north", "region")],
+    cancellationToken: cancellation.Token);
+
+await executor.TransactionAsync(async tran =>
+{
+    await executor.NonQueryAsync(
+        "UPDATE user_table SET seen = 1 WHERE id = @id",
+        dbParams: [new ValueParam(users[0].Id, "id")],
+        tran: tran);
+}, cancellation.Token);
+```
+
+**Cancellation convention.** The `CancellationToken` is always the last
+optional parameter. It is observed before any database call — an
+already-canceled token throws `OperationCanceledException` without opening a
+connection — and is then forwarded to the driver's asynchronous execution, so
+in-flight cancellation surfaces as the driver's exception. Callback-based
+methods (`TransactionAsync`, `ExecuteAsync`) forward the token to
+`OpenAsync` only; callbacks receive no token and must not block.
+
+**Async boundaries.** Methods return `Task`/`Task<T>`, not `ValueTask`.
+`TransactionAsync` begins, commits, and rolls back the transaction through the
+synchronous members: netstandard2.0 has no `BeginTransactionAsync`, and for
+most drivers beginning a transaction is not a network round trip. The
+`Adapter`/`AdapterProcedure` family stays synchronous because ADO.NET has no
+`FillAsync`; the swallowing `TryTransaction`/`TryExecute` pair and the
+deprecated `Generate*Id` methods deliberately received no async twins. The
+async layer was added in 0.3.0 and is purely additive.
+
 ## ID generation and concurrency
 
 `GenerateId`, `GenerateMaxId`, `GenerateTimeId`, and `GenerateUtcTimeId` return a
