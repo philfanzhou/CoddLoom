@@ -14,5 +14,5 @@ internal abstract class WhereItemBase(WhereConnector connector)
 
     public WhereConnector WhereConnector { get; } = connector;
 
-    protected internal abstract string ToSql(SqlBuilder builder);
+    protected internal abstract string ToSql(SqlBuilder builder, WhereBuildContext context);
 }

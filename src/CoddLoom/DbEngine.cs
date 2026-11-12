@@ -56,39 +56,33 @@ public partial class DbEngine
         return InsertWithTransaction(tableName, inputs, batchSize, tran);
     }
 
-    public int Delete(string tableName, WhereConditions where, 
+    public int Delete(string tableName, WhereConditions where,
         IDbConnection con = null, IDbTransaction tran = null, bool force = false)
     {
-        var sql = Executor.SqlBuilder.Delete(tableName, where, force);
-        return Executor.NonQuery(sql, where?.Parameters, con, tran);
+        var sql = Executor.SqlBuilder.DeleteWithParameters(tableName, where, force, out var dbParams);
+        return Executor.NonQuery(sql, dbParams, con, tran);
     }
 
-    public int Update(string tableName, InputValues input, WhereConditions where, 
+    public int Update(string tableName, InputValues input, WhereConditions where,
         IDbConnection con = null, IDbTransaction tran = null, bool force = false)
     {
-        var sql = Executor.SqlBuilder.Update(tableName, input, where, force);
-        var dbParams = new List<ValueParam>();
-        dbParams.AddRange(input.Items);
-        if (where != null)
-        {
-            dbParams.AddRange(where.Parameters);
-        }
+        var sql = Executor.SqlBuilder.UpdateWithParameters(tableName, input, where, force, out var dbParams);
         return Executor.NonQuery(sql, dbParams, con, tran);
     }
 
     public int Count(string tableName, WhereConditions where, ColumnParam columns,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var sql = Executor.SqlBuilder.Count(tableName, where, columns);
-        return Executor.Scalar(sql, System.Convert.ToInt32, where?.Parameters, con, tran);
+        var sql = Executor.SqlBuilder.CountWithParameters(tableName, where, columns, out var dbParams);
+        return Executor.Scalar(sql, System.Convert.ToInt32, dbParams, con, tran);
     }
 
     public List<T> Select<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where,
         OrderByCondition orderBy, ColumnParam columns,
         IDbConnection con = null, IDbTransaction tran = null)
     {
-        var sql = Executor.SqlBuilder.Select(tableName, where, orderBy, null, columns);
-        return Executor.Reader(sql, convertor, where?.Parameters, con, tran);
+        var sql = Executor.SqlBuilder.SelectWithParameters(tableName, where, orderBy, null, columns, out var dbParams);
+        return Executor.Reader(sql, convertor, dbParams, con, tran);
     }
 
     public List<T> PageSelect<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where,
@@ -111,8 +105,8 @@ public partial class DbEngine
             }
         }
 
-        var sql = Executor.SqlBuilder.Select(tableName, where, orderBy, pageParam, columns);
-        return Executor.Reader(sql, convertor, where?.Parameters, con, tran);
+        var sql = Executor.SqlBuilder.SelectWithParameters(tableName, where, orderBy, pageParam, columns, out var dbParams);
+        return Executor.Reader(sql, convertor, dbParams, con, tran);
     }
 
     private bool ExistTable(TableDefine tableDefine, IDbConnection con)
