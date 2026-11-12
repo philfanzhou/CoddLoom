@@ -1,45 +1,35 @@
-> 正文一律用中文填写。标题使用英文 conventional commit 格式（`feat:` / `fix:` / `docs:` …）。
-> 一个 PR 只关闭一个可实施的 task issue。
+> Use the English conventional commit format for the title (`feat:` / `fix:` / `docs:` …).
 
-## 概述
+## Overview
 
-说明要解决的问题和本次改动。
+Explain the problem being solved and what this change does.
 
 Closes #
 
-## 范围
+## Scope
 
-引用所链接 issue 的“范围”，并逐项交代：
+Quote the linked issue's "Scope" and account for each item:
 
-- **范围内，已完成：**
-- **本次刻意不修：** 实施中发现的既有缺陷，每条都链接独立 issue；确认没有写“无”。
+- **In scope, completed:**
+- **Deliberately not fixed in this PR:** write "None" when confirmed none.
 
-本 PR 不应改变 issue 明确排除的行为。如果确实改变，指出是哪一条验收标准要求的。
+## Contracts and compatibility
 
-## 契约与兼容性
+- **Guarantees and non-guarantees:** consistent with the issue, or "None" when not applicable.
+- **Public API / SQL / behavior:**
+- **Providers, target frameworks, and packages:**
+- **Transactions, concurrency, and databases:**
+- **User documentation and releases:**
 
-- **保证与非保证：** 是否与 issue 一致；不适用写“无”。
-- **公开 API / SQL / 行为：**
-- **Provider、目标框架与包：**
-- **事务、并发与数据库：**
-- **使用者文档与发布：**
+Write "None" for unaffected items.
 
-没有影响的项目写“无”。
+## Verification
 
-## 验证
+List the commands actually run, their results, and anything skipped with reasons:
 
-列出实际执行的命令、结果和跳过原因：
-
-- [ ] Release 构建通过
-- [ ] 单元/contract 测试通过
-- [ ] 适用的 provider 数据库集成测试通过，或已明确等待 CI
-- [ ] 涉及包或发布路径时，六个 provider 的打包/兼容性检查通过
-- [ ] 行为、公共 API 或用法变化时，英文使用者文档已同步
-- [ ] 不包含密钥、连接字符串、凭据或私有数据
-
-## Review 收敛
-
-- [ ] 每个 commit 都能追溯到所链接 issue 的某条验收标准
-- [ ] Review 意见已区分“本 PR 引入”与“既有问题”
-- [ ] 既有问题均已转为独立 issue，没有在本 PR 顺手修复
-- [ ] 若已进入第三轮 review，已完成范围审计并链接所有 follow-up issue
+- [ ] Release build passes
+- [ ] Unit/contract tests pass
+- [ ] Applicable provider database integration tests pass, or explicitly waiting on CI
+- [ ] When packages or the release path are involved, packaging/compatibility checks for the six providers pass
+- [ ] When behavior, public API, or usage changes, English user-facing documentation is updated
+- [ ] Contains no secrets, connection strings, credentials, or private data
