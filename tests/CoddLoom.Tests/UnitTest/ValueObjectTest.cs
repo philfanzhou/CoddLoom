@@ -74,8 +74,15 @@ public class ValueObjectTest
             () => new OrderByCondition<OrderTypeWithoutColumns>("id"));
         Assert.AreEqual("tableType", noConstants.ParamName);
         Assert.IsFalse(string.IsNullOrEmpty(noConstants.Message));
-        Assert.ThrowsExactly<ArgumentNullException>(() => new OrderByCondition<OrderTable>(string.Empty));
-        Assert.ThrowsExactly<ArgumentNullException>(() => new OrderByCondition(string.Empty));
+        var missingOrdering = Assert.ThrowsExactly<ArgumentException>(
+            () => new OrderByCondition<OrderTable>(string.Empty));
+        Assert.AreEqual("defaultOrderBy", missingOrdering.ParamName);
+        StringAssert.Contains(missingOrdering.Message, "defaultOrderBy");
+        var emptyColumn = Assert.ThrowsExactly<ArgumentException>(
+            () => new OrderByCondition(string.Empty));
+        Assert.AreEqual("column", emptyColumn.ParamName);
+        Assert.IsFalse(string.IsNullOrEmpty(emptyColumn.Message));
+        Assert.ThrowsExactly<ArgumentNullException>(() => new OrderByCondition((string)null));
     }
 
     [TestMethod]
