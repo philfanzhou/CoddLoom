@@ -8,6 +8,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Data.SQLite;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CoddLoom.Tests.UnitTest;
 
@@ -104,6 +106,36 @@ public class ExecutorConstructionTest
     }
 
     [TestMethod]
+    public async Task ValidateConnectionAsync_OpensReachableDatabase()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"coddloom-probe-async-{Guid.NewGuid():N}.db");
+        try
+        {
+            var executor = new SqliteExecutor($"Data Source={path};Version=3;Pooling=False;");
+
+            await executor.ValidateConnectionAsync();
+
+            Assert.IsTrue(File.Exists(path), "Opening the connection must create the database file lazily.");
+        }
+        finally
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+    }
+
+    [TestMethod]
+    public async Task ValidateConnectionAsync_ThrowsDriverException_WhenUnreachable()
+    {
+        var missingDirectory = Path.Combine(Path.GetTempPath(), $"coddloom-absent-async-{Guid.NewGuid():N}");
+        var executor = new SqliteExecutor($"Data Source={Path.Combine(missingDirectory, "app.db")};Version=3;");
+
+        await Assert.ThrowsExactlyAsync<SQLiteException>(() => executor.ValidateConnectionAsync());
+    }
+
+    [TestMethod]
     public void EnsureDatabase_RejectsConnectionStringWithoutDatabase_BeforeConnecting()
     {
         // The validation must fail before any network access, so an unreachable
@@ -113,6 +145,32 @@ public class ExecutorConstructionTest
 
         Assert.ThrowsExactly<ArgumentException>(() => mySql.EnsureDatabase());
         Assert.ThrowsExactly<ArgumentException>(() => mariaDb.EnsureDatabase());
+    }
+
+    [TestMethod]
+    public async Task EnsureDatabaseAsync_RejectsConnectionStringWithoutDatabase_BeforeConnecting()
+    {
+        // The validation must fail before any network access, so an unreachable
+        // server in the connection string keeps this test deterministic.
+        var mySql = new MySqlExecutor($"Server={UnreachableServer};Uid=root;Pwd=pw;");
+        var mariaDb = new MariaDbExecutor($"Server={UnreachableServer};Uid=root;Pwd=pw;");
+
+        await Assert.ThrowsExactlyAsync<ArgumentException>(() => mySql.EnsureDatabaseAsync());
+        await Assert.ThrowsExactlyAsync<ArgumentException>(() => mariaDb.EnsureDatabaseAsync());
+    }
+
+    [TestMethod]
+    public async Task EnsureDatabaseAsync_ThrowsOperationCanceledException_BeforeConnecting()
+    {
+        // The token is observed before the connection attempt: against an
+        // unreachable server, any real attempt would surface a driver
+        // exception instead of the cancellation.
+        var mySql = new MySqlExecutor($"Server={UnreachableServer};Database=test_db;Uid=root;Pwd=pw;");
+        var mariaDb = new MariaDbExecutor($"Server={UnreachableServer};Database=test_db;Uid=root;Pwd=pw;");
+        var cancelled = new System.Threading.CancellationToken(canceled: true);
+
+        await Assert.ThrowsExactlyAsync<OperationCanceledException>(() => mySql.EnsureDatabaseAsync(cancelled));
+        await Assert.ThrowsExactlyAsync<OperationCanceledException>(() => mariaDb.EnsureDatabaseAsync(cancelled));
     }
 
     [TestMethod]
