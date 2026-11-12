@@ -8,7 +8,7 @@ namespace CoddLoom.PostgreSql;
 public class PostgreSqlExecutor : DbExecutor
 {
     public PostgreSqlExecutor(string connectionString)
-        : base(connectionString, new NpgsqlConnection(connectionString))
+        : base(connectionString)
     {
     }
 

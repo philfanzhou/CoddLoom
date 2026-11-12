@@ -11,18 +11,22 @@ namespace CoddLoom;
 
 public abstract class DbExecutor
 {
-    protected DbExecutor(string connectionString, IDbConnection connection)
+    /// <summary>
+    /// Initializes the executor with a connection string. Constructing an executor
+    /// performs no I/O: it does not open a connection, issue DDL, or create files.
+    /// Use <see cref="ValidateConnection"/> to verify reachability explicitly.
+    /// </summary>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="connectionString"/> is null or empty.
+    /// </exception>
+    protected DbExecutor(string connectionString)
     {
-        try
+        if (string.IsNullOrEmpty(connectionString))
         {
-            // because of connection instance not include db password, so need provide connection string.
-            connection.Open();
-            ConnectionString = connectionString;
+            throw new ArgumentNullException(nameof(connectionString));
         }
-        finally
-        {
-            connection.Close();
-        }
+
+        ConnectionString = connectionString;
     }
 
     public string ConnectionString { get; }
@@ -42,6 +46,30 @@ public abstract class DbExecutor
     public virtual bool CanContinueTransactionAfterCommandFailure => true;
 
     public abstract IDbConnection GetConnection();
+
+    /// <summary>
+    /// Opens and closes one connection to verify that the configured connection
+    /// string is reachable. This is the explicit replacement for the construction
+    /// -time connection probe removed in 0.2.0: construction performs no I/O, so
+    /// callers that want eager validation must call this method.
+    /// </summary>
+    /// <remarks>
+    /// A successful return only proves that the connection could be opened at the
+    /// moment of the call; it does not reserve or keep the connection. Failures
+    /// surface as the underlying driver's connection exception.
+    /// </remarks>
+    public void ValidateConnection()
+    {
+        using var connection = GetConnection();
+        try
+        {
+            connection.Open();
+        }
+        finally
+        {
+            connection.Close();
+        }
+    }
 
     public void Transaction(Action<IDbTransaction> action)
     {

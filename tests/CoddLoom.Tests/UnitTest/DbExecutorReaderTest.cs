@@ -50,7 +50,7 @@ public class DbExecutorReaderTest
         }
 
         private TestExecutor(TestConnection connection)
-            : base("test", connection)
+            : base("test")
         {
             _connection = connection;
         }

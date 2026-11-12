@@ -14,10 +14,15 @@ public class SqliteExecutor : DbExecutor
     }
 
     public SqliteExecutor(string connectionString)
-        : base(connectionString, BuildConnection(connectionString))
+        : base(connectionString)
     {
     }
 
+    /// <summary>
+    /// Builds a connection string for a database file. Constructing the executor
+    /// performs no I/O: the directory must already exist, and SQLite creates the
+    /// database file itself the first time a connection is opened.
+    /// </summary>
     public SqliteExecutor(string directory, string dbFileName)
         : this(BuildConnectionString(directory, dbFileName))
     {
@@ -54,27 +59,6 @@ public class SqliteExecutor : DbExecutor
 
     private static string BuildConnectionString(string directory, string dbFileName)
     {
-        CreateFilePath(directory, dbFileName);
-        var filePath = Path.Combine(directory, dbFileName);
-        var connStrBuilder = new SQLiteConnectionStringBuilder
-        {
-            DataSource = filePath,
-            ReadOnly = false
-        };
-        return connStrBuilder.ConnectionString;
-    }
-
-    private static SQLiteConnection BuildConnection(string connectionString)
-    {
-        var builder = new SQLiteConnectionStringBuilder(connectionString);
-        var dir = Path.GetDirectoryName(builder.DataSource);
-        var file = Path.GetFileName(builder.DataSource);
-        CreateFilePath(dir, file);
-        return new SQLiteConnection(builder.ConnectionString);
-    }
-
-    private static void CreateFilePath(string directory, string dbFileName)
-    {
         if (string.IsNullOrEmpty(directory))
         {
             throw new ArgumentNullException(nameof(directory));
@@ -84,15 +68,12 @@ public class SqliteExecutor : DbExecutor
             throw new ArgumentNullException(nameof(dbFileName));
         }
 
-        if (!Directory.Exists(directory))
+        var filePath = Path.Combine(directory, dbFileName);
+        var connStrBuilder = new SQLiteConnectionStringBuilder
         {
-            Directory.CreateDirectory(directory);
-        }
-
-        var fullPath = Path.Combine(directory, dbFileName);
-        if (!File.Exists(fullPath))
-        {
-            SQLiteConnection.CreateFile(fullPath);
-        }
+            DataSource = filePath,
+            ReadOnly = false
+        };
+        return connStrBuilder.ConnectionString;
     }
 }
