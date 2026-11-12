@@ -1,6 +1,8 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections;
 using System.Data;
+using System.Data.Common;
 
 namespace CoddLoom.Tests.UnitTest;
 
@@ -37,7 +39,7 @@ public class DbExecutorReaderTest
             table.Rows.Add(value);
         }
 
-        return new InterfaceOnlyDataReader(table.CreateDataReader());
+        return table.CreateDataReader();
     }
 
     private sealed class TestExecutor : DbExecutor
@@ -55,7 +57,7 @@ public class DbExecutorReaderTest
             _connection = connection;
         }
 
-        public override IDbConnection GetConnection() => _connection;
+        public override DbConnection GetConnection() => _connection;
 
         protected override Func<string, object, IDbDataParameter> GetAddParameterFunc(IDbCommand command) =>
             throw new NotSupportedException();
@@ -64,79 +66,94 @@ public class DbExecutorReaderTest
             throw new NotSupportedException();
     }
 
-    private sealed class TestConnection(Func<IDataReader> readerFactory) : IDbConnection
+    private sealed class TestConnection(Func<IDataReader> readerFactory) : DbConnection
     {
-        public string ConnectionString { get; set; }
-        public int ConnectionTimeout => 0;
-        public string Database => "test";
-        public ConnectionState State { get; private set; }
+        private ConnectionState _state;
 
-        public IDbTransaction BeginTransaction() => throw new NotSupportedException();
-        public IDbTransaction BeginTransaction(IsolationLevel il) => throw new NotSupportedException();
-        public void ChangeDatabase(string databaseName) => throw new NotSupportedException();
-        public void Close() => State = ConnectionState.Closed;
-        public IDbCommand CreateCommand() => new TestCommand(this, readerFactory);
-        public void Dispose() => Close();
-        public void Open() => State = ConnectionState.Open;
+        public override string ConnectionString { get; set; }
+        public override string Database => "test";
+        public override string DataSource => "test";
+        public override string ServerVersion => "1.0";
+        public override ConnectionState State => _state;
+
+        public override void ChangeDatabase(string databaseName) => throw new NotSupportedException();
+        public override void Close() => _state = ConnectionState.Closed;
+        public override void Open() => _state = ConnectionState.Open;
+
+        protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel) =>
+            throw new NotSupportedException();
+
+        protected override DbCommand CreateDbCommand() => new TestCommand(this, readerFactory);
     }
 
-    private sealed class TestCommand(IDbConnection connection, Func<IDataReader> readerFactory) : IDbCommand
+    private sealed class TestCommand(TestConnection connection, Func<IDataReader> readerFactory) : DbCommand
     {
-        public string CommandText { get; set; }
-        public int CommandTimeout { get; set; }
-        public CommandType CommandType { get; set; }
-        public IDbConnection Connection { get; set; } = connection;
-        public IDataParameterCollection Parameters => throw new NotSupportedException();
-        public IDbTransaction Transaction { get; set; }
-        public UpdateRowSource UpdatedRowSource { get; set; }
+        public override string CommandText { get; set; }
+        public override int CommandTimeout { get; set; }
+        public override CommandType CommandType { get; set; }
+        public override bool DesignTimeVisible { get; set; }
+        public override UpdateRowSource UpdatedRowSource { get; set; }
+        protected override DbConnection DbConnection { get; set; } = connection;
+        protected override DbParameterCollection DbParameterCollection => throw new NotSupportedException();
+        protected override DbTransaction DbTransaction { get; set; }
 
-        public void Cancel() { }
-        public IDbDataParameter CreateParameter() => throw new NotSupportedException();
-        public void Dispose() { }
-        public int ExecuteNonQuery() => throw new NotSupportedException();
-        public IDataReader ExecuteReader() => readerFactory();
-        public IDataReader ExecuteReader(CommandBehavior behavior) => readerFactory();
-        public object ExecuteScalar() => throw new NotSupportedException();
-        public void Prepare() { }
+        public override void Cancel() { }
+        public override int ExecuteNonQuery() => throw new NotSupportedException();
+        public override object ExecuteScalar() => throw new NotSupportedException();
+        public override void Prepare() { }
+        protected override DbParameter CreateDbParameter() => throw new NotSupportedException();
+
+        protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior) =>
+            new InterfaceOnlyDbDataReader(readerFactory());
     }
 
-    private sealed class InterfaceOnlyDataReader(IDataReader inner) : IDataReader
+    /// <summary>
+    /// Wraps an <see cref="IDataReader"/> that offers nothing beyond the interface surface.
+    /// This keeps the regression coverage of issue #17 after the executor moved to
+    /// <see cref="DbConnection"/>: the Reader pipeline must consume results through
+    /// interface-level members only. DbDataReader-only members throw so that any use of
+    /// them fails the surrounding test loudly.
+    /// </summary>
+    private sealed class InterfaceOnlyDbDataReader(IDataReader inner) : DbDataReader
     {
-        public object this[int i] => inner[i];
-        public object this[string name] => inner[name];
-        public int Depth => inner.Depth;
-        public bool IsClosed => inner.IsClosed;
-        public int RecordsAffected => inner.RecordsAffected;
-        public int FieldCount => inner.FieldCount;
+        public override int Depth => inner.Depth;
+        public override int FieldCount => inner.FieldCount;
+        public override bool IsClosed => inner.IsClosed;
+        public override int RecordsAffected => inner.RecordsAffected;
+        public override object this[int i] => inner[i];
+        public override object this[string name] => inner[name];
 
-        public void Close() => inner.Close();
-        public void Dispose() => inner.Dispose();
-        public bool GetBoolean(int i) => inner.GetBoolean(i);
-        public byte GetByte(int i) => inner.GetByte(i);
-        public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length) =>
-            inner.GetBytes(i, fieldOffset, buffer, bufferoffset, length);
-        public char GetChar(int i) => inner.GetChar(i);
-        public long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length) =>
+        public override bool GetBoolean(int i) => inner.GetBoolean(i);
+        public override byte GetByte(int i) => inner.GetByte(i);
+        public override long GetBytes(int i, long dataOffset, byte[] buffer, int bufferOffset, int length) =>
+            inner.GetBytes(i, dataOffset, buffer, bufferOffset, length);
+        public override char GetChar(int i) => inner.GetChar(i);
+        public override long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length) =>
             inner.GetChars(i, fieldoffset, buffer, bufferoffset, length);
-        public IDataReader GetData(int i) => inner.GetData(i);
-        public string GetDataTypeName(int i) => inner.GetDataTypeName(i);
-        public DateTime GetDateTime(int i) => inner.GetDateTime(i);
-        public decimal GetDecimal(int i) => inner.GetDecimal(i);
-        public double GetDouble(int i) => inner.GetDouble(i);
-        public Type GetFieldType(int i) => inner.GetFieldType(i);
-        public float GetFloat(int i) => inner.GetFloat(i);
-        public Guid GetGuid(int i) => inner.GetGuid(i);
-        public short GetInt16(int i) => inner.GetInt16(i);
-        public int GetInt32(int i) => inner.GetInt32(i);
-        public long GetInt64(int i) => inner.GetInt64(i);
-        public string GetName(int i) => inner.GetName(i);
-        public int GetOrdinal(string name) => inner.GetOrdinal(name);
-        public DataTable GetSchemaTable() => inner.GetSchemaTable();
-        public string GetString(int i) => inner.GetString(i);
-        public object GetValue(int i) => inner.GetValue(i);
-        public int GetValues(object[] values) => inner.GetValues(values);
-        public bool IsDBNull(int i) => inner.IsDBNull(i);
-        public bool NextResult() => inner.NextResult();
-        public bool Read() => inner.Read();
+        public override string GetDataTypeName(int i) => inner.GetDataTypeName(i);
+        public override DateTime GetDateTime(int i) => inner.GetDateTime(i);
+        public override decimal GetDecimal(int i) => inner.GetDecimal(i);
+        public override double GetDouble(int i) => inner.GetDouble(i);
+        public override Type GetFieldType(int i) => inner.GetFieldType(i);
+        public override float GetFloat(int i) => inner.GetFloat(i);
+        public override Guid GetGuid(int i) => inner.GetGuid(i);
+        public override short GetInt16(int i) => inner.GetInt16(i);
+        public override int GetInt32(int i) => inner.GetInt32(i);
+        public override long GetInt64(int i) => inner.GetInt64(i);
+        public override string GetName(int i) => inner.GetName(i);
+        public override int GetOrdinal(string name) => inner.GetOrdinal(name);
+        public override string GetString(int i) => inner.GetString(i);
+        public override object GetValue(int i) => inner.GetValue(i);
+        public override int GetValues(object[] values) => inner.GetValues(values);
+        public override bool IsDBNull(int i) => inner.IsDBNull(i);
+
+        public override bool HasRows =>
+            throw new NotSupportedException("DbDataReader-only surface must not be used.");
+        public override IEnumerator GetEnumerator() =>
+            throw new NotSupportedException("DbDataReader-only surface must not be used.");
+        public override DataTable GetSchemaTable() => inner.GetSchemaTable();
+        public override bool NextResult() => inner.NextResult();
+        public override bool Read() => inner.Read();
+        public override void Close() => inner.Close();
     }
 }

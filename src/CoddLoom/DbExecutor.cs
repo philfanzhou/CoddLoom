@@ -5,6 +5,7 @@ using CoddLoom.Table;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Reflection;
 
 namespace CoddLoom;
@@ -45,7 +46,7 @@ public abstract class DbExecutor
     /// </summary>
     public virtual bool CanContinueTransactionAfterCommandFailure => true;
 
-    public abstract IDbConnection GetConnection();
+    public abstract DbConnection GetConnection();
 
     /// <summary>
     /// Opens and closes one connection to verify that the configured connection
@@ -71,7 +72,7 @@ public abstract class DbExecutor
         }
     }
 
-    public void Transaction(Action<IDbTransaction> action)
+    public void Transaction(Action<DbTransaction> action)
     {
         using var conn = GetConnection();
         try
@@ -95,7 +96,7 @@ public abstract class DbExecutor
         }
     }
 
-    public T Transaction<T>(Func<IDbTransaction, T> func)
+    public T Transaction<T>(Func<DbTransaction, T> func)
     {
         var result = default(T);
         Transaction(tran =>
@@ -105,7 +106,7 @@ public abstract class DbExecutor
         return result;
     }
 
-    public T TryTransaction<T>(Func<IDbTransaction, T> func)
+    public T TryTransaction<T>(Func<DbTransaction, T> func)
     {
         try
         {
@@ -117,7 +118,7 @@ public abstract class DbExecutor
         }
     }
 
-    public void Execute(Action<IDbConnection> action)
+    public void Execute(Action<DbConnection> action)
     {
         using var con = GetConnection();
         try
@@ -131,7 +132,7 @@ public abstract class DbExecutor
         }
     }
 
-    public T Execute<T>(Func<IDbConnection, T> func)
+    public T Execute<T>(Func<DbConnection, T> func)
     {
         var result = default(T);
         Execute(con =>
@@ -141,7 +142,7 @@ public abstract class DbExecutor
         return result;
     }
 
-    public T TryExecute<T>(Func<IDbConnection, T> func)
+    public T TryExecute<T>(Func<DbConnection, T> func)
     {
         try
         {
@@ -202,8 +203,8 @@ public abstract class DbExecutor
 
     protected abstract IDataAdapter GetAdapter(IDbCommand command);
 
-    private IDbCommand BuildCommand(IDbConnection con, string commandText,
-        IEnumerable<ValueParam> dbParams = null, IDbTransaction tran = null)
+    private IDbCommand BuildCommand(DbConnection con, string commandText,
+        IEnumerable<ValueParam> dbParams = null, DbTransaction tran = null)
     {
         if (con == null) throw new ArgumentNullException(nameof(con));
         if (string.IsNullOrEmpty(commandText)) throw new ArgumentNullException(nameof(commandText));
@@ -265,7 +266,7 @@ public abstract class DbExecutor
     }
 
     private T Execute<T>(string commandText, Func<IDbCommand, T> func,
-        IEnumerable<ValueParam> dbParams = null, IDbConnection con = null, IDbTransaction tran = null)
+        IEnumerable<ValueParam> dbParams = null, DbConnection con = null, DbTransaction tran = null)
     {
         if (tran != null)
         {
@@ -326,56 +327,56 @@ public abstract class DbExecutor
 
     public int NonQuery(string commandText,
         IEnumerable<ValueParam> dbParams = null,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         return Execute(commandText, NonQuery, dbParams, con, tran);
     }
 
     public int NonQueryProcedure(string procedureName,
         IEnumerable<ValueParam> dbParams = null,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         return Execute(procedureName, command => Procedure(command, NonQuery), dbParams, con, tran);
     }
 
     public List<T> Reader<T>(string commandText, Func<IDataRecord, T> convertor,
         IEnumerable<ValueParam> dbParams = null,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         return Execute(commandText, command => Reader(command, convertor), dbParams, con, tran);
     }
 
     public List<T> ReaderProcedure<T>(string procedureName, Func<IDataRecord, T> convertor,
         IEnumerable<ValueParam> dbParams = null,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         return Execute(procedureName, command => Procedure(command, c => Reader(c, convertor)), dbParams, con, tran);
     }
 
     public DataSet Adapter(string commandText, 
         IEnumerable<ValueParam> dbParams = null,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         return Execute(commandText, Adapter, dbParams, con, tran);
     }
 
     public DataSet AdapterProcedure(string procedureName,
         IEnumerable<ValueParam> dbParams = null,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         return Execute(procedureName, command => Procedure(command, Adapter), dbParams, con, tran);
     }
 
     public T Scalar<T>(string commandText, Func<object, T> convertor,
         IEnumerable<ValueParam> dbParams = null,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         return Execute(commandText, command => Scalar(command, convertor), dbParams, con, tran);
     }
 
     public T ScalarProcedure<T>(string procedureName, Func<object, T> convertor,
         IEnumerable<ValueParam> dbParams = null,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         return Execute(procedureName, command => Procedure(command, c => Scalar(c, convertor)), dbParams, con, tran);
     }
