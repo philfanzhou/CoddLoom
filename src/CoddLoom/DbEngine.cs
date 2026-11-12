@@ -1,6 +1,7 @@
 using CoddLoom.Condition;
 using CoddLoom.Cache;
 using CoddLoom.Input;
+using CoddLoom.Model;
 using CoddLoom.Params;
 using CoddLoom.Table;
 using System;
@@ -229,6 +230,29 @@ public partial class DbEngine
         return Executor.Reader(sql, convertor, dbParams, con, tran);
     }
 
+    /// <summary>
+    /// Asynchronously queries records and maps every row with the convertor. This is
+    /// the asynchronous counterpart of
+    /// <see cref="Select{T}(Func{IDataRecord, T}, string, WhereConditions, OrderByCondition, ColumnParam, DbConnection, DbTransaction)"/>;
+    /// the generated SQL, parameters, connection ownership, and exception types are
+    /// identical, and the convertor keeps the synchronous
+    /// <see cref="IDataRecord"/> signature.
+    /// </summary>
+    /// <remarks>
+    /// The call delegates to the executor's asynchronous methods and awaits the
+    /// driver's asynchronous APIs directly; it never wraps the synchronous path in
+    /// <c>Task.Run</c>. The cancellation token is observed before any database call
+    /// and is then forwarded to the driver's asynchronous execution.
+    /// </remarks>
+    public Task<List<T>> SelectAsync<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where,
+        OrderByCondition orderBy, ColumnParam columns,
+        DbConnection con = null, DbTransaction tran = null,
+        CancellationToken cancellationToken = default)
+    {
+        var sql = Executor.SqlBuilder.SelectWithParameters(tableName, where, orderBy, null, columns, out var dbParams);
+        return Executor.ReaderAsync(sql, convertor, dbParams, con, tran, cancellationToken);
+    }
+
     public List<T> PageSelect<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where,
         OrderByCondition orderBy, ColumnParam columns,
         PageParam pageParam, out int totalPages, out int totalCount,
@@ -251,6 +275,75 @@ public partial class DbEngine
 
         var sql = Executor.SqlBuilder.SelectWithParameters(tableName, where, orderBy, pageParam, columns, out var dbParams);
         return Executor.Reader(sql, convertor, dbParams, con, tran);
+    }
+
+    /// <summary>
+    /// Asynchronously queries one page of records together with its pagination
+    /// metadata. This is the asynchronous counterpart of
+    /// <see cref="PageSelect{T}(Func{IDataRecord, T}, string, WhereConditions, OrderByCondition, ColumnParam, PageParam, out int, out int, DbConnection, DbTransaction)"/>.
+    /// Because asynchronous methods cannot use <c>out</c> parameters, the metadata
+    /// that the synchronous version reports through its <c>totalPages</c> and
+    /// <c>totalCount</c> output parameters is returned instead as a
+    /// <see cref="PageResult{T}"/> whose <see cref="PageResult{T}.Items"/>,
+    /// <see cref="PageResult{T}.PageNumber"/>, <see cref="PageResult{T}.TotalPage"/>,
+    /// and <see cref="PageResult{T}.TotalCount"/> carry the page rows, the requested
+    /// page number, and the same totals the synchronous version writes to its
+    /// <c>out</c> parameters.
+    /// </summary>
+    /// <returns>A <see cref="PageResult{T}"/> with the page rows and pagination
+    /// metadata.</returns>
+    /// <remarks>
+    /// <para>
+    /// When <paramref name="pageParam"/> is not null, the method runs two commands in
+    /// sequence: an asynchronous COUNT for the totals, awaited first, then the
+    /// asynchronous page SELECT. Just like the synchronous version, the two commands
+    /// are not atomic: the data may change between them, so
+    /// <see cref="PageResult{T}.TotalCount"/> can disagree with the number of rows the
+    /// SELECT can still see. The <see cref="PageResult{T}.TotalPage"/> carry rule is
+    /// unchanged: any remainder adds one final page. When
+    /// <paramref name="pageParam"/> is null, no COUNT runs, the SELECT is unpaged, and
+    /// <see cref="PageResult{T}.TotalPage"/> and <see cref="PageResult{T}.TotalCount"/>
+    /// are zero, exactly like the synchronous version's <c>out</c> values.
+    /// </para>
+    /// <para>
+    /// The call delegates to the executor's asynchronous methods and awaits the
+    /// driver's asynchronous APIs directly; it never wraps the synchronous path in
+    /// <c>Task.Run</c>. The cancellation token is observed before the COUNT and is
+    /// then forwarded to both commands' asynchronous execution.
+    /// </para>
+    /// </remarks>
+    public async Task<PageResult<T>> PageSelectAsync<T>(Func<IDataRecord, T> convertor, string tableName,
+        WhereConditions where, OrderByCondition orderBy, ColumnParam columns,
+        PageParam pageParam,
+        DbConnection con = null, DbTransaction tran = null,
+        CancellationToken cancellationToken = default)
+    {
+        var totalPages = 0;
+        var totalCount = 0;
+        if (pageParam != null)
+        {
+            totalCount = await CountAsync(tableName, where, columns, con, tran,
+                cancellationToken).ConfigureAwait(false);
+            if (totalCount > 0)
+            {
+                totalPages = totalCount / pageParam.PageSize;
+                if (Math.Abs(totalCount % pageParam.PageSize) > 0)
+                {
+                    totalPages++;
+                }
+            }
+        }
+
+        var sql = Executor.SqlBuilder.SelectWithParameters(tableName, where, orderBy, pageParam, columns, out var dbParams);
+        var items = await Executor.ReaderAsync(sql, convertor, dbParams, con, tran,
+            cancellationToken).ConfigureAwait(false);
+        return new PageResult<T>
+        {
+            Items = items,
+            PageNumber = pageParam?.PageNumber ?? 0,
+            TotalPage = totalPages,
+            TotalCount = totalCount,
+        };
     }
 
     private bool ExistTable(TableDefine tableDefine, DbConnection con)
