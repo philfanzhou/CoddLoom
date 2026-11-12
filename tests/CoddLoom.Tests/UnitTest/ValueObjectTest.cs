@@ -67,9 +67,14 @@ public class ValueObjectTest
         Assert.AreEqual("SELECT * FROM sample ORDER BY id ASC",
             new CoddLoom.Sql.SqlBuilder().Select("sample",
                 orderBy: new OrderByCondition<OrderTable>(string.Empty, OrderTable.Id)));
-        Assert.ThrowsExactly<Exception>(() => new OrderByCondition<OrderTable>("unknown"));
+        var missingColumn = Assert.ThrowsExactly<InvalidOperationException>(
+            () => new OrderByCondition<OrderTable>("unknown"));
+        StringAssert.Contains(missingColumn.Message, "unknown");
+        var noConstants = Assert.ThrowsExactly<ArgumentException>(
+            () => new OrderByCondition<OrderTypeWithoutColumns>("id"));
+        Assert.AreEqual("tableType", noConstants.ParamName);
+        Assert.IsFalse(string.IsNullOrEmpty(noConstants.Message));
         Assert.ThrowsExactly<ArgumentNullException>(() => new OrderByCondition<OrderTable>(string.Empty));
-        Assert.ThrowsExactly<ArgumentNullException>(() => new OrderByCondition<OrderTypeWithoutColumns>("id"));
         Assert.ThrowsExactly<ArgumentNullException>(() => new OrderByCondition(string.Empty));
     }
 

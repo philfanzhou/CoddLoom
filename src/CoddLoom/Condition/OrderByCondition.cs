@@ -13,6 +13,13 @@ public class OrderByCondition
         Add(column, descending);
     }
 
+    /// <exception cref="ArgumentException">
+    /// <paramref name="tableType"/> does not define any constant fields to map order-by columns.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// <paramref name="orderBy"/> matches neither the name nor the value of any constant field of
+    /// <paramref name="tableType"/> (comparison is <see cref="StringComparison.OrdinalIgnoreCase"/>).
+    /// </exception>
     public OrderByCondition(Type tableType, string orderBy,
         string defaultOrderBy = "", bool descending = false)
         : this(GetColumn(tableType, orderBy, defaultOrderBy), descending)
@@ -47,7 +54,9 @@ public class OrderByCondition
         var constFields = tableType.GetAllConstField();
         if (constFields == null || constFields.Length == 0)
         {
-            throw new ArgumentNullException(nameof(tableType));
+            throw new ArgumentException(
+                $"Type {tableType.Name} does not define any constant fields to map order-by columns.",
+                nameof(tableType));
         }
 
         foreach (var field in constFields)
@@ -66,12 +75,19 @@ public class OrderByCondition
             }
         }
 
-        throw new Exception($"Can not get column named {orderBy} in table {tableType.Name}");
+        throw new InvalidOperationException($"Can not get column named {orderBy} in table {tableType.Name}");
     }
 }
 
 public class OrderByCondition<TTable> : OrderByCondition where TTable : class
 {
+    /// <exception cref="ArgumentException">
+    /// <typeparamref name="TTable"/> does not define any constant fields to map order-by columns.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// <paramref name="orderBy"/> matches neither the name nor the value of any constant field of
+    /// <typeparamref name="TTable"/> (comparison is <see cref="StringComparison.OrdinalIgnoreCase"/>).
+    /// </exception>
     public OrderByCondition(string orderBy, string defaultOrderBy = "", bool descending = false)
         : base(typeof(TTable), orderBy, defaultOrderBy, descending)
     {
