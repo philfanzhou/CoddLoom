@@ -261,7 +261,7 @@ public class DbEngineUtilityIntegrationTest : TestBase
         }
 
         private ScriptedIdExecutor(ScriptedIdConnection connection)
-            : base("scripted", connection)
+            : base("scripted")
         {
             _connection = connection;
         }

@@ -57,6 +57,21 @@ var users = engine.Select<User>(
 For PostgreSQL, install `CoddLoom.PostgreSql` and construct the engine with a
 `PostgreSqlExecutor` using an Npgsql-compatible connection string.
 
+## Construction performs no I/O
+
+Since 0.2.0, constructing any executor neither opens a connection nor issues
+DDL. Each constructor only stores its inputs:
+
+- Connection validation is explicit: call `ValidateConnection()` to open and
+  close one connection and surface driver failures eagerly.
+- MySQL and MariaDB database creation is explicit: the five-argument
+  convenience constructors only build a connection string; call
+  `EnsureDatabase()` to run `CREATE DATABASE IF NOT EXISTS` with a safely
+  quoted database name.
+- SQLite creates the database file itself the first time a connection opens.
+  The target directory is no longer created automatically and must already
+  exist.
+
 Tables and entities are defined independently: table constants describe schema and reusable SQL identifiers, while mapping attributes connect entity members to those columns.
 
 ## ID generation and concurrency

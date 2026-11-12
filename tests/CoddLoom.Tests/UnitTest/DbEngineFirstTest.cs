@@ -78,7 +78,7 @@ public class DbEngineFirstTest
         private readonly RecordingConnection _connection;
 
         public RecordingExecutor(RecordingConnection connection)
-            : base("recording", connection)
+            : base("recording")
         {
             _connection = connection;
         }

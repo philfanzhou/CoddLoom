@@ -10,7 +10,7 @@ public class SqlServerExecutor : DbExecutor
     private readonly bool _trustServerCertificate;
 
     public SqlServerExecutor(string connectionString, bool trustServer = false)
-        : base(connectionString, CreateConnection(connectionString, trustServer))
+        : base(connectionString)
     {
         _trustServerCertificate = trustServer;
     }

@@ -8,7 +8,7 @@ namespace CoddLoom.Oracle;
 public class OracleExecutor : DbExecutor
 {
     public OracleExecutor(string connectionString)
-        : base(connectionString, new OracleConnection(connectionString))
+        : base(connectionString)
     {
     }
 
