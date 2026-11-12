@@ -3,7 +3,7 @@ using CoddLoom.Params;
 using CoddLoom.Table;
 using CoddLoom.Table.Base;
 using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System;
 
@@ -42,7 +42,7 @@ partial class DbEngine
     }
 
     private List<TableInitializationPlan> BuildInitializationPlans(
-        IEnumerable<TableDefine> tables, IDbConnection con)
+        IEnumerable<TableDefine> tables, DbConnection con)
     {
         var plans = new List<TableInitializationPlan>();
         foreach (var table in tables)
@@ -73,13 +73,13 @@ partial class DbEngine
         return plans;
     }
 
-    private List<string> GetExistingColumns(TableDefine table, IDbConnection con)
+    private List<string> GetExistingColumns(TableDefine table, DbConnection con)
     {
         var sql = Executor.SqlBuilder.GetTableColumnsSql(table, out var dbParams);
         return Executor.Reader(sql, reader => reader.GetString(0), dbParams, con);
     }
 
-    private bool TableHasRows(TableDefine table, IDbConnection con)
+    private bool TableHasRows(TableDefine table, DbConnection con)
     {
         var page = new PageParam { PageNumber = 1, PageSize = 1 };
         var columns = new ColumnParam().AddSelect("1");

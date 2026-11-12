@@ -6,6 +6,7 @@ using CoddLoom.Table;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 
 namespace CoddLoom;
 
@@ -25,21 +26,21 @@ public partial class DbEngine
     public DbExecutor Executor { get; }
 
     public void Drop(string tableName,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         var sql = Executor.SqlBuilder.DropTableSql(tableName);
         Executor.NonQuery(sql, null, con, tran);
     }
 
     public int Insert(string tableName, InputValues input,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         var sql = Executor.SqlBuilder.Insert(tableName, [input], out var dbParams);
         return Executor.NonQuery(sql, dbParams, con, tran);
     }
 
     public int Insert(string tableName, IEnumerable<InputValues> inputs, int batchSize, 
-        IDbTransaction tran = null)
+        DbTransaction tran = null)
     {
         if (batchSize <= 0)
         {
@@ -57,21 +58,21 @@ public partial class DbEngine
     }
 
     public int Delete(string tableName, WhereConditions where,
-        IDbConnection con = null, IDbTransaction tran = null, bool force = false)
+        DbConnection con = null, DbTransaction tran = null, bool force = false)
     {
         var sql = Executor.SqlBuilder.DeleteWithParameters(tableName, where, force, out var dbParams);
         return Executor.NonQuery(sql, dbParams, con, tran);
     }
 
     public int Update(string tableName, InputValues input, WhereConditions where,
-        IDbConnection con = null, IDbTransaction tran = null, bool force = false)
+        DbConnection con = null, DbTransaction tran = null, bool force = false)
     {
         var sql = Executor.SqlBuilder.UpdateWithParameters(tableName, input, where, force, out var dbParams);
         return Executor.NonQuery(sql, dbParams, con, tran);
     }
 
     public int Count(string tableName, WhereConditions where, ColumnParam columns,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         var sql = Executor.SqlBuilder.CountWithParameters(tableName, where, columns, out var dbParams);
         return Executor.Scalar(sql, System.Convert.ToInt32, dbParams, con, tran);
@@ -79,7 +80,7 @@ public partial class DbEngine
 
     public List<T> Select<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where,
         OrderByCondition orderBy, ColumnParam columns,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         var sql = Executor.SqlBuilder.SelectWithParameters(tableName, where, orderBy, null, columns, out var dbParams);
         return Executor.Reader(sql, convertor, dbParams, con, tran);
@@ -88,7 +89,7 @@ public partial class DbEngine
     public List<T> PageSelect<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where,
         OrderByCondition orderBy, ColumnParam columns,
         PageParam pageParam, out int totalPages, out int totalCount,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         totalPages = 0;
         totalCount = 0;
@@ -109,7 +110,7 @@ public partial class DbEngine
         return Executor.Reader(sql, convertor, dbParams, con, tran);
     }
 
-    private bool ExistTable(TableDefine tableDefine, IDbConnection con)
+    private bool ExistTable(TableDefine tableDefine, DbConnection con)
     {
         if (Executor.TryGetLegacyExistTableParam(tableDefine, out var checkTable, out var where))
         {

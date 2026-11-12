@@ -2,6 +2,7 @@ using CoddLoom.Sql;
 using Npgsql;
 using System;
 using System.Data;
+using System.Data.Common;
 
 namespace CoddLoom.PostgreSql;
 
@@ -23,7 +24,7 @@ public class PostgreSqlExecutor : DbExecutor
 
     public override bool CanContinueTransactionAfterCommandFailure => false;
 
-    public override IDbConnection GetConnection()
+    public override DbConnection GetConnection()
     {
         return new NpgsqlConnection(ConnectionString);
     }

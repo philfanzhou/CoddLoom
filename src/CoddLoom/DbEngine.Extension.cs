@@ -5,6 +5,7 @@ using CoddLoom.Params;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Globalization;
 using System.Linq;
 
@@ -17,14 +18,14 @@ partial class DbEngine
         "Prefer a database identity/sequence, UUID, or unique-constraint-protected inserts with retry handling.";
 
     public int Insert<T>(T entity,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         DbConverter.ToInsert(entity, _tableColumnsCache, out var table, out var inputs);
         return Insert(table, inputs.First(), con, tran);
     }
 
     public int Insert<T>(IEnumerable<T> entities, int batchSize,
-        IDbTransaction tran = null)
+        DbTransaction tran = null)
     {
         if (batchSize <= 0)
         {
@@ -37,34 +38,34 @@ partial class DbEngine
     }
 
     public int Delete<T>(object id,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         var where = WhereConditions.ById<T>(id, out var tableName);
         return Delete(tableName, where, con, tran);
     }
 
     public int Update<T>(T entity,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         DbConverter.ToUpdate(entity, _tableColumnsCache, out var table, out var input, out var where);
         return Update(table, input, where, con, tran);
     }
 
     public int Count(string tableName, WhereConditions where,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         return Count(tableName, where, null, con, tran);
     }
 
     public bool Exist(string tableName, WhereConditions where,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         return Count(tableName, where, null, con, tran) > 0;
     }
 
     public T First<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where,
         OrderByCondition orderBy, ColumnParam columns,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         var pageParam = new PageParam { PageSize = 1, PageNumber = 1 };
         var sql = Executor.SqlBuilder.SelectWithParameters(tableName, where, orderBy, pageParam, columns, out var dbParams);
@@ -74,14 +75,14 @@ partial class DbEngine
 
     public T First<T>(Func<IDataRecord, T> convertor, string tableName, WhereConditions where,
         OrderByCondition orderBy,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         return First(convertor, tableName, where, orderBy, null, con, tran);
     }
 
     public T First<T>(WhereConditions where,
         OrderByCondition orderBy,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
         where T : new()
     {
         var table = EntityMapCache.GetTableName<T>();
@@ -114,13 +115,13 @@ partial class DbEngine
     /// </remarks>
     [Obsolete(ConcurrentIdGenerationObsoleteMessage, false)]
     public T GenerateId<T>(string tableName, string columnName, Func<T, T> generateId,
-        IDbConnection con = null, IDbTransaction tran = null, int tryCount = 10)
+        DbConnection con = null, DbTransaction tran = null, int tryCount = 10)
     {
         return GenerateId(tableName, columnName, generateId, null, con, tran, tryCount);
     }
 
     private T GenerateId<T>(string tableName, string columnName, Func<T, T> generateId,
-        DbType? candidateCast, IDbConnection con = null, IDbTransaction tran = null,
+        DbType? candidateCast, DbConnection con = null, DbTransaction tran = null,
         int tryCount = 10)
     {
         if (tryCount <= 0)
@@ -172,7 +173,7 @@ partial class DbEngine
     /// </remarks>
     [Obsolete(ConcurrentIdGenerationObsoleteMessage, false)]
     public long GenerateMaxId(string tableName, string columnName,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         return GenerateId<long>(tableName, columnName, _ =>
         {
@@ -206,7 +207,7 @@ partial class DbEngine
     /// </remarks>
     [Obsolete(ConcurrentIdGenerationObsoleteMessage, false)]
     public string GenerateTimeId(string tableName, string columnName, Func<DateTime> getTime,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         var random = new Random();
         return GenerateId<string>(tableName, columnName, _ =>
@@ -239,7 +240,7 @@ partial class DbEngine
     /// </remarks>
     [Obsolete(ConcurrentIdGenerationObsoleteMessage, false)]
     public string GenerateUtcTimeId(string tableName, string columnName,
-        IDbConnection con = null, IDbTransaction tran = null)
+        DbConnection con = null, DbTransaction tran = null)
     {
         return GenerateTimeId(tableName, columnName, () => DateTime.UtcNow, con, tran);
     }

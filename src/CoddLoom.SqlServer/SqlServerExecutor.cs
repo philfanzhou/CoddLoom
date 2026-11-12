@@ -2,6 +2,7 @@ using Microsoft.Data.SqlClient;
 using CoddLoom.Sql;
 using System;
 using System.Data;
+using System.Data.Common;
 
 namespace CoddLoom.SqlServer;
 
@@ -19,12 +20,12 @@ public class SqlServerExecutor : DbExecutor
 
     public override int MaxParametersPerCommand => 2100;
 
-    public override IDbConnection GetConnection()
+    public override DbConnection GetConnection()
     {
         return CreateConnection(ConnectionString, _trustServerCertificate);
     }
 
-    private static IDbConnection CreateConnection(string connectionString, bool trustServer)
+    private static DbConnection CreateConnection(string connectionString, bool trustServer)
     {
         var conn = new SqlConnection(BuildConnectionString(connectionString, trustServer));
         return conn;

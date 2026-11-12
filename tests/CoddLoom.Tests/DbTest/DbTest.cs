@@ -1,7 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using CoddLoom.Condition;
 using System;
-using System.Data;
+using System.Data.Common;
 using System.Text;
 using CoddLoom.Tests.DbCode.Entity;
 using CoddLoom.Tests.DbCode.Tables;
@@ -38,7 +38,7 @@ namespace CoddLoom.Tests.DbTest
         /// <summary>
         /// Tests complex data types.
         /// </summary>
-        private void TestComplexDataTypes(IDbConnection con)
+        private void TestComplexDataTypes(DbConnection con)
         {
             const int count = 10;
             var specialString = "test'fdadf_OLOGY£¨KUNSHAN£©ELECTR";
@@ -99,7 +99,7 @@ namespace CoddLoom.Tests.DbTest
         /// Tests joined-query operations.
         /// This method is simplified because PasswordUser and PasswordUserTable were removed.
         /// </summary>
-        private void TestJoinOperations(IDbConnection con)
+        private void TestJoinOperations(DbConnection con)
         {
             // Simplified joined-query test using only UserTable.
             var users = DbEngine.Select<User>(null, null, con);
@@ -132,7 +132,7 @@ namespace CoddLoom.Tests.DbTest
         /// <summary>
         /// Inserts test data.
         /// </summary>
-        private void InsertTestData(IDbConnection con)
+        private void InsertTestData(DbConnection con)
         {
             for (var i = 0; i < 100; i++)
             {

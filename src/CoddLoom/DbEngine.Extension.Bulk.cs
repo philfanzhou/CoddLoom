@@ -1,7 +1,7 @@
 using CoddLoom.Input;
 using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 using System.Linq;
 
 namespace CoddLoom;
@@ -17,7 +17,7 @@ partial class DbEngine
     /// <param name="transaction">The transaction.</param>
     /// <returns>The number of successfully inserted records.</returns>
     /// <exception cref="InvalidOperationException">Thrown when a batch cannot be inserted; includes its row-index range and error details.</exception>
-    private int InsertWithTransaction(string table, IEnumerable<InputValues> inputs, int batchSize, IDbTransaction transaction)
+    private int InsertWithTransaction(string table, IEnumerable<InputValues> inputs, int batchSize, DbTransaction transaction)
     {
         if (table == null) throw new ArgumentNullException(nameof(table));
         if (batchSize < 1) throw new ArgumentOutOfRangeException(nameof(batchSize), "Batch size must be greater than 0.");
@@ -59,7 +59,7 @@ partial class DbEngine
     /// <summary>
     /// Executes a batch insert.
     /// </summary>
-    private int ExecuteChunk(IReadOnlyList<InputValues> chunk, string table, IDbTransaction transaction)
+    private int ExecuteChunk(IReadOnlyList<InputValues> chunk, string table, DbTransaction transaction)
     {
         if (chunk.Count == 0)
         {

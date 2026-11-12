@@ -1,5 +1,6 @@
 using System;
 using System.Data;
+using System.Data.Common;
 using System.Data.SQLite;
 using System.IO;
 
@@ -28,7 +29,7 @@ public class SqliteExecutor : DbExecutor
     {
     }
 
-    public override IDbConnection GetConnection()
+    public override DbConnection GetConnection()
     {
         return new SQLiteConnection(ConnectionString);
     }
