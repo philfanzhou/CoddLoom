@@ -22,23 +22,18 @@ internal class WhereConditionsNormalItem(ValueParam parameter, WhereOperator whe
 
     public DbType? CastType { get; }
 
-    protected internal override string ToSql(SqlBuilder builder)
+    protected internal override string ToSql(SqlBuilder builder, WhereBuildContext context)
     {
-        // update like condition value
-        if (WhereOperator == WhereOperator.Like)
-        {
-            // refresh for set db parameter value later.
-            var value = builder.GetLikeParamValue(Parameter.Value.ToString());
-            Parameter.Value = value; 
-        }
+        // LIKE wrapping is applied to the snapshot handed to the command; the
+        // caller's original parameter value is never rewritten.
+        var snapshot = context.Snapshot(Parameter, WhereOperator == WhereOperator.Like);
 
-        // do not update column name in parameter, just update in sql.
-        var whereColumn = Parameter.Column; 
+        var whereColumn = Parameter.Column;
         if (CastType.HasValue)
         {
             whereColumn = builder.GetCastColumn(Parameter.Column, CastType.Value);
         }
 
-        return builder.GetNormalCondition(whereColumn, WhereOperator, Parameter);
+        return builder.GetNormalCondition(whereColumn, WhereOperator, snapshot);
     }
 }

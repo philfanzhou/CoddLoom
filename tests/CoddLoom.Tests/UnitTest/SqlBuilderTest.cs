@@ -114,7 +114,10 @@ public class SqlBuilderTest
         Assert.AreEqual(
             "SELECT * FROM sample WHERE a = @a0 AND b != @b0 AND c > @c0 AND d >= @d0 AND e < @e0 AND f <= @f0 OR name LIKE @name0 AND deletedAt IS NULL OR createdAt IS NOT NULL AND status IN (@status0,@status1) AND CAST(casted AS DateTime) = @casted0",
             sql);
-        Assert.AreEqual("%abc%", where.Parameters.Single(parameter => parameter.Column == "name").Value);
+        // The public getter is a read-only snapshot: the caller's original value
+        // stays unwrapped; wrapping happens only on the materialized command
+        // parameters (covered by WhereConditionsSnapshotTest).
+        Assert.AreEqual("abc", where.Parameters.Single(parameter => parameter.Column == "name").Value);
     }
 
     [TestMethod]

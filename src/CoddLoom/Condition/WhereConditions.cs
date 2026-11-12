@@ -30,13 +30,20 @@ public class WhereConditions
 
     #region Property
 
+    /// <summary>
+    /// Gets a side-effect-free snapshot of this condition tree's parameters.
+    /// Each call returns fresh instances with deterministic names derived from
+    /// the condition order; LIKE values appear in their original, unwrapped
+    /// form. The condition tree and its stored values are never modified, and
+    /// the returned instances are not shared with later renders.
+    /// </summary>
     public IEnumerable<ValueParam> Parameters
     {
         get
         {
             var parameters = new List<ValueParam>();
-            CollectParameters(this, parameters, new HashSet<ValueParam>());
-            RefreshParamNames(parameters);
+            var generator = new ParameterNameGenerator();
+            CollectParameterSnapshots(this, parameters, generator);
             return parameters.AsReadOnly();
         }
     }
@@ -146,52 +153,33 @@ public class WhereConditions
         return this;
     }
 
-    internal void RefreshParamNames()
-    {
-        var parameters = new List<ValueParam>();
-        CollectParameters(this, parameters, new HashSet<ValueParam>());
-        RefreshParamNames(parameters);
-    }
-
-    private static void RefreshParamNames(IEnumerable<ValueParam> parameters)
-    {
-        var nameGenerator = new ParameterNameGenerator();
-        foreach (var parameter in parameters)
-        {
-            parameter.ParamName = nameGenerator.Get(parameter.Column);
-        }
-    }
-
-    private static void CollectParameters(WhereConditions where, ICollection<ValueParam> parameters,
-        ISet<ValueParam> visited)
+    private static void CollectParameterSnapshots(WhereConditions where,
+        ICollection<ValueParam> parameters, ParameterNameGenerator generator)
     {
         foreach (var item in where._conditionsItemList)
         {
             switch (item)
             {
                 case WhereConditionsNormalItem normalItem:
-                    AddParameter(normalItem.Parameter, parameters, visited);
+                    parameters.Add(SnapshotParameter(normalItem.Parameter, generator));
                     break;
                 case WhereConditionsInItem inItem:
                     foreach (var parameter in inItem.Parameters)
                     {
-                        AddParameter(parameter, parameters, visited);
+                        parameters.Add(SnapshotParameter(parameter, generator));
                     }
                     break;
                 case PartialWhereConditions partialItem:
-                    CollectParameters(partialItem.WhereConditions, parameters, visited);
+                    CollectParameterSnapshots(partialItem.WhereConditions, parameters, generator);
                     break;
             }
         }
     }
 
-    private static void AddParameter(ValueParam parameter, ICollection<ValueParam> parameters,
-        ISet<ValueParam> visited)
+    private static ValueParam SnapshotParameter(ValueParam parameter, ParameterNameGenerator generator)
     {
-        if (visited.Add(parameter))
-        {
-            parameters.Add(parameter);
-        }
+        return new ValueParam(parameter.Column, parameter.Value, generator.Get(parameter.Column),
+            parameter.ForceParameter);
     }
 
     private static bool Contains(WhereConditions where, WhereConditions target)
@@ -226,30 +214,6 @@ public class WhereConditions
     }
 
     #endregion
-
-    private class ParameterNameGenerator
-    {
-        private readonly Dictionary<string, int> _paramNameIndex = new();
-
-        public string Get(string paramName)
-        {
-            if (paramName.Contains("."))
-            {
-                paramName = paramName.Replace('.', '_');
-            }
-
-            if (!_paramNameIndex.ContainsKey(paramName))
-            {
-                _paramNameIndex.Add(paramName, 0);
-            }
-            else
-            {
-                _paramNameIndex[paramName] += 1;
-            }
-
-            return $"{paramName}{_paramNameIndex[paramName]}";
-        }
-    }
 }
 
 public enum WhereConnector

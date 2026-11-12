@@ -10,7 +10,7 @@ internal class WhereConditionsNullItem(
 {
     public bool IsNull { get; } = isNull;
 
-    protected internal override string ToSql(SqlBuilder builder)
+    protected internal override string ToSql(SqlBuilder builder, WhereBuildContext context)
     {
         return builder.GetIsNullCondition(Column, IsNull);
     }

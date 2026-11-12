@@ -12,8 +12,9 @@ internal class WhereConditionsInItem(string column, IEnumerable<ValueParam> valu
 
     public IEnumerable<ValueParam> Parameters => _valueParams.AsReadOnly();
 
-    protected internal override string ToSql(SqlBuilder builder)
+    protected internal override string ToSql(SqlBuilder builder, WhereBuildContext context)
     {
-        return builder.GetInCondition(Column, Parameters);
+        var snapshots = _valueParams.Select(parameter => context.Snapshot(parameter, wrapLikeValue: false)).ToList();
+        return builder.GetInCondition(Column, snapshots);
     }
 }

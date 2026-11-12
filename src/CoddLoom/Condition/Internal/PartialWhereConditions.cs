@@ -7,8 +7,8 @@ internal class PartialWhereConditions(WhereConditions whereConditions, WhereConn
 {
     public WhereConditions WhereConditions { get; } = whereConditions;
 
-    protected internal override string ToSql(SqlBuilder builder)
+    protected internal override string ToSql(SqlBuilder builder, WhereBuildContext context)
     {
-        return builder.RenderInnerWhereSql(WhereConditions);
+        return builder.RenderInnerWhereSql(WhereConditions, context);
     }
 }
