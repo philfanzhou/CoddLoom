@@ -107,6 +107,23 @@ public abstract class DbExecutor
         }
     }
 
+    /// <summary>
+    /// Runs the action inside one transaction on a dedicated connection and
+    /// commits when it completes; any failure rolls the transaction back and
+    /// rethrows the callback's exception.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// When the callback throws, the transaction is rolled back before the
+    /// callback's original exception is rethrown. If the rollback itself
+    /// also throws — for example because the connection already broke — the
+    /// original exception still propagates unchanged; the rollback failure
+    /// is retained in the original exception's
+    /// <see cref="Exception.Data"/> dictionary under the key
+    /// <c>CoddLoom.RollbackException</c>, so it cannot replace the original
+    /// exception and hide the root cause.
+    /// </para>
+    /// </remarks>
     public void Transaction(Action<DbTransaction> action)
     {
         using var conn = GetConnection();
@@ -119,9 +136,9 @@ public abstract class DbExecutor
                 action(tran);
                 tran.Commit();
             }
-            catch
+            catch (Exception exception)
             {
-                tran.Rollback();
+                RollbackPreservingException(tran, exception);
                 throw;
             }
         }
@@ -142,6 +159,31 @@ public abstract class DbExecutor
     }
 
     /// <summary>
+    /// The key under which a failed rollback's exception is retained in the
+    /// original callback exception's <see cref="Exception.Data"/> dictionary.
+    /// </summary>
+    internal const string RollbackExceptionDataKey = "CoddLoom.RollbackException";
+
+    /// <summary>
+    /// Rolls the transaction back without letting a rollback failure replace
+    /// the callback's original exception. When the rollback throws, the
+    /// rollback failure is retained in the original exception's
+    /// <see cref="Exception.Data"/> dictionary instead; the rollback outcome
+    /// itself still depends on the driver and the connection state.
+    /// </summary>
+    private static void RollbackPreservingException(DbTransaction tran, Exception originalException)
+    {
+        try
+        {
+            tran.Rollback();
+        }
+        catch (Exception rollbackFailure)
+        {
+            originalException.Data[RollbackExceptionDataKey] = rollbackFailure;
+        }
+    }
+
+    /// <summary>
     /// Runs the awaited action inside one transaction on a dedicated
     /// connection and commits when it completes; any failure rolls the
     /// transaction back and rethrows. This is the asynchronous counterpart of
@@ -157,9 +199,12 @@ public abstract class DbExecutor
     /// </para>
     /// <para>
     /// Rollback failure semantics match the synchronous version exactly: when
-    /// the rollback itself throws, that exception replaces the original one.
-    /// The cancellation token is observed before the connection opens and is
-    /// forwarded to <c>OpenAsync</c>; callbacks receive no token.
+    /// the callback throws and the rollback itself also throws, the
+    /// callback's original exception propagates and the rollback failure is
+    /// retained in its <see cref="Exception.Data"/> dictionary under the key
+    /// <c>CoddLoom.RollbackException</c>. The cancellation token is observed
+    /// before the connection opens and is forwarded to <c>OpenAsync</c>;
+    /// callbacks receive no token.
     /// </para>
     /// </remarks>
     public async Task TransactionAsync(Func<DbTransaction, Task> action,
@@ -176,9 +221,9 @@ public abstract class DbExecutor
                 await action(tran).ConfigureAwait(false);
                 tran.Commit();
             }
-            catch
+            catch (Exception exception)
             {
-                tran.Rollback();
+                RollbackPreservingException(tran, exception);
                 throw;
             }
         }

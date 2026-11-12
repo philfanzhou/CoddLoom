@@ -132,6 +132,15 @@ most drivers beginning a transaction is not a network round trip. The
 deprecated `Generate*Id` methods deliberately received no async twins. The
 async layer was added in 0.3.0 and is purely additive.
 
+**Rollback failure.** When a transaction callback throws, `Transaction` and
+`TransactionAsync` roll back and rethrow the callback's exception. If the
+rollback itself also throws — typically because the connection is already
+broken — the callback's original exception still propagates; the rollback
+failure is retained in that exception's `Data` dictionary under the key
+`CoddLoom.RollbackException`. Before 0.3.0 the synchronous path let the
+rollback failure replace the original exception, hiding the root cause of the
+business failure.
+
 ## ID generation and concurrency
 
 `GenerateId`, `GenerateMaxId`, `GenerateTimeId`, and `GenerateUtcTimeId` return a
