@@ -193,27 +193,6 @@ public class WhereConditions
             .OfType<PartialWhereConditions>()
             .Any(item => Contains(item.WhereConditions, target));
     }
-
-    #region Obsolete
-
-    [Obsolete]
-    public void AddIsNull(string column,
-        WhereConnector connector = WhereConnector.And, bool isNull = true)
-    {
-        if (string.IsNullOrEmpty(column)) throw new ArgumentNullException(nameof(column));
-
-        var conditionItem = new WhereConditionsNullItem(column, isNull, connector);
-        _conditionsItemList.Add(conditionItem);
-    }
-
-    [Obsolete]
-    public void AddIsNotNull(string column,
-        WhereConnector connector = WhereConnector.And)
-    {
-        AddIsNull(column, connector, false);
-    }
-
-    #endregion
 }
 
 public enum WhereConnector
