@@ -1,70 +1,59 @@
 ---
-name: 任务
-about: 一个可独立合并的改动。范围、边界和验收标准必须明确，否则不能标记 ready。
+name: Task
+about: An independently mergeable change. Scope, boundaries, and acceptance criteria must be clear.
 title: ''
 labels: 'type: task'
 assignees: ''
 ---
 
 <!--
-正文和标题用中文。标题建议使用：[模块] 简明动作。
-不要手工添加 status: ready，完成代码、契约和邻近债务盘点后再添加。
-一个 task issue 对应一个 PR；若包含第二个独立 provider、契约或发布面，请拆分。
+Suggested title format: [Module] concise action.
 -->
 
-## 背景与目标
+## Background and goal
 
-描述现象、触发条件和影响。有复现步骤、失败输出或受影响的 provider 就写上。
+Describe the symptom, trigger conditions, and impact. Include reproduction steps, failing output, or affected providers when available.
 
-相关代码/文档：`src/...`
+Related code/docs: `src/...`
 
-## 固定契约与不变量
+## Fixed contracts and invariants
 
-- 写清公共 API、SQL、事务、分页、provider 方言、目标框架或包元数据中必须固定的部分。
-- 若修复需要覆盖多条路径，写清共同不变量和应落下修复的路径汇合边界。
+- State clearly what must stay fixed among the public API, SQL, transactions, pagination, provider dialects, target frameworks, or package metadata.
+- If a fix has to cover multiple paths, state the shared invariants and the boundary where the paths converge and the fix should land.
 
-## 范围
+## Scope
 
-- 要改什么。
-- **明确排除什么**：尤其是“不改变现有运行时行为”“不重构 X”“不新增 provider”等限制。
-- 本节在 review 时有约束力；无法追溯到验收标准的越界改动必须拆为独立 issue。
+- What will change.
+- **Explicitly excluded**: especially limits such as "do not change existing runtime behavior", "do not refactor X", "no new provider".
 
-## 明确不包含与不保证
+## Exclusions and non-guarantees
 
-安全或健壮性任务必须分别说明保证什么、不保证什么以及调用方责任；其他任务写“无”。
+Security or robustness tasks must state separately what is guaranteed, what is not guaranteed, and caller responsibilities; other tasks write "None".
 
-- 保证：
-- 不保证：
-- 调用方责任：
+- Guarantees:
+- Not guaranteed:
+- Caller responsibilities:
 
-## 验收标准
+## Acceptance criteria
 
-- 可逐条验证的成功结果。
-- 适用的失败、取消、安全和并发结果；不适用时写明“不适用”及理由。
-- 涉及公共 API、provider、事务、包边界或发布时，写清兼容性结果。
+- Individually verifiable successful outcomes.
+- Applicable failure, cancellation, security, and concurrency outcomes; when not applicable, state "not applicable" and why.
+- When the public API, providers, transactions, package boundaries, or releases are involved, state the compatibility outcome.
 
-## 文档与兼容性影响
+## Documentation and compatibility impact
 
-说明是否影响公共 API、SQL/provider、目标框架、包版本、事务语义、发布流程或使用者文档；没有影响时写“无”。
+State whether the public API, SQL/providers, target frameworks, package versions, transaction semantics, release process, or user-facing documentation are affected; write "None" when there is no impact.
 
-## 已知邻近问题（本次不修）
+## Known adjacent issues (not fixed this time)
 
-排期前完整阅读将要改动的实现、测试和契约，把发现的既有缺陷各自开成 issue，在这里列出来：
+- #NNN one-line summary
+- If confirmed none, write "None".
 
-- #NNN 一句话说明
-- 若确认没有，写「无」。
+## Dependencies
 
-留空表示尚未完成邻近债务盘点，issue 不能标记 `status: ready`。
+- GitHub-native Blocked by: #NNN, or "None"
+- GitHub-native Blocks: #NNN, or "None"
 
-## 依赖
+## Delivery constraints
 
-- GitHub 原生 Blocked by：#NNN，或“无”
-- GitHub 原生 Blocks：#NNN，或“无”
-
-只有前置 issue 全部关闭、依赖关系与标签一致后，才能添加 `status: ready`。
-
-## 交付约束
-
-- 一个 PR 只关闭本 task issue；不得吸收邻近债务。
-- 实现以及适用的失败、取消、安全和并发测试在同一个 PR 中交付。
-- 公开行为或用法变化时同步英文 README、XML 文档和发布说明。
+- When public behavior or usage changes, update the English README, XML docs, and release notes in sync.

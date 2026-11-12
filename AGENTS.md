@@ -1,106 +1,37 @@
-# CoddLoom 协作规范
+# CoddLoom Collaboration Guidelines
 
-基于 ADO.NET 的轻量、显式 ORM：`netstandard2.0` 核心包，加上每个数据库各自的 provider 包。
-没有 LINQ provider，没有变更跟踪器，没有隐式的工作单元。
+A lightweight, explicit ORM built on ADO.NET: a `netstandard2.0` core package plus a separate provider package for each database.
+There is no LINQ provider, no change tracker, and no implicit unit of work.
 
-## 维护方式
+## Maintenance
 
-- 本文件是仓库内 AI 协作流程与约束的唯一事实来源。
-- Codex 直接读取本文件；Claude Code v2.1.277+ 同样直接读取本文件，无需 `CLAUDE.md` 导入。
-- 仓库内没有单独的 `CONTRIBUTING.md`；本文件是 AI 与贡献者工作流程、review 政策和项目边界的统一入口。
-- 修改通用规范时只改本文件。除非某条规则确实只适用于单个工具，否则不要把规则正文写进
-  `CLAUDE.md` 或其他工具入口文件，以免内容漂移或互相冲突。
+- This file is the single source of truth for in-repo AI collaboration process and constraints.
+- Codex reads this file directly; Claude Code v2.1.277+ likewise reads this file directly, without a `CLAUDE.md` import.
+- There is no separate `CONTRIBUTING.md` in this repository; this file is the unified entry point for AI and contributor workflow, review policy, and project boundaries.
+- Change only this file when modifying general rules. Unless a rule really applies to a single tool only, do not put rule text into
+  `CLAUDE.md` or other tool entry files, to avoid drift or conflicts.
 
-## 文档语言
+## Documentation language
 
-- **仓库内的流程与约束文档用中文**：本文件、`.github/ISSUE_TEMPLATE/` 下的 issue 模板、
-  `.github/pull_request_template.md`。
-- **提交到 GitHub 的 issue 和 PR，正文一律用中文。**
-  issue 标题用中文；PR 标题沿用英文 conventional commit 格式（`feat:` / `fix:` / `docs:` …），
-  因为 squash 合并后它就是 `main` 上那条 commit 的标题。
-- **review 全程用中文**：发到 PR 上的行内意见、review summary、回复，以及在对话里向我汇报
-  review 发现的问题，一律中文。引用的代码、标识符、编译器诊断码（如 `CS0618`）、命令行照原样保留。
-- **面向使用者的文档用英文**：`README.md`、`THIRD-PARTY-NOTICES.md`、代码里的 XML 文档注释、
-  异常消息、`[Obsolete]` 等特性中面向调用方的文字。这些是公开发布物的一部分。
-- 代码标识符、commit message 保持英文。
+- PR titles keep the English conventional commit format (`feat:` / `fix:` / `docs:` …), because after a squash merge the PR title becomes the commit title on `main`.
+- **User-facing documentation is written in English**: `README.md`, `THIRD-PARTY-NOTICES.md`, XML documentation comments in code,
+  exception messages, and caller-facing text in attributes such as `[Obsolete]`. These are part of the public release.
+- Code identifiers and commit messages stay in English.
 
-## 项目边界与契约
+## Project boundaries and contracts
 
-- `src/CoddLoom` 是数据库无关的核心；数据库驱动、方言和 provider 专属行为只能放在对应的
-  `src/CoddLoom.*` provider 包中。
-- 公共 API、SQL 生成、参数化行为、事务所有权、分页语义和已发布的包/目标框架均视为兼容性契约。
-  不得为了方便调用方而引入 LINQ provider、隐式变更跟踪器或隐式提交。
-- 所有六个 provider 的 SQL contract 都必须继续可独立验证；真实数据库集成测试只在改动触及对应
-  provider、SQL、映射、事务或并发语义时运行。
-- `GenerateId`、`GenerateMaxId`、`GenerateTimeId` 和 `GenerateUtcTimeId` 只返回查询时未占用的
-  候选值，不负责保留或原子分配。修改这些方法时必须阅读 README 的兼容性说明及相关测试。
+- `src/CoddLoom` is the database-independent core; database drivers, dialects, and provider-specific behavior may live only in the
+  corresponding `src/CoddLoom.*` provider packages.
+- The public API, SQL generation, parameterization behavior, transaction ownership, pagination semantics, and published packages/target
+  frameworks are all compatibility contracts. Do not introduce a LINQ provider, implicit change tracker, or implicit commit for caller
+  convenience.
+- The SQL contracts of all six providers must remain independently verifiable; real-database integration tests run only when a change
+  touches the corresponding provider, SQL, mapping, transactions, or concurrency semantics.
+- `GenerateId`, `GenerateMaxId`, `GenerateTimeId`, and `GenerateUtcTimeId` only return candidate values that were unused at query time;
+  they do not reserve or atomically allocate them. When changing these methods, read the compatibility notes in the README and the
+  related tests.
 
-## 范围纪律
-
-这个仓库有一个反复出现的失败模式：一个范围很窄、描述很清楚的 issue，做成 PR 之后进入
-review，来回很多轮都收敛不了。每次的机理都是同一个——review 在紧挨着 diff 的代码里发现了
-一个真实的既有缺陷，这个缺陷在同一个 PR 里被顺手修掉，而这次修复又产生了新的可 review 面
-（行为变化、兼容性说明、文档、发布说明），于是循环重复。
-
-最严重的一次见 [PR #34](https://github.com/philfanzhou/CoddLoom/pull/34)：issue #24 明确
-排除了任何运行时行为变化，但它的七条 review 意见里有三条是 `DbEngine.Extension.cs` 中的
-既有缺陷。其中一条还是在 PR 内被修掉了（`068da65b`，culture-invariant 的时间 ID），而这一个
-越界 commit 又自己产生了第七条意见——已持久化 ID 的兼容性、README、发布说明，也就是又一轮。
-对照 [PR #33](https://github.com/philfanzhou/CoddLoom/pull/33)：同类的既有缺陷被推迟到
-issue #40，PR 直接合掉，没有把它吸收进来。
-
-下面的规则就是为了打断这个循环。它们不是风格偏好。
-
-### 在宣布一个 issue 可以开工之前
-
-绝不能只看 issue 描述就判断它 ready。先把 issue 里提到的每个文件、每个成员从头到尾读一遍。
-
-在那些代码里发现的、issue 并没有要求修的缺陷，都属于**邻近债务**。每一条：单独开一个 issue，
-然后在目标 issue 的 `## 已知邻近问题（本次不修）` 一节里链接过去。
-
-一个 issue 只有同时满足三条才算 ready：
-
-1. 它自己写清楚了 `## 范围`（或等价的最小修改范围章节）和 `## 验收标准`。
-2. 安全或健壮性任务写清楚了保证、不保证和调用方责任；不适用时明确写“无”。
-3. 它将要改动的代码、测试和公开契约已经被完整读过。
-4. 那段代码里的邻近债务已经开成 issue 并链接好；确认没有时明确写“无”。
-5. 前置 issue 已关闭，依赖关系与项目标签保持一致。
-
-「描述很清楚」不等于 ready。一个清楚的 issue 架在一段烂代码上，恰恰就是会失控的那种情况。
-
-### 实施过程中
-
-issue 的 `范围` 有约束力。issue 说不会变的运行时行为就不要动——哪怕你确实、可验证地
-发现那里是坏的，也不要顺手改。开 issue 记下来。
-
-- 先找不变量，再决定修改点；同一缺陷经多条路径到达同一输出时，在路径汇合处修复并覆盖输入集合。
-- 成功路径以及适用的失败、取消、安全和并发行为必须与实现一起测试。
-- 不得顺手重构、改名、升级依赖或修复仅仅靠近 diff 的问题。
-
-### review 过程中
-
-每条意见在写下来或实施之前先分类：
-
-- **本 PR 引入的**——缺陷位于本 PR 新增或修改的行上。在本 PR 里修。
-- **既有的**——缺陷位于本 PR 只是移动、重新缩进、改名波及、或者仅仅是挨着的代码里。
-  开一个 issue，在 review 意见里链接过去，并明确说明它不在本 PR 范围内。不要在本 PR 里修。
-
-只有一个例外：某个既有缺陷导致本 PR 自己的某条 `验收标准` 无法验证。援引这个例外时，必须指名
-具体条目，并确认修复仍属于同一个契约。
-
-意见真实、可复现、证据充分，并不等于它在范围内。范围由 PR 改动了哪些行决定，不由意见质量决定。
-
-### 熔断线
-
-一个 PR 进入第三轮 review 时，停下来，先不要再写代码，把它的 commit 逐个对照 issue 的
-`范围` 和 `验收标准`。任何一个追溯不到验收标准的 commit 都是范围违规：撤掉它，改为开 issue。
-
-不违反已声明保证的资源整形、纵深防御和内部结构建议，在第三轮之后转为 follow-up issue；违反
-已声明保证的问题继续修复，但不得借机吸收邻近债务。
-
-## 验证
-
-按改动风险运行最小充分验证，并在 PR 中记录实际命令和结果：
+## Verification
 
 ```bash
 dotnet restore CoddLoom.sln
@@ -108,45 +39,22 @@ dotnet build CoddLoom.sln --configuration Release --no-restore
 dotnet test CoddLoom.sln --configuration Release --no-build --no-restore
 ```
 
-涉及 provider SQL、数据库连接、事务、映射或并发时，运行对应的 contract/数据库集成测试；Oracle
-真实数据库测试保持显式 opt-in。涉及包元数据或发布路径时，验证六个 provider 的本地打包结果、
-目标框架兼容性和符号包，不以一次普通单元测试代替发布验证。
+When provider SQL, database connections, transactions, mapping, or concurrency are involved, run the corresponding contract/database
+integration tests; Oracle real-database tests stay explicitly opt-in. When package metadata or the release path is involved, verify the
+six providers' local packaging results, target-framework compatibility, and symbol packages; do not replace release verification with a
+single ordinary unit test run.
 
-## 安全与变更纪律
+## Security and change discipline
 
-- 不得提交连接字符串、密码、token、私钥、测试数据库文件或私有数据。
-- 只读分析不得修改文件；保留用户已有且与任务无关的改动，不回退、覆盖、提交或推送它们。
-- 提交前检查文档链接、格式、secret 和仓库状态。
+- Never commit connection strings, passwords, tokens, private keys, test database files, or private data.
+- Before committing, check documentation links and formatting.
 
-## 合并 PR 后
+## Known debt hotspots
 
-PR 合并不等于工作结束。合并后必须检查并合理处理以下事项，不要遗留失效状态或无主分支：
+`src/CoddLoom/DbEngine.Extension.cs` — the client-side `Generate*Id` series produced
+issues #36, #37, #38, and #39 in a single review round. Any scheduled change touching this file deserves extra care during the
+adjacent-debt inventory.
 
-1. 确认远端 PR 已合并，目标分支已经包含合并结果。合并时用了 `gh pr merge --delete-branch`
-   的话，注意本地删分支那一步可能因为下面第 4 条的 worktree 占用而失败；PR 本身仍然会正常
-   合并，照第 4–6 条手工收尾即可。
-2. 检查 PR 对应的远端 issue。已经完成的 issue 应关闭；只完成一部分或仍有后续工作的 issue
-   应保持开启，并更新说明或链接后续 issue，不能因为 PR 已合并就放任状态失真。PR 本来就没有
-   关联 issue 时（例如维护者直接要求的改动），在汇报里写明「无关联 issue」，不要跳过这一条。
-3. 确认远端工作分支已经随合并自动删除（仓库开启了 `deleteBranchOnMerge`）。分支仍然存在时，
-   要么删掉，要么说明保留原因。
-4. 用 `git worktree list` 检查残留 worktree，删掉不再需要的，并执行 `git worktree prune`。
-   `.claude/worktrees/` 下的工作区被 `.git/info/exclude` 忽略，不会出现在 `git status` 里，
-   是最容易漏掉的那类失效状态。这一步排在更新目标分支之前：只要目标分支还被某个 worktree
-   检出，第 5 条就做不了。删之前先确认那个工作区是干净的、没有独有提交。
-5. 更新本地的目标分支：`git switch main && git merge --ff-only origin/main`。如果 `main` 仍然
-   被别的工作区检出，`git switch main` 和 `git fetch origin main:main` 都会直接失败——前者报
-   `already checked out at ...`，后者报 `refusing to fetch into branch ...`，两条命令谁也绕不
-   过去。只能先按第 4 条移除那个工作区，或者进到那个工作区里更新并在汇报中说明。
-6. 清理本地工作分支和远端跟踪引用。本仓库用 squash 合并，工作分支的 commit 不会成为目标分支
-   的祖先，因此 `git branch -d` 一定报 `not fully merged`，`git branch --merged` 也一定列不出
-   它——这不构成「还没合并」的证据。删除前用别的方式确认改动确实进去了（`gh pr view <编号>
-   --json state,mergeCommit` 显示已合并，或者该分支与目标分支之间已经没有实质 diff），确认之后
-   再 `git branch -D`。确认不了就保留分支并说明原因；绝不要因为 `-d` 失败就顺手换成 `-D`。
-7. 向用户汇报 PR、issue、远端分支、本地分支和 worktree 各自的最终状态；任何未完成的清理都要
-   说明原因和后续动作。
+## English working environment
 
-## 已知债务热点
-
-`src/CoddLoom/DbEngine.Extension.cs` —— 客户端的 `Generate*Id` 系列在一轮 review 里就产出了
-issue #36、#37、#38、#39。任何要动这个文件的排期，做邻近债务盘点时格外小心。
+Write in English: project-maintained documentation (README and docs), Issue and Change Request titles and bodies, Comments, Discussions, Review Threads, and future commit messages, unless a maintainer explicitly requests another language. Preserve historical Issues, Change Requests, and comments. Do not translate code, commands, paths, identifiers, logs, technical data, or quoted external text. Preserve other project conventions.
