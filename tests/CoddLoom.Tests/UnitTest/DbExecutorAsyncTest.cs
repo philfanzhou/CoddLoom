@@ -494,6 +494,7 @@ public class DbExecutorAsyncTest
     private sealed class RecordingCommand(RecordingConnection connection, ExecutionSurface surface) : DbCommand
     {
         private readonly RecordingParameterCollection _parameters = new();
+        private bool _disposed;
 
         public override string CommandText { get; set; }
         public override int CommandTimeout { get; set; }
@@ -503,6 +504,12 @@ public class DbExecutorAsyncTest
         protected override DbConnection DbConnection { get; set; } = connection;
         protected override DbParameterCollection DbParameterCollection => _parameters;
         protected override DbTransaction DbTransaction { get; set; }
+
+        protected override void Dispose(bool disposing)
+        {
+            _disposed = true;
+            base.Dispose(disposing);
+        }
 
         public override void Cancel() { }
 
@@ -568,6 +575,11 @@ public class DbExecutorAsyncTest
                 throw new NotSupportedException("The asynchronous execution members must not be used.");
             }
 
+            // Yield once so every fake async execution completes genuinely
+            // asynchronously: if the executor disposes the command before the
+            // execution task finishes, Record() below fails loudly.
+            await Task.Yield();
+
             if (connection.ExecutionDelay is { } delay)
             {
                 await Task.Delay(delay, cancellationToken);
@@ -585,6 +597,13 @@ public class DbExecutorAsyncTest
 
         private void Record()
         {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(
+                    nameof(RecordingCommand),
+                    "The command was disposed before its asynchronous execution completed.");
+            }
+
             connection.Commands.Add(new RecordedCommand(
                 CommandText,
                 CommandType,

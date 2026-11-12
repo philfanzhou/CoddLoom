@@ -495,10 +495,13 @@ public abstract class DbExecutor
             return await func(command, cancellationToken).ConfigureAwait(false);
         }
 
-        return await ExecuteAsync(newCon =>
+        return await ExecuteAsync(async newCon =>
         {
+            // Await inside the using scope: returning the task without
+            // awaiting would dispose the command while its asynchronous
+            // execution is still running.
             using var command = BuildCommand(newCon, commandText, dbParams);
-            return func(command, cancellationToken);
+            return await func(command, cancellationToken).ConfigureAwait(false);
         }, cancellationToken).ConfigureAwait(false);
     }
 
