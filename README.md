@@ -228,9 +228,10 @@ dotnet test tests/CoddLoom.Tests/CoddLoom.Tests.csproj --filter "TestCategory=Da
 Repository maintainers configure a NuGet.org Trusted Publishing policy for
 `.github/workflows/release.yml`, then push a semantic-version tag. The release
 workflow verifies the repository, publishes all seven `.nupkg` packages to
-NuGet.org and GitHub Packages, and attaches the same `.nupkg` files plus their
-`.snupkg` symbol packages to the GitHub Release — the feeds themselves carry
-the `.nupkg` packages only.
+GitHub Packages, publishes the `.nupkg` packages together with their companion
+`.snupkg` symbol packages to NuGet.org (the NuGet client pushes companion
+symbol packages automatically), and attaches both file kinds to the GitHub
+Release.
 
 ```bash
 git tag v1.2.3
