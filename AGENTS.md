@@ -27,9 +27,6 @@ There is no LINQ provider, no change tracker, and no implicit unit of work.
   convenience.
 - The SQL contracts of all six providers must remain independently verifiable; real-database integration tests run only when a change
   touches the corresponding provider, SQL, mapping, transactions, or concurrency semantics.
-- `GenerateId`, `GenerateMaxId`, `GenerateTimeId`, and `GenerateUtcTimeId` only return candidate values that were unused at query time;
-  they do not reserve or atomically allocate them. When changing these methods, read the compatibility notes in the README and the
-  related tests.
 
 ## Verification
 
@@ -51,9 +48,8 @@ single ordinary unit test run.
 
 ## Known debt hotspots
 
-`src/CoddLoom/DbEngine.Extension.cs` — the client-side `Generate*Id` series produced
-issues #36, #37, #38, and #39 in a single review round. Any scheduled change touching this file deserves extra care during the
-adjacent-debt inventory.
+None currently. The former `Generate*Id` hotspot in `src/CoddLoom/DbEngine.Extension.cs` was
+removed with the deprecated API family in 0.3.0 (issues #36-#39 remain closed as history).
 
 ## English working environment
 
